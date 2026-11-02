@@ -1,0 +1,316 @@
+.capabilities-emblem {
+  align-items: center;
+  gap: 9px;
+}
+.capabilities-emblem > span {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+}
+.capabilities-panel {
+  flex: 1;
+  min-width: 0;
+}
+.capability-tab-description {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  color: #718094;
+  font-size: 12px;
+  line-height: 1.8;
+  padding-top: 19px;
+}
+.capability-tab-description > span:last-child {
+  color: #8b96a6;
+  white-space: nowrap;
+}
+.capability-notice {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 13px;
+  margin-top: 15px;
+  background: #edf8f2;
+  color: #247653;
+  border: 1px solid #d7ecdf;
+  border-radius: 9px;
+  font-size: 12px;
+}
+.capability-notice .icon-button {
+  margin-left: auto;
+}
+.capability-icon.subagent {
+  background: #eeeffb;
+  color: #7568ae;
+  border-color: #e1def5;
+}
+.capability-builtin {
+  font-size: 9px;
+  font-weight: 500;
+  color: #7b8798;
+  background: #eff2f6;
+  padding: 2px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.capability-disabled .capability-icon {
+  filter: grayscale(0.65);
+  opacity: 0.7;
+}
+.capability-edit {
+  color: #78869a;
+}
+.capability-edit:hover {
+  color: #d7761d;
+  background: #fff1e5;
+}
+.capability-description:focus-visible,
+.capabilities-tabs button:focus-visible,
+.capability-switch:focus-visible {
+  outline: 2px solid #ea842e;
+  outline-offset: 5px;
+  border-radius: 4px;
+}
+.capability-editor {
+  max-width: 720px;
+}
+.capability-editor-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 23px;
+}
+.capability-editor-heading > span:first-child {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #7e8a9d;
+  font-size: 12px;
+}
+.capability-editor-heading b {
+  color: #a57239;
+  font-size: 10px;
+  background: #fff1df;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-weight: 500;
+}
+.capability-content-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 0 9px;
+}
+.capability-content-toolbar > label {
+  font-size: 13px;
+  font-weight: 550;
+  color: #455165;
+}
+.capability-view-toggle {
+  padding: 3px;
+  border: 1px solid #e8edf3;
+  background: #f6f8fb;
+  border-radius: 7px;
+  display: flex;
+}
+.capability-view-toggle > button {
+  border: 0;
+  background: transparent;
+  color: #8390a2;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 5px 9px;
+}
+.capability-view-toggle > button.selected {
+  background: white;
+  box-shadow: 0 1px 4px #10213912;
+  color: #34445c;
+}
+.capability-editor .extension-content-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 220px;
+  max-height: 50vh;
+}
+.capability-editor .input[readonly] {
+  background: #f8f9fc;
+  color: #536278;
+}
+.capability-input-caption {
+  text-align: right;
+  font-size: 10px;
+  color: #8b96a6;
+  margin: 7px 0 18px;
+}
+.capability-markdown {
+  border: 1px solid #e3e9f1;
+  background: #fafbfc;
+  padding: 16px 20px;
+  border-radius: 9px;
+  color: #45556b;
+  font-size: 13px;
+  line-height: 1.8;
+  min-height: 220px;
+  max-height: 50vh;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+}
+.capability-markdown h1 {
+  font-size: 21px;
+}
+.capability-markdown h2 {
+  font-size: 18px;
+}
+.capability-markdown h3 {
+  font-size: 15px;
+}
+.capability-markdown pre {
+  overflow: auto;
+  white-space: pre-wrap;
+  background: #edf1f6;
+  padding: 12px;
+  border-radius: 6px;
+}
+.capability-markdown table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.capability-markdown td,
+.capability-markdown th {
+  border: 1px solid #dfe5ee;
+  padding: 5px 9px;
+}
+.capability-preview-link {
+  color: #c77b35;
+  text-decoration: underline;
+}
+.capability-agent-settings {
+  margin-top: 23px;
+}
+.capability-selection {
+  border: 1px solid #e5eaf1;
+  border-radius: 9px;
+  margin: 0 0 18px;
+  padding: 12px 14px 14px;
+  min-width: 0;
+}
+.capability-selection legend {
+  font-size: 12px;
+  color: #536278;
+  font-weight: 550;
+  padding: 0 6px;
+}
+.capability-selection legend > span {
+  font-weight: 400;
+  color: #97a0ae;
+  margin-left: 10px;
+  font-size: 10px;
+}
+.capability-selection-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 14px;
+  max-height: 190px;
+  overflow: auto;
+}
+.capability-selection-list > label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  min-width: 0;
+  cursor: pointer;
+  color: #4a5970;
+  padding: 6px 0;
+}
+.capability-selection-list input {
+  accent-color: #ed8a36;
+  flex-shrink: 0;
+}
+.capability-selection-list span {
+  overflow-wrap: anywhere;
+}
+.capability-selection-list small {
+  display: block;
+  color: #929cad;
+  font-size: 10px;
+  margin-top: 4px;
+}
+.capability-selection:disabled label {
+  cursor: default;
+}
+.settings-fixed-protocol {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 13px 14px;
+  border: 1px solid #e7ecf3;
+  border-radius: 8px;
+  color: #6c7c91;
+  margin-bottom: 18px;
+  font-size: 12px;
+}
+.settings-fixed-protocol strong {
+  color: #263c58;
+  font-size: 12px;
+  font-weight: 600;
+}
+@media (max-width: 760px) {
+  .capabilities-tabs {
+    gap: 18px;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .capabilities-tabs > button {
+    gap: 5px;
+    font-size: 12px;
+  }
+  .capabilities-tabs > button svg {
+    width: 15px;
+  }
+  .capability-tab-description {
+    flex-direction: column;
+    gap: 5px;
+    padding-top: 15px;
+    font-size: 11px;
+  }
+  .capability-tab-description > span:last-child {
+    font-size: 10px;
+  }
+  .capability-actions {
+    gap: 4px;
+  }
+  .capability-actions .icon-button {
+    width: 28px;
+    height: 30px;
+    padding: 5px;
+  }
+  .capability-switch {
+    margin: 0 4px;
+  }
+  .capability-row {
+    flex-wrap: wrap;
+    column-gap: 10px;
+  }
+  .capability-description {
+    flex-basis: calc(100% - 60px);
+  }
+  .capability-actions {
+    margin-left: 52px;
+    margin-top: -2px;
+  }
+  .capability-description h3 {
+    flex-wrap: wrap;
+  }
+  .capability-selection-list {
+    grid-template-columns: 1fr;
+  }
+}

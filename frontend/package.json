@@ -11,11 +11,15 @@
     "test:ui": "node tests/regression.mjs",
     "test:deployment": "node tests/deployment.mjs",
     "test:deployment-restart": "node tests/deployment-restart.mjs",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" tests/*.mjs"
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" tests/*.mjs",
+    "test:timeline": "node --test tests/run-timeline.test.mjs && node tests/timeline.mjs && node tests/timeline-recovery.mjs",
+    "test:capabilities": "node tests/capabilities.mjs",
+    "test:previews": "node tests/file-previews.mjs"
   },
   "dependencies": {
     "dompurify": "^3.4.17",
     "lucide-react": "^0.468.0",
+    "pdfjs-dist": "^6.5.438",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-markdown": "^10.1.0",

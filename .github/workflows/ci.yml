@@ -52,3 +52,6 @@ jobs:
             sleep 1
           done
           npm run test:ui
+          npm run test:timeline
+          npm run test:capabilities
+          npm run test:previews

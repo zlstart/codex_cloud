@@ -1,128 +1,103 @@
-import { useState } from "react";
-import {
-  ChevronDown,
-  ChevronRight,
-  History,
-  LoaderCircle,
-  Check,
-} from "lucide-react";
-import type { ToolEvent } from "../types";
+import { useEffect, useRef, useState } from "react";
+import { ChevronRight, History, LoaderCircle, RotateCcw } from "lucide-react";
+import type { Artifact, Run, TimelinePage, TimelineState } from "../types";
+import { api, errorMessage } from "../lib/api";
+import { initialTimeline, replayEvents } from "../lib/runTimeline";
+import { RunTimeline } from "./RunTimeline";
 
-export function ExecutionHistory({ runId }: { runId: string }) {
-  const [open, setOpen] = useState(false);
+export function ExecutionHistory({
+  runId,
+  files,
+  onPreview,
+  finalContent,
+  status,
+}: {
+  runId: string;
+  files: Artifact[];
+  onPreview: (file: Artifact) => void;
+  finalContent?: string;
+  status?: Run["status"];
+}) {
+  const [timeline, setTimeline] = useState<TimelineState | null>(null);
   const [loading, setLoading] = useState(false);
-  const [steps, setSteps] = useState<ToolEvent[] | null>(null);
   const [error, setError] = useState("");
-  async function toggle() {
-    setOpen(!open);
-    if (open || steps || loading) return;
+  const abortRef = useRef<AbortController | null>(null);
+  useEffect(() => () => abortRef.current?.abort(), [runId]);
+  async function load() {
+    if (loading) return;
+    const controller = new AbortController();
+    abortRef.current?.abort();
+    abortRef.current = controller;
     setLoading(true);
     setError("");
+    let next = initialTimeline();
     try {
-      const response = await fetch(
-        `/api/runs/${encodeURIComponent(runId)}/events?after=0`,
-        { credentials: "include" },
-      );
-      if (!response.ok) throw new Error("暂时无法读取执行记录。");
-      const text = await response.text();
-      const results: ToolEvent[] = [];
-      for (const block of text.split(/\r?\n\r?\n/)) {
-        const event = block
-          .split("\n")
-          .find((line) => line.startsWith("event:"))
-          ?.slice(6)
-          .trim();
-        const dataText = block
-          .split("\n")
-          .filter((line) => line.startsWith("data:"))
-          .map((line) => line.slice(5).trim())
-          .join("\n");
-        if (!dataText) continue;
-        let data: Record<string, unknown>;
-        try {
-          data = JSON.parse(dataText) as Record<string, unknown>;
-        } catch {
-          continue;
-        }
-        if (event === "tool.started")
-          results.push({
-            id: String(results.length),
-            name: String(data.name ?? "工具"),
-            arguments: data.arguments,
-            status: "running",
-          });
-        if (event === "tool.completed") {
-          const step = results.find(
-            (item) => item.name === data.name && item.status === "running",
-          );
-          if (step) {
-            step.status = "completed";
-            step.output = data.output;
-          } else
-            results.push({
-              id: String(results.length),
-              name: String(data.name ?? "工具"),
-              arguments: {},
-              status: "completed",
-              output: data.output,
-            });
-        }
+      let after = 0;
+      for (;;) {
+        const page = await api<TimelinePage>(
+          `/runs/${encodeURIComponent(runId)}/timeline?after=${after}&limit=500`,
+          { signal: controller.signal },
+        );
+        if (controller.signal.aborted) return;
+        if (!Array.isArray(page.events))
+          throw new Error("执行记录格式无效，请刷新后重试。");
+        next = replayEvents(page.events, next);
+        next = { ...next, status: page.status ?? status ?? next.status };
+        if (!page.has_more) break;
+        if (
+          !Number.isSafeInteger(page.next_cursor) ||
+          page.next_cursor <= after
+        )
+          throw new Error("执行记录分页未能继续，请重试。");
+        after = page.next_cursor;
       }
-      setSteps(results);
+      setTimeline(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "读取失败");
+      if (!controller.signal.aborted) setError(errorMessage(e));
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }
   return (
     <div className="execution-history">
-      <button className="history-toggle" onClick={() => void toggle()}>
-        <History size={13} />
-        <span>执行记录</span>
-        {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-      </button>
-      {open && (
-        <div className="history-content">
+      {timeline ? (
+        <RunTimeline
+          key={runId}
+          timeline={timeline}
+          files={files}
+          onPreview={onPreview}
+          finalContent={finalContent ?? ""}
+          history
+          initiallyExpanded
+        />
+      ) : (
+        <button
+          className="process-toggle history-toggle"
+          onClick={() => void load()}
+          disabled={loading}
+          aria-label={error ? "重试读取执行记录" : "执行记录"}
+        >
           {loading ? (
-            <span className="history-loading">
-              <LoaderCircle size={13} className="spin" />
-              正在读取…
-            </span>
+            <LoaderCircle size={14} className="spin" />
           ) : error ? (
-            <p>{error}</p>
-          ) : steps?.length ? (
-            steps.map((step) => (
-              <details className="trace-step" key={step.id}>
-                <summary>
-                  <Check size={12} />
-                  <span>{step.name}</span>
-                  <ChevronDown size={12} />
-                </summary>
-                <div>
-                  <span className="trace-label">输入</span>
-                  <pre>
-                    {typeof step.arguments === "string"
-                      ? step.arguments
-                      : JSON.stringify(step.arguments, null, 2)}
-                  </pre>
-                  {step.output !== undefined && (
-                    <>
-                      <span className="trace-label">结果</span>
-                      <pre>
-                        {typeof step.output === "string"
-                          ? step.output
-                          : JSON.stringify(step.output, null, 2)}
-                      </pre>
-                    </>
-                  )}
-                </div>
-              </details>
-            ))
+            <RotateCcw size={14} />
           ) : (
-            <p>本次回复没有调用工具。</p>
+            <History size={14} />
           )}
-        </div>
+          <span>
+            {loading
+              ? "正在读取执行记录…"
+              : error
+                ? "重试读取执行记录"
+                : "执行记录"}
+          </span>
+          <ChevronRight size={13} />
+        </button>
+      )}
+      {error && (
+        <p className="timeline-error" role="alert">
+          {error}
+        </p>
       )}
     </div>
   );

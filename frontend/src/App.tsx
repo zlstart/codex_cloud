@@ -85,6 +85,8 @@ function App() {
     toast,
     setToast,
     notice,
+    runSyncError,
+    retryRunSync,
     setNotice,
     preview,
     setPreview,
@@ -112,6 +114,8 @@ function App() {
     navigate,
   } = useWorkspace();
   const populated = !!detail?.messages.length || !!run;
+  const runBusy =
+    !!run && ["queued", "running", "awaiting_approval"].includes(run.status);
   return (
     <div className="app-shell">
       <Sidebar
@@ -198,19 +202,28 @@ function App() {
                     <div className="chat-scroll">
                       <ChatMessages
                         messages={detail?.messages ?? []}
+                        runs={detail?.runs ?? []}
+                        activeRunId={run?.id}
+                        conversationId={detail?.session.id}
                         files={detail?.files ?? []}
                         user={user}
-                        liveText={stream.liveText}
-                        tools={stream.tools}
+                        timeline={stream.timeline}
                         busy={!!run}
                         approval={stream.approval}
                         onApprove={approve}
                         onPreview={setPreview}
                         connectionLost={stream.connectionLost}
-                        plan={stream.plan}
                       />
                     </div>
                     <div className="chat-composer-wrap">
+                      {runSyncError && (
+                        <div className="inline-notice" role="status">
+                          <span>{runSyncError}</span>
+                          <button onClick={() => void retryRunSync()}>
+                            重试同步
+                          </button>
+                        </div>
+                      )}
                       {notice && (
                         <div className="inline-notice" role="alert">
                           <span>{notice}</span>
@@ -232,7 +245,7 @@ function App() {
                         onRemove={(id) =>
                           setPending((p) => p.filter((f) => f.id !== id))
                         }
-                        busy={!!run}
+                        busy={runBusy}
                         uploading={uploading || sending}
                         onCapabilities={() => navigate("capabilities")}
                       />

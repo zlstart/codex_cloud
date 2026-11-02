@@ -1,102 +1,83 @@
 # 丰尚智能工作台 · FAMSUN Agent
 
-基于 **OpenAI Agents SDK** 的多用户通用智能体工作台。浏览器里完成对话、资料上传、Python 分析、文件生成与预览；通过 Skills 和 MCP 扩展业务能力。支持 OpenAI 及实现对应协议的兼容模型服务。
+基于 **OpenAI Python Agents SDK 0.24** 的多用户智能体工作台。浏览器中完成资料上传、对话、隔离代码执行、文件生成和预览，并通过可编辑的 Skills、MCP 和子代理扩展业务能力。
 
-前端使用 React、TypeScript、Vite，后端使用 Python、FastAPI、SQLAlchemy。默认本地 SQLite；提供 PostgreSQL 与 Docker 部署配置。
+前端使用 React 19、TypeScript、Vite；后端使用 Python、FastAPI、SQLAlchemy。应用数据支持 SQLite / PostgreSQL，完整 SDK 会话历史保存在本地 SQLite。模型接入仅使用 **Responses API**。
 
-![丰尚智能工作台](docs/screenshots/workspace.png)
+![原生子代理执行过程](docs/screenshots/sdk-native-timeline.png)
 
 ## 快速开始
 
-需要 Python 3.12+、[uv](https://docs.astral.sh/uv/)、Node.js 22+。Python / Shell 执行还需要可访问的 Docker Engine。
+需要 Python 3.12+、[uv](https://docs.astral.sh/uv/)、Node.js 22+。执行智能体任务还需要可访问的 Docker Engine 和沙箱镜像。
 
 ```bash
 cp .env.example .env
+docker build -t famsun-sandbox:latest sandbox
 ./scripts/dev.sh
 ```
 
-打开 [http://localhost:5173](http://localhost:5173)。首次注册的账号成为管理员；默认关闭后续公开注册。后台 API 位于 [http://localhost:8000](http://localhost:8000)，接口文档位于 `/api/docs`。
+打开 [http://localhost:5173](http://localhost:5173)。API 位于 [http://localhost:8000](http://localhost:8000)，交互接口文档位于 `/api/docs`。首次注册创建管理员；默认关闭后续公开注册。
 
-没有模型密钥也可以启动页面、注册账号、管理会话与文件。发送模型请求会明确提示未配置，不会返回模拟回答。
-
-要启用 Python / Shell 分析，先构建执行镜像：
-
-```bash
-docker build -t famsun-sandbox:latest sandbox
-```
-
-如果当前机器没有 Docker，可以在 `.env` 设置 `SANDBOX_BACKEND=disabled`。这保留对话与受限文件工具，但不会运行任何主机代码。
+没有模型密钥时仍可注册、管理会话和文件；发送任务会明确提示未配置。`SANDBOX_BACKEND=disabled` 仅供账号、文件和界面调试，不能运行智能体，不会回退到宿主机执行代码。
 
 ## 连接模型
 
-按实际服务填写 `.env`，然后重启后端。密钥只保存在服务器环境，不发送给浏览器或代码执行容器。
+在 `.env` 填写实际服务配置并重启后端：
 
 ```dotenv
 AGENT_API_KEY=
 AGENT_BASE_URL=https://api.openai.com/v1
-AGENT_MODEL=gpt-4.1
-AGENT_API_MODE=chat_completions
+AGENT_MODEL=gpt-5.6-luna
+AGENT_COMPACTION_THRESHOLD=32000
 ```
 
-`AGENT_API_KEY` / `AGENT_BASE_URL` 也分别支持 `OPENAI_API_KEY` / `OPENAI_BASE_URL`。兼容服务应填写其实际 Base URL 和模型名称；管理员可在设置页调整端点、模型与 API 模式。
+`AGENT_API_KEY`、`AGENT_BASE_URL` 分别支持 `OPENAI_API_KEY`、`OPENAI_BASE_URL` 别名。密钥只在服务端使用，不发送给浏览器或沙箱。管理员可以在设置页修改 API 根地址、模型和压缩阈值；已保存的设置优先于环境默认值。
 
-Base URL 是 API 根地址，不是完整请求地址。例如阿里云兼容接口使用
-`https://dashscope.aliyuncs.com/compatible-mode/v1`，不要在末尾添加
-`/responses` 或 `/chat/completions`。SDK 会根据 API 模式自动拼接请求路径，
-填入完整接口地址会导致路径重复和 404。环境变量修改后需重启应用；如果管理员已在设置页保存地址，该设置优先于环境变量。
+Base URL 应为 API 根地址，不能带 `/responses` 等请求路径。运行器固定使用 `OpenAIResponsesModel` 和 `store=False`，本地管理历史，不依赖 OpenAI Conversations 或托管执行环境。旧 API 模式配置会归一为 Responses，应用不会自动切换协议。
 
-| 模式 | 适用情况 |
-| --- | --- |
-| `chat_completions` | 默认。服务需要支持流式 Chat Completions 与 function calling |
-| `responses` | 服务明确实现 Responses API 时使用 |
-
-“兼容 OpenAI”不保证兼容全部协议细节。工具调用、流式事件和结构化参数需要在目标供应商上验证。本应用的 Python 和文件工具由自己的执行环境提供，不依赖供应商的托管 Code Interpreter。
+兼容服务必须实际支持 Responses 流式事件、函数及 custom tools，以及原生 `context_management` / compaction。仅声明“OpenAI 兼容”不能证明支持这些能力；缺少能力时任务明确失败。压缩由模型服务完成，需按目标模型的上下文窗口设置阈值，并在部署环境验证。
 
 ## 工作台能力
 
-- **多用户工作区**：登录会话、会话归属检查、独立文件目录、所有文件读取均要求授权。
-- **实时执行**：流式 Markdown、任务计划、工具调用记录、任务取消、MCP 工具审批，以及可重放的持久化执行事件。
-- **文件与产物**：上传资料、展示生成文件、图片与文本等预览、授权下载。支持从一份 CSV 开始分析并生成图表与报告。
-- **隔离执行**：每次代码执行使用独立 Docker 容器，只挂载当前会话目录；无网络、非 root、只读根文件系统、资源与时间限制。
-- **扩展能力**：Skills 按需加载，MCP 使用允许的 HTTPS 服务，外部工具执行前要求审批。管理员管理扩展，用户控制自己的启用状态。
-- **持久化**：用户、会话、消息、文件、任务与执行事件入库；刷新页面不会删除已有记录。
+- **多用户会话**：登录与资源归属校验，每个用户、每个聊天拥有独立文件目录和 SDK 历史。
+- **SDK 原生执行**：`SandboxAgent` 使用 `Filesystem`、`Shell`、`Skills`、`Compaction`；通过 `exec_command` / `write_stdin` 执行命令，`apply_patch` 编辑文件，`view_image` 查看图片。`update_plan` 是保留的产品专用工具。
+- **连续上下文**：`SQLiteSession` 保存消息和完整工具往返；原生压缩缩短模型上下文，`ToolOutputTrimmer` 在本地减少较早的大型工具输出。
+- **子代理**：通过 SDK `Agent.as_tool()` 委派任务，独立任务上下文、共享当前聊天沙箱；可配置指令、模型、轮数及使用的 Skills / MCP。
+- **有序过程与最终答复**：文字、工具、审批和子代理活动按事件顺序显示；执行过程可折叠，最终答案独立保留。持久化事件支持刷新后回放和 SSE 断线重连。
+- **文件预览**：表格工作表、PDF 分页、Markdown / HTML、图片、文本 / 代码 / JSON、DOCX 文本以及浏览器支持的音视频。大型或不支持的文件保留授权下载入口。
+- **能力编辑**：管理员创建、编辑、删除共享 Skills / MCP / 子代理；每位用户独立控制启用状态。远程 MCP 工具通过 SDK 原生审批机制先审批、后执行。
 
-文件目录按 `DATA_DIR/workspaces/<user>/<session>/` 隔离。上传文件进入 `uploads/`，可交付产物进入 `outputs/`。代码容器在单次工具调用结束后销毁，工作区文件持续保留；Python 内存变量不跨工具调用保留。
+每次任务创建一个 SDK Docker 容器，任务中的工具和子代理共享该容器；结束、失败或取消时清理容器。文件保存在 `DATA_DIR/workspaces/<user>/<session>/`，跨任务保留。`uploads/` 只读，成果写入 `outputs/`。网络默认启用；容器以非 root 用户运行，限制 CPU、内存和进程数量，不挂载模型密钥、历史数据库、其他聊天或 Docker socket。
+
+SDK 历史位于 `DATA_DIR/history/<user>/<session>.sqlite3`，在模型工作空间之外。即使应用数据库使用 PostgreSQL，这些历史文件仍需一起持久化和备份。
 
 ## 扩展业务能力
 
-在“能力中心”中以管理员身份添加 Skill，填写名称、说明和 Markdown 指令。建议将输入、处理步骤、输出格式、业务约束写清楚，避免把访问凭据写进 Skill。
+在“能力中心”添加 Skill，填写适用场景和 Markdown 工作指引；添加子代理，设置专门的任务指令和能力选择。原生 Skills 将指引放入当前沙箱，模型按需要读取，不会把所有正文预先加入每个请求。
 
-```markdown
-# 生产周报
-
-适用于生产数据分析与周报。
-
-1. 读取用户上传的表格，核对日期、产量、停机时间的字段与单位。
-2. 先报告缺失数据，不擅自补造生产记录。
-3. 使用 Python 汇总，输出趋势图和异常清单。
-4. 将中文报告与处理后的表格写入 outputs/，引用生成文件。
-```
-
-要连接 MCP，先在服务器设置 `ALLOWED_MCP_HOSTS`，再由管理员在能力中心添加对应 HTTPS 端点。需要 Bearer 认证时，在服务器配置符合 `MCP_<NAME>_TOKEN` 格式的环境变量，并在扩展的 `token_env` 字段填写该变量名，不能填写密钥本身。仅添加扩展并不代表远端已连接成功；实际连接与工具调用错误会出现在任务记录中。
+连接企业系统时，先在服务器设置 `ALLOWED_MCP_HOSTS`，再添加 HTTPS MCP 地址。可选认证字段 `token_env` 只填写 `MCP_<NAME>_TOKEN` 格式的服务器环境变量名，不能填写密钥值。具体流程见 [扩展指南](docs/EXTENSIONS.md)。
 
 ## 验证与部署
+
+运行本地检查：
 
 ```bash
 ./scripts/check.sh
 ```
 
-这会运行后端测试并构建前端。另有主动运行的真实 Docker 冒烟检查，不需要模型密钥：
+该脚本运行 Python lint / 测试及前端类型检查 / 构建。真实 Docker 检查独立运行，不需要模型密钥：
 
 ```bash
 docker build -t famsun-sandbox:latest sandbox
 PYTHONPATH=backend uv run python tests/docker_smoke.py
 ```
 
-它会在临时会话目录中将 CSV 转为 Excel 与 PNG 图表，并检查非 root、只读输入与根文件系统、禁网、无模型密钥、取消和执行超时；完成后清理临时产物。这条链路已在开发环境实际执行通过。真实模型端到端调用仍需要配置目标服务并验证。
+模型端到端验收需要另外配置真实 Responses 服务；mock 协议测试不能代替供应商验证。实际执行过的检查以对应日期的验证报告为准，历史报告保留当时版本的结果。
 
-生产部署见 [DEPLOYMENT.md](docs/DEPLOYMENT.md)，数据流与安全边界见 [ARCHITECTURE.md](docs/ARCHITECTURE.md)，业务扩展步骤见 [EXTENSIONS.md](docs/EXTENSIONS.md)，接口约定见 [API.md](docs/API.md)。
+- [部署与运维](docs/DEPLOYMENT.md)
+- [架构与运行边界](docs/ARCHITECTURE.md)
+- [Skills / MCP / 子代理](docs/EXTENSIONS.md)
+- [API 与事件契约](docs/API.md)
+- [SDK 能力复用审计](docs/SDK-CAPABILITY-AUDIT.md)
 
-交付时的实际测试范围和复跑方式见 [VERIFICATION.md](docs/VERIFICATION.md)。
-
-当前运行器采用**单 API 进程**管理任务。事件断线可以重连；进程重启会把未完成任务标记为中断，不会自动重复有副作用的工具调用。SSO、独立任务队列、多实例运行器及跨地域容灾仍需结合企业基础设施实施，不能仅增加 Uvicorn worker 数量来扩容。
+当前部署使用 **一个 API worker、一个应用副本**。不同用户和聊天可以并行运行，但同一聊天只允许一个活动任务。重启会将未完成任务标记为中断，不会自动重放可能有副作用的工具。横向扩容需要额外的持久任务队列、分布式调度和共享存储设计。

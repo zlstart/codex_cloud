@@ -1,338 +1,299 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import {
+  ArrowDown,
   Check,
-  ChevronDown,
-  ChevronRight,
+  CircleAlert,
   Copy,
   LoaderCircle,
   ShieldCheck,
-  Terminal,
+  WifiOff,
   X,
 } from "lucide-react";
-import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
-import remarkGfm from "remark-gfm";
-import type { Approval, Artifact, Message, ToolEvent, User } from "../types";
+import type {
+  Approval,
+  Artifact,
+  Message,
+  Run,
+  TimelineState,
+  User,
+} from "../types";
 import { FileTile } from "./Artifacts";
-import { safeArtifactUrl } from "../lib/api";
+import { Markdown } from "./Markdown";
 import { ExecutionHistory } from "./ExecutionHistory";
-export function Markdown({
-  content,
-  files,
-  onPreview,
-}: {
-  content: string;
-  files: Artifact[];
-  onPreview: (file: Artifact) => void;
-}) {
-  function resolveFile(link: string | undefined) {
-    if (!link) return undefined;
-    const direct = files.find((file) => file.url === link);
-    if (direct) return direct;
-    if (/^[a-z]+:\/\//i.test(link)) return undefined;
-    const relative = link
-      .replace(/^sandbox:/, "")
-      .replace(/^\/workspace\//, "")
-      .replace(/^\/mnt\/data\//, "outputs/");
-    if (
-      relative.includes("..") ||
-      (!relative.startsWith("outputs/") && relative.includes("/"))
-    )
-      return undefined;
-    let name: string;
-    try {
-      name = decodeURIComponent(relative.split("/").at(-1) ?? "");
-    } catch {
-      return undefined;
-    }
-    const candidates = files.filter(
-      (file) => file.kind === "output" && file.name === name,
-    );
-    return candidates.length === 1 ? candidates[0] : undefined;
-  }
-  return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      urlTransform={(url) =>
-        resolveFile(url) ? url : defaultUrlTransform(url)
-      }
-      components={{
-        a: ({ href, children }) => {
-          const file = resolveFile(href);
-          return file ? (
-            <button
-              className="artifact-inline-link"
-              onClick={() => onPreview(file)}
-            >
-              {children}
-            </button>
-          ) : (
-            <a href={href} target="_blank" rel="noopener noreferrer">
-              {children}
-            </a>
-          );
-        },
-        pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
-        img: ({ src, alt }) => {
-          const file = typeof src === "string" ? resolveFile(src) : undefined;
-          const safe = file
-            ? safeArtifactUrl(file.url)
-            : typeof src === "string"
-              ? safeArtifactUrl(src)
-              : "";
-          return safe ? (
-            <img src={safe} alt={alt ?? "生成图片"} loading="lazy" />
-          ) : (
-            <span className="external-image-note">
-              图片未自动加载{alt ? `：${alt}` : ""}（请从工作空间预览文件）
-            </span>
-          );
-        },
-      }}
-    >
-      {content}
-    </ReactMarkdown>
-  );
-}
-function CodeBlock({ children }: { children: React.ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [copied, setCopied] = useState(false);
-  return (
-    <div className="code-block" ref={ref}>
-      <button
-        aria-label="复制代码"
-        onClick={async () => {
-          try {
-            await navigator.clipboard.writeText(
-              ref.current?.querySelector("code")?.textContent || "",
-            );
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1800);
-          } catch {
-            setCopied(false);
-          }
-        }}
-      >
-        {copied ? <Check size={14} /> : <Copy size={14} />}{" "}
-        {copied ? "已复制" : "复制代码"}
-      </button>
-      <pre>{children}</pre>
-    </div>
-  );
-}
-export function ToolTrace({ tools }: { tools: ToolEvent[] }) {
-  const [expanded, setExpanded] = useState(false);
-  if (!tools.length) return null;
-  const done = tools.every((t) => t.status === "completed");
-  return (
-    <div className="tool-trace">
-      <button className="trace-heading" onClick={() => setExpanded(!expanded)}>
-        {done ? (
-          <Check size={14} />
-        ) : (
-          <LoaderCircle size={14} className="spin" />
-        )}
-        <span>
-          {done ? `已完成 ${tools.length} 个执行步骤` : "正在使用工具完成任务"}
-        </span>
-        {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-      </button>
-      {expanded && (
-        <div className="trace-steps">
-          {tools.map((t) => (
-            <details key={t.id} className="trace-step">
-              <summary>
-                <Terminal size={14} />
-                <span>{t.name}</span>
-                {t.status === "running" ? (
-                  <LoaderCircle size={12} className="spin" />
-                ) : (
-                  <Check size={12} />
-                )}
-              </summary>
-              <div>
-                <span className="trace-label">输入</span>
-                <pre>
-                  {typeof t.arguments === "string"
-                    ? t.arguments
-                    : JSON.stringify(t.arguments, null, 2)}
-                </pre>
-                {t.output !== undefined && (
-                  <>
-                    <span className="trace-label">结果</span>
-                    <pre>
-                      {typeof t.output === "string"
-                        ? t.output
-                        : JSON.stringify(t.output, null, 2)}
-                    </pre>
-                  </>
-                )}
-              </div>
-            </details>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+import { RunTimeline } from "./RunTimeline";
+export { Markdown } from "./Markdown";
+
 export function ChatMessages({
   messages,
+  runs,
+  activeRunId,
+  conversationId,
   user,
-  liveText,
-  tools,
+  timeline,
   busy,
   approval,
   onApprove,
   onPreview,
   connectionLost,
-  plan,
   files,
 }: {
   messages: Message[];
+  runs: Run[];
+  activeRunId?: string;
+  conversationId?: string;
   user: User | null;
-  liveText: string;
-  tools: ToolEvent[];
+  timeline: TimelineState;
   busy: boolean;
   approval: Approval | null;
   onApprove: (approved: boolean) => Promise<void>;
-  onPreview: (f: Artifact) => void;
+  onPreview: (file: Artifact) => void;
   connectionLost: boolean;
   files: Artifact[];
-  plan: { steps: string[]; current_step: number; completed: boolean } | null;
 }) {
-  const bottom = useRef<HTMLDivElement>(null);
+  const list = useRef<HTMLDivElement>(null);
+  const follow = useRef(true);
+  const [showLatest, setShowLatest] = useState(false);
   const [approving, setApproving] = useState(false);
   const [approvalError, setApprovalError] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
+  const approvalIdentity = useRef<string | null>(null);
+  approvalIdentity.current = approval
+    ? `${conversationId}:${activeRunId}:${approval.id}`
+    : null;
+  useEffect(
+    () => () => {
+      approvalIdentity.current = null;
+    },
+    [],
+  );
   useEffect(() => {
-    bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages.length, liveText, tools.length, approval]);
+    const scroll = list.current?.closest<HTMLElement>(".chat-scroll");
+    if (!scroll) return;
+    follow.current = true;
+    setShowLatest(false);
+    const onScroll = () => {
+      const nearBottom =
+        scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 100;
+      follow.current = nearBottom;
+      setShowLatest(!nearBottom);
+    };
+    const resize = new ResizeObserver(() => {
+      if (follow.current) scroll.scrollTop = scroll.scrollHeight;
+      else if (
+        scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight <
+        100
+      ) {
+        follow.current = true;
+        setShowLatest(false);
+      }
+    });
+    if (list.current) resize.observe(list.current);
+    scroll.addEventListener("scroll", onScroll, { passive: true });
+    scroll.scrollTop = scroll.scrollHeight;
+    return () => {
+      resize.disconnect();
+      scroll.removeEventListener("scroll", onScroll);
+    };
+  }, [conversationId]);
+  useEffect(() => {
+    if (!follow.current) return;
+    const scroll = list.current?.closest<HTMLElement>(".chat-scroll");
+    if (scroll) scroll.scrollTop = scroll.scrollHeight;
+  }, [messages.length, timeline.cursor, approval]);
+  useEffect(() => {
+    setApprovalError("");
+    setApproving(false);
+  }, [approval?.id]);
+
   async function decide(approved: boolean) {
+    const expected = approvalIdentity.current;
+    if (!expected) return;
     setApproving(true);
     setApprovalError("");
     try {
       await onApprove(approved);
     } catch (e) {
-      setApprovalError(e instanceof Error ? e.message : "授权未能提交");
+      if (approvalIdentity.current === expected)
+        setApprovalError(e instanceof Error ? e.message : "授权未能提交");
     } finally {
-      setApproving(false);
+      if (approvalIdentity.current === expected) setApproving(false);
     }
   }
+  const completedMessageRuns = new Set(
+    messages.filter((m) => m.role === "assistant").map((m) => m.run_id),
+  );
+  const orphanedRuns = new Map(
+    runs
+      .filter(
+        (r) =>
+          r.id !== activeRunId &&
+          !completedMessageRuns.has(r.id) &&
+          ["failed", "cancelled"].includes(r.status),
+      )
+      .map((r) => [r.id, r]),
+  );
+  const active =
+    busy && !["completed", "failed", "cancelled"].includes(timeline.status);
+
   return (
-    <div className="message-list">
-      {messages.map((m) => (
-        <article key={m.id} className={`message ${m.role}`}>
-          <div className={`message-avatar ${m.role}`}>
-            {m.role === "user" ? (
-              user?.name[0] || "你"
-            ) : (
-              <span className="mini-mark">F</span>
-            )}
-          </div>
-          <div className="message-main">
-            <div className="message-heading">
-              <strong>{m.role === "user" ? "你" : "丰尚助手"}</strong>
-              <span>
-                {new Date(m.created_at).toLocaleTimeString("zh-CN", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            </div>
-            {m.attachments?.length ? (
-              <div className="message-attachments">
-                {m.attachments.map((f) => (
-                  <FileTile key={f.id} file={f} onPreview={onPreview} />
-                ))}
-              </div>
-            ) : null}
-            <div className="message-content">
-              {m.role === "user" ? (
-                <p className="user-content">{m.content}</p>
-              ) : (
-                <Markdown
-                  content={m.content}
-                  files={files}
-                  onPreview={onPreview}
-                />
-              )}
-            </div>
-            {m.role === "assistant" && m.run_id && (
-              <ExecutionHistory runId={m.run_id} />
-            )}
-            {m.role === "assistant" && (
-              <div className="message-actions">
-                <button
-                  className="icon-button"
-                  aria-label="复制回复"
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(m.content);
-                      setCopied(m.id);
-                      setTimeout(() => setCopied(null), 1500);
-                    } catch {
-                      /* browser clipboard unavailable */
+    <>
+      <div className="message-list" ref={list}>
+        {messages.map((message) => {
+          const incomplete =
+            message.role === "user" && message.run_id
+              ? orphanedRuns.get(message.run_id)
+              : undefined;
+          return (
+            <Fragment key={message.id}>
+              <article className={`message ${message.role}`}>
+                <div className={`message-avatar ${message.role}`}>
+                  {message.role === "user" ? (
+                    user?.name[0] || "你"
+                  ) : (
+                    <span className="mini-mark">F</span>
+                  )}
+                </div>
+                <div className="message-main">
+                  <div className="message-heading">
+                    <strong>
+                      {message.role === "user" ? "你" : "丰尚助手"}
+                    </strong>
+                    <span>
+                      {new Date(message.created_at).toLocaleTimeString(
+                        "zh-CN",
+                        { hour: "2-digit", minute: "2-digit" },
+                      )}
+                    </span>
+                  </div>
+                  {!!message.attachments?.length && (
+                    <div className="message-attachments">
+                      {message.attachments.map((file) => (
+                        <FileTile
+                          key={file.id}
+                          file={file}
+                          onPreview={onPreview}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {message.role === "assistant" && message.run_id && (
+                    <ExecutionHistory
+                      key={message.run_id}
+                      runId={message.run_id}
+                      files={files}
+                      onPreview={onPreview}
+                      finalContent={message.content}
+                    />
+                  )}
+                  <div
+                    className={`message-content ${message.role === "assistant" ? "final-answer" : ""}`}
+                    data-final-answer={
+                      message.role === "assistant" ? "true" : undefined
                     }
-                  }}
-                >
-                  {copied === m.id ? <Check size={14} /> : <Copy size={14} />}
-                </button>
-              </div>
-            )}
-          </div>
-        </article>
-      ))}
-      {busy && (
-        <article className="message assistant live-message">
-          <div className="message-avatar assistant">
-            <span className="mini-mark">F</span>
-          </div>
-          <div className="message-main">
-            <div className="message-heading">
-              <strong>丰尚助手</strong>
-              <span className="live-label">
-                {approval ? "等待你的确认" : "正在处理"}
-              </span>
-            </div>
-            {plan && (
-              <div className="task-plan">
-                <strong>任务计划</strong>
-                <ol>
-                  {plan.steps.map((step, index) => (
-                    <li
-                      className={
-                        plan.completed || index < plan.current_step
-                          ? "done"
-                          : index === plan.current_step
-                            ? "current"
-                            : ""
-                      }
-                      key={index}
-                    >
-                      <span>
-                        {plan.completed || index < plan.current_step ? (
-                          <Check size={11} />
+                  >
+                    {message.role === "user" ? (
+                      <p className="user-content">{message.content}</p>
+                    ) : (
+                      <Markdown
+                        content={message.content}
+                        files={files}
+                        onPreview={onPreview}
+                      />
+                    )}
+                  </div>
+                  {message.role === "assistant" && (
+                    <div className="message-actions">
+                      <button
+                        className="icon-button"
+                        aria-label="复制回复"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(
+                              message.content,
+                            );
+                            setCopied(message.id);
+                            setTimeout(() => setCopied(null), 1500);
+                          } catch {
+                            /* Clipboard access can be unavailable in embedded browsers. */
+                          }
+                        }}
+                      >
+                        {copied === message.id ? (
+                          <Check size={14} />
                         ) : (
-                          index + 1
+                          <Copy size={14} />
                         )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </article>
+              {incomplete && (
+                <article className="message assistant incomplete-message">
+                  <div className="message-avatar assistant">
+                    <span className="mini-mark">F</span>
+                  </div>
+                  <div className="message-main">
+                    <div className="message-heading">
+                      <strong>丰尚助手</strong>
+                      <span>
+                        {incomplete.status === "failed"
+                          ? "执行未完成"
+                          : "已停止"}
                       </span>
-                      {step}
-                    </li>
-                  ))}
-                </ol>
+                    </div>
+                    <p className="run-result-notice">
+                      <CircleAlert size={15} />
+                      {incomplete.error ||
+                        (incomplete.status === "cancelled"
+                          ? "任务已停止，已完成的步骤仍可查看。"
+                          : "本次任务未完成，你可以查看执行过程后重试。")}
+                    </p>
+                    <ExecutionHistory
+                      key={incomplete.id}
+                      runId={incomplete.id}
+                      files={files}
+                      onPreview={onPreview}
+                      status={incomplete.status}
+                    />
+                  </div>
+                </article>
+              )}
+            </Fragment>
+          );
+        })}
+        {busy && (
+          <article className="message assistant live-message">
+            <div className="message-avatar assistant">
+              <span className="mini-mark">F</span>
+            </div>
+            <div className="message-main">
+              <div className="message-heading">
+                <strong>丰尚助手</strong>
+                <span className="live-label">
+                  {approval
+                    ? "等待你的确认"
+                    : active
+                      ? "正在处理"
+                      : timeline.status === "completed"
+                        ? "已完成"
+                        : "已停止"}
+                </span>
               </div>
-            )}
-            <ToolTrace tools={tools} />
-            {liveText ? (
-              <div className="message-content">
-                <Markdown
-                  content={liveText}
-                  files={files}
-                  onPreview={onPreview}
-                />
-                <span className="stream-cursor" />
-              </div>
-            ) : (
-              !approval && (
+              <RunTimeline
+                key={activeRunId}
+                timeline={timeline}
+                files={files}
+                onPreview={onPreview}
+                busy
+              />
+              {connectionLost && (
+                <div className="stream-connection" role="status">
+                  <WifiOff size={14} />
+                  连接暂时中断，正在恢复执行记录…
+                </div>
+              )}
+              {!timeline.items.length && !approval && (
                 <div className="thinking-indicator">
                   <i />
                   <i />
@@ -341,52 +302,71 @@ export function ChatMessages({
                     {connectionLost ? "正在重新连接…" : "正在推进你的任务…"}
                   </span>
                 </div>
-              )
-            )}
-            {approval && (
-              <div className="approval-card">
-                <header>
-                  <ShieldCheck size={20} />
-                  <div>
-                    <strong>这一步，需要你的确认</strong>
-                    <p>助手准备调用外部工具，请确认操作内容。</p>
+              )}
+              {approval && (
+                <div className="approval-card">
+                  <header>
+                    <ShieldCheck size={20} />
+                    <div>
+                      <strong>这一步，需要你的确认</strong>
+                      <p>助手准备调用外部工具，请确认操作内容。</p>
+                    </div>
+                  </header>
+                  <span className="approval-tool">{approval.tool}</span>
+                  <pre>
+                    {typeof approval.arguments === "string"
+                      ? approval.arguments
+                      : JSON.stringify(approval.arguments, null, 2)}
+                  </pre>
+                  {approvalError && (
+                    <p className="form-error" role="alert">
+                      {approvalError}
+                    </p>
+                  )}
+                  <div className="approval-actions">
+                    <button
+                      className="button secondary"
+                      onClick={() => void decide(false)}
+                      disabled={approving}
+                    >
+                      <X size={15} />
+                      拒绝
+                    </button>
+                    <button
+                      className="button primary"
+                      onClick={() => void decide(true)}
+                      disabled={approving}
+                    >
+                      {approving ? (
+                        <LoaderCircle size={15} className="spin" />
+                      ) : (
+                        <Check size={15} />
+                      )}
+                      允许本次操作
+                    </button>
                   </div>
-                </header>
-                <span className="approval-tool">{approval.tool}</span>
-                <pre>
-                  {typeof approval.arguments === "string"
-                    ? approval.arguments
-                    : JSON.stringify(approval.arguments, null, 2)}
-                </pre>
-                {approvalError && <p className="form-error">{approvalError}</p>}
-                <div className="approval-actions">
-                  <button
-                    className="button secondary"
-                    onClick={() => void decide(false)}
-                    disabled={approving}
-                  >
-                    <X size={15} />
-                    拒绝
-                  </button>
-                  <button
-                    className="button primary"
-                    onClick={() => void decide(true)}
-                    disabled={approving}
-                  >
-                    {approving ? (
-                      <LoaderCircle size={15} className="spin" />
-                    ) : (
-                      <Check size={15} />
-                    )}
-                    允许本次操作
-                  </button>
                 </div>
-              </div>
-            )}
-          </div>
-        </article>
+              )}
+            </div>
+          </article>
+        )}
+      </div>
+      {showLatest && (
+        <div className="jump-latest-wrap">
+          <button
+            className="jump-latest"
+            onClick={() => {
+              follow.current = true;
+              setShowLatest(false);
+              const scroll = list.current?.closest<HTMLElement>(".chat-scroll");
+              if (scroll) scroll.scrollTop = scroll.scrollHeight;
+            }}
+          >
+            <ArrowDown size={15} />
+            回到最新内容
+          </button>
+        </div>
       )}
-      <div ref={bottom} />
-    </div>
+    </>
   );
 }

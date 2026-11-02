@@ -109,6 +109,7 @@ class Extension(Base):
     url: Mapped[str] = mapped_column(Text, default="")
     token_env: Mapped[str | None] = mapped_column(String(100), nullable=True)
     builtin: Mapped[bool] = mapped_column(Boolean, default=False)
+    config: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
 class ExtensionPreference(Base):

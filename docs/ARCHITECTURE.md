@@ -1,94 +1,92 @@
 # 架构与运行边界
 
-## 总体结构
+## 组件职责
 
 ```mermaid
 flowchart LR
-  Browser[React 工作台] -->|Cookie / JSON / SSE| API[FastAPI · 身份与归属校验]
-  API --> DB[(SQLite / PostgreSQL)]
-  API --> Store[用户 / 会话文件目录]
-  API --> Runner[OpenAI Agents SDK Runner]
-  Runner -->|Responses 或 Chat Completions| Provider[配置的模型服务]
-  Runner --> Skills[按需加载 Skill]
-  Runner -->|人工审批| MCP[允许的 MCP HTTPS 端点]
-  Runner --> Docker[独立代码容器]
-  Docker -->|只挂载本会话| Store
+  Browser[React 工作台] -->|Cookie / JSON / SSE| API[FastAPI 身份与归属校验]
+  API --> DB[(应用 SQLite / PostgreSQL)]
+  API --> History[(本地 SDK SQLiteSession)]
+  API --> Runner[SDK Runner / SandboxAgent]
+  Runner -->|Responses / store=false| Provider[模型服务与原生 compaction]
+  Runner -->|原生审批| MCP[允许的 MCP 服务]
+  Runner --> Children[Agent.as_tool 子代理]
+  Runner --> Sandbox[SDK DockerSandboxClient]
+  Children --> Sandbox
+  Sandbox --> Workspace[当前聊天文件目录]
 ```
 
-应用把模型编排、业务数据访问和代码运行边界分开。Agents SDK 负责工具循环与模型协议适配；FastAPI 负责用户身份、任务状态、持久化、审批和事件流；Docker 负责执行模型产生的代码。
+Python Agents SDK 0.24 负责模型 / 工具循环、沙箱工具、Skills、会话项目持久化、压缩、委派、审批恢复和原始流事件。应用负责登录、资源归属、能力配置、任务生命周期、文件注册、浏览器预览与有序执行记录。
 
-## 一次任务的生命周期
+`backend/app/runtime.py` 组合 SDK 组件；`runtime_history.py` 管理本地历史位置和旧消息迁移；`runtime_events.py` 把 SDK 事件转为产品事件。`sdk_sandbox.py` 的 Docker 创建策略适配器只补充可信会话 bind mount、资源与安全参数，命令、PTY、补丁和生命周期仍由 SDK 执行。
 
-1. 浏览器提交消息及 `client_request_id`，服务器验证用户对当前会话和附件的访问权限。
-2. 服务器拒绝同一会话的并发运行，并保存消息与任务。相同请求 ID 不重复创建任务。
-3. 后台运行器读取会话上下文，向模型暴露启用的工具和 Skills。
-4. 文本增量、工具开始与结束、审批请求和任务状态写入事件表。SSE 只是观察通道，断开连接不会主动取消任务。
-5. 模型写入 `outputs/` 的安全普通文件被登记为产物。浏览器获得需要授权的下载 URL。
-6. 成功、失败或用户取消后保存终态。应用重启时，对遗留运行中任务记录明确的中断状态。
+## 一次任务
 
-## 用户、会话与文件隔离
+1. API 验证用户、聊天、附件和 `client_request_id`；同一聊天已有活动任务时返回冲突。
+2. 应用保存当前 user 消息与 AgentRun，后台打开该聊天的 SDK 历史和独立 Docker 会话。
+3. 首次迁移旧聊天时，把既有 user / assistant 文本加入空的 SDK Session。之后 SDK Session 是模型历史来源，每轮只提交最新 user 输入。
+4. Runner 使用启用的原生能力、MCP 和子代理。普通工具由 SDK 调用；MCP 需要审批时返回 interruption，应用等待授权决定，再用同一 Session 和 `RunState` 恢复。
+5. 文本与工具事件写入 `RunEvent`；工具完成及任务结束时扫描 `outputs/`，把安全普通文件登记为产物。
+6. 成功时独立保存最终 Message，事件记录最终 item ID；失败和取消保留已有执行过程。沙箱始终走清理路径，聊天文件继续保留。
 
-数据库记录包含所有者标识，API 逐项检查归属。客户端传入的 session ID、file ID 或 run ID 都不作为授权凭据。下载接口与事件流同样要求登录和所有权检查。
+SSE 是观察通道；断开浏览器连接不会取消任务。取消通过独立 API 触发，运行器取消模型流、等待 SDK 清理并删除本次沙箱。
 
-工作目录形如：
+## 数据和授权
 
 ```text
-data/
-  app.db                         # 本地 SQLite 模式
+DATA_DIR/
+  app.db                              # 应用使用本地 SQLite 时
+  history/
+    <user-id>/<session-id>.sqlite3     # SDK 完整会话项目，始终本地保存
   workspaces/
-    <user-id>/
-      <session-id>/
-        uploads/
-        outputs/
+    <user-id>/<session-id>/
+      uploads/                        # 容器内只读
+      outputs/                        # 可交付成果
+      .famsun-skills/                  # 每次运行重新准备的技能文件
 ```
 
-文件路径经过规范化并限制在会话目录内，拒绝路径穿越、符号链接逃逸与非普通文件。服务端执行上传大小与会话容量限制。文件展示使用授权端点，HTML 等主动内容在隔离预览中处理。
+Session ID 是查找标识，不是授权凭据。FastAPI 对会话、任务、审批、文件、SSE 和 JSON timeline 逐项检查所有权。SDK 历史数据库位于沙箱挂载目录之外，模型不能直接读取或修改它。
 
-## 代码执行
+应用 `Message` 保存用户界面中的对话和最终答案；SDK `SQLiteSession` 保存完整模型项目，包括工具 call / output。`RunEvent` 保存可重放的执行视图。三者用途不同，不能用 UI 文本重新构建每一轮模型历史。删除聊天会清理其关联记录、文件和本地 SDK 历史。
 
-执行容器以当前应用用户的非 root UID / GID 运行。每次工具调用创建新的容器，共享本会话文件目录，但不共享 Python 进程内存。
+路径与文件访问拒绝目录穿越、符号链接逃逸和非普通文件；上传受文件大小与聊天容量限制。数据库备份与整个 `DATA_DIR` 必须保持一致，使用 PostgreSQL 也不能漏掉本地 SDK 历史。
 
-容器使用只读根文件系统、只读上传目录、`no-new-privileges`、移除全部 capabilities、无网络、限制 CPU / 内存 / 进程数量，并设置超时和输出上限。模型密钥、其他用户目录和 Docker socket 不进入代码容器。常用数据分析和文档库在镜像构建时预装。
+## 沙箱与网络
 
-执行期限同时由应用监控和容器内部 `timeout` 进程执行，即使观察进程异常也不会无限等待。容器带有部署标签，应用启动时只清理本部署遗留的容器。默认部署标识由数据目录路径生成；同一 Docker 主机上多个部署应使用各自的数据目录，必要时显式设置不同的 `FAMSUN_DEPLOYMENT_ID`。
+每次任务创建一个原生 Docker sandbox session；主代理、子代理和连续工具调用共享它。任务结束后容器删除，只保留绑定的聊天文件。普通命令是独立进程，不提供持久 Python notebook 内核；持续运行的命令由 SDK `write_stdin` 等接口跟进。
 
-默认 Docker 后端不可用时执行会明确失败。应用不存在自动切换到主机 `exec` 的退路。`SANDBOX_BACKEND=disabled` 是显式禁用执行能力的模式。
+创建策略配置非 root UID / GID、只读根文件系统、只读 `uploads/`、`no-new-privileges`、移除 Linux capabilities、512 MiB 内存、1 CPU、64 个进程和文件句柄 / 文件大小限制。`/tmp` 为 128 MiB 私有 tmpfs；SDK 原生辅助程序需要执行权限，因此此目录允许 exec，并保留 nosuid / nodev。
 
-Docker 容器共享宿主内核；它不是针对恶意租户的微虚拟机隔离。生产部署应把执行器放在专用节点，并根据威胁模型使用 gVisor、Kata 或远程沙箱。Compose 为了创建兄弟容器向控制面挂载 Docker socket；控制面因而具有较高宿主权限，不能与不受信任服务共用 Docker 主机。
+网络启用，模型可执行任务需要的网络请求。MCP 主机允许列表只限制 MCP 连接配置，不是整个沙箱的网络防火墙。运行环境只注入受控变量；管理员可显式挂载只读 CA 证书包，Docker 客户端可采用管理员的代理默认值。模型 API 密钥、聊天历史、其他用户目录及 Docker socket 不进入执行容器。
 
-## 模型兼容性
+`SANDBOX_BACKEND=disabled` 禁止智能体运行；没有主机执行回退。启动时只清理本部署标签下的遗留容器。Docker 共享宿主内核；Compose 控制面持有 Docker socket 的权限，应部署在专用主机，并按实际租户威胁模型决定是否增加更强隔离。
 
-后端通过 `AsyncOpenAI` 客户端配置 `base_url` 和密钥，选择 Agents SDK 的 Chat Completions 或 Responses 模型适配器。兼容性依赖目标服务对选定协议、流式工具调用和 JSON 参数的实际支持。
+## 模型、历史和压缩
 
-本应用自己的文件和执行工具在两种模式下保持一致。模型服务不必实现 OpenAI 托管沙箱；模型也不会收到其他用户的文件路径。供应商特有的联网搜索、图像生成或业务 API 可以通过允许的 MCP 或新增服务器工具接入。
+固定使用 `AsyncOpenAI` + `OpenAIResponsesModel`，设置 `store=False`。应用不使用远端 Conversation ID 维持历史，也不使用托管代码执行沙箱。目标端点必须支持流式 Responses、原生函数 / custom tools 和 `context_management`。
 
-运行器提供计划更新、文件列表、文本读写、Python、Shell、图片读取和 Skills 加载工具。图片读取面向支持视觉输入的模型；端点是否接受相应图像格式仍由供应商能力决定。任务计划同时保存为 `outputs/task-plan.json`。
+语义压缩采用 SDK `Compaction(StaticCompactionPolicy(...))`，阈值默认 32,000，可通过环境或管理员设置修改。SDK 向服务端请求 compaction，并在返回 compaction 项后缩短后续模型输入；这不是本地摘要模型，也不等同于删除数据库中的旧消息。服务端不支持该协议时明确失败，不静默改成截断或其他 API。
 
-每次任务最多加载最近 60 条、总计 100,000 字符的历史消息。超过时会在执行记录和模型上下文中明确说明裁剪，数据库内的完整记录不变。当前没有自动长期记忆或语义摘要压缩；不能据此宣称无限上下文。SDK 远程 tracing 默认关闭，避免把任务内容自动发送到额外的追踪服务。
+另外使用 SDK `ToolOutputTrimmer`，保留最近两轮，对较早超过 8,000 字符的工具输出提供最多 2,000 字符预览。这是本地输入过滤，不额外调用模型，不替代语义压缩。UI 消息和执行记录保持独立。远程 tracing 默认关闭。
 
-## Skills 与 MCP
+## Skills、MCP 和子代理
 
-Skills 是可审核的 Markdown 指令，按需要加载，避免把所有业务知识一次性塞进提示词。当前管理入口是能力中心与扩展 API；部署目录中的任意 Markdown 不会被悄悄当作可信指令执行。
+管理员维护共享扩展，用户分别启用或停用。SDK `Skills` 把所选指引准备为沙箱文件，并向模型提供目录；模型按需读取 `SKILL.md`。当前管理表单保存 Markdown，不是任意技能安装器。
 
-MCP 端点必须满足 HTTPS 与服务端允许域名配置。外部工具执行需要用户审批，拒绝会反馈给运行器。审批发生在工具执行之前。Skills 与工具描述均属于可影响模型的输入；组织仍需审核启用的扩展来源与访问权限。
+MCP 使用 SDK `MCPServerStreamableHttp`。应用检查 HTTPS、准确主机允许列表、URL 与凭据引用；SDK 在每次远程工具执行前暂停审批。用户拒绝后模型收到拒绝结果。`token_env` 引用服务器的 `MCP_<NAME>_TOKEN`，值不会进入提示词或浏览器；也支持现有部署的 `FAMSUN_MCP_TOKENS` 映射。
 
-带认证的 MCP 可指定 `token_env`，仅允许引用 `MCP_[A-Z0-9_]+_TOKEN` 格式的服务器环境变量。运行器在建立连接时读取 token 并构造 Bearer header；变量值不进入提示词、事件和浏览器响应。也兼容 `FAMSUN_MCP_TOKENS` 中按扩展 ID 映射的 JSON 配置。缺少指定变量会明确报连接配置错误，不会悄悄降级为匿名调用。
+子代理由 `Agent.as_tool()` 创建，拥有独立任务输入和所选 Skills / MCP；未指定模型时继承主模型。它们共享当前聊天沙箱，能协作处理文件，但不是相互隔离的租户。子代理不绑定主聊天 Session，也不递归获得委派工具。其流事件带 `parent_call_id`，答案作为工具结果返回主代理，主代理继续给出用户最终答复。
 
-## 当前并发与持久化模型
+## 有序事件与文件预览
 
-同一个 API 进程可处理不同用户、不同会话的异步任务。同一会话只允许一个活动任务。数据库保存执行记录，但任务对象与等待中的协程属于进程内存。
+SDK 原始 Responses / RunItem 事件统一映射为持久化事件，以递增 `RunEvent.id` 排序。文本使用 `item_id`，工具使用 `call_id`，子代理附带 `agent_id` 和 `parent_call_id`。同名工具并发时不能按名称配对。原始与 SDK 汇总事件去重；private reasoning 和 compaction 加密内容不进入浏览器记录。
 
-因此部署仅运行 **1 个 Uvicorn worker / 1 个应用副本**。不能通过增加 worker 数来获得可靠多实例执行。后续横向扩展应增加持久任务队列、分布式任务锁、专用运行器、对象存储和统一 SSE 事件总线，再启用多 API 副本。
+SSE 和 `/api/runs/{id}/timeline` 返回同一批事件。前端使用同一 reducer 还原过程，`text.completed` 是文本权威内容，`text.phase` 识别最终答案，`run.completed` 关联最终 Message。历史和实时视图都把执行过程与最终答复分开。
 
-## 接口与目录
+Office 预览在独立的受限解析进程中处理已授权文件描述符，只返回表格值或 DOCX 文本，不运行公式、宏或外部链接。预览有文件、解压体积、行列、文本、时间和内存上限。HTML 通过清洗和受限 iframe 渲染，PDF 在浏览器分页呈现；音视频取决于浏览器支持的格式。预览不等同于 Office 完整版式渲染，超限或不支持的文件仍可下载。
 
-`/api/auth/*` 处理身份，`/api/sessions/*` 处理会话，`/api/runs/*` 处理任务、取消与审批，`/api/files/*` 处理产物，`/api/extensions/*` 处理 Skills / MCP，`/api/settings` 处理管理员配置。完整模型以运行时 `/api/docs` OpenAPI 文档为准。
+## 运行拓扑
 
-```text
-backend/app/     HTTP API、持久化、认证、运行器与沙箱
-backend/tests/   后端与隔离边界测试
-frontend/src/   界面、API 客户端与交互状态
-sandbox/        代码执行镜像与锁定依赖
-scripts/        本地启动与检查
-docs/           架构与部署
-```
+当前调度、取消和审批等待使用进程内协程。每次 SDK 运行使用独立的工作线程事件循环，避免 Docker 同步 I/O 阻塞 API 主循环；事件和审批回传主循环处理，取消会等待原生资源清理。一个 API 进程可以并发处理多个用户 / 聊天，同一聊天只允许一个活动任务；默认每用户最多三个、全服务十六个。
+
+部署保持 **一个 Uvicorn worker、一个应用副本**。数据库共享不意味着调度已支持多实例。进程重启会把遗留活动任务标记为中断，不自动重新执行工具。横向扩展需要先引入持久队列、分布式任务所有权与锁、共享文件存储和事件分发。

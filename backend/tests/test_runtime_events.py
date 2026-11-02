@@ -1,0 +1,220 @@
+from types import SimpleNamespace as NS
+
+import pytest
+from app import runtime_events
+
+
+def raw(kind, **kwargs):
+    return NS(type="raw_response_event", data={"type": kind, **kwargs})
+
+
+def item(kind, payload, **kwargs):
+    return NS(type="run_item_stream_event", item=NS(type=kind, raw_item=payload, **kwargs))
+
+
+def message(identity, text, phase=None):
+    return {
+        "type": "message",
+        "id": identity,
+        "role": "assistant",
+        "status": "completed",
+        "content": [{"type": "output_text", "text": text}],
+        "phase": phase,
+    }
+
+
+@pytest.fixture
+def recorder():
+    events = []
+
+    async def emit(kind, data):
+        events.append((kind, data))
+
+    return events, runtime_events.RuntimeEvents(emit)
+
+
+async def test_interleaves_text_tools_and_keeps_only_final_answer_final(recorder):
+    events, adapter = recorder
+    await adapter.consume(raw("response.output_item.added", item=message("m1", "")))
+    await adapter.consume(raw("response.output_text.delta", item_id="m1", delta="检查文件。"))
+    await adapter.consume(raw("response.output_item.done", item=message("m1", "检查文件。")))
+    call = {
+        "type": "function_call",
+        "id": "fc1",
+        "call_id": "c1",
+        "name": "exec_command",
+        "arguments": '{"cmd":"ls"}',
+    }
+    await adapter.consume(raw("response.output_item.done", item=call))
+    await adapter.consume(item("tool_call_item", call))
+    await adapter.consume(item("tool_call_output_item", {"call_id": "c1", "output": "report.csv"}))
+    await adapter.consume(raw("response.output_text.delta", item_id="m2", delta="文件已检查。"))
+    last = message("m2", "文件已检查。")
+    await adapter.consume(item("message_output_item", last))
+    final = await adapter.finalize(
+        NS(
+            final_output="文件已检查。",
+            new_items=[
+                NS(type="message_output_item", raw_item=message("m1", "检查文件。")),
+                NS(type="message_output_item", raw_item=last),
+            ],
+        )
+    )
+    assert final == ["m2"]
+    assert adapter.final_item_ids == ["m2"]
+    significant = [
+        (name, data.get("item_id"))
+        for name, data in events
+        if name in {"text.delta", "tool.started", "tool.completed"}
+    ]
+    assert significant == [
+        ("text.delta", "m1"),
+        ("tool.started", "fc1"),
+        ("tool.completed", "fc1"),
+        ("text.delta", "m2"),
+    ]
+    assert [
+        data["item_id"] for name, data in events if name == "text.phase" and data["phase"] == "final"
+    ] == ["m2"]
+
+
+async def test_same_name_parallel_tools_pair_by_call_id(recorder):
+    events, adapter = recorder
+    for cid in ("c1", "c2"):
+        await adapter.consume(
+            item(
+                "tool_call_item",
+                {
+                    "type": "function_call",
+                    "id": f"f{cid}",
+                    "call_id": cid,
+                    "name": "exec_command",
+                    "arguments": '{"cmd":"pwd"}',
+                },
+            )
+        )
+    for cid in ("c2", "c1"):
+        await adapter.consume(item("tool_call_output_item", {"call_id": cid, "output": cid}))
+    completed = [data for name, data in events if name == "tool.completed"]
+    assert [(data["call_id"], data["item_id"], data["output"]) for data in completed] == [
+        ("c2", "fc2", "c2"),
+        ("c1", "fc1", "c1"),
+    ]
+
+
+async def test_child_invocations_have_distinct_ids_and_never_become_final(recorder):
+    events, adapter = recorder
+    for parent in ("delegation1", "delegation2"):
+        await adapter.consume(
+            raw("response.output_text.delta", item_id="shared", delta="child"),
+            agent_id="analyst",
+            agent_name="分析员",
+            parent_call_id=parent,
+        )
+        await adapter.consume(
+            item("message_output_item", message("shared", "child", "final_answer")),
+            agent_id="analyst",
+            agent_name="分析员",
+            parent_call_id=parent,
+        )
+    root = message("shared", "parent")
+    await adapter.consume(item("message_output_item", root))
+    await adapter.finalize(
+        NS(final_output="parent", new_items=[NS(type="message_output_item", raw_item=root)])
+    )
+    completions = [data for name, data in events if name == "text.completed"]
+    assert len({data["item_id"] for data in completions}) == 3
+    assert [data["parent_call_id"] for data in completions[:2]] == ["delegation1", "delegation2"]
+    assert [
+        data["item_id"] for name, data in events if name == "text.phase" and data["phase"] == "final"
+    ] == ["shared"]
+
+
+async def test_completed_text_is_authoritative_and_duplicate_sources_emit_once(recorder):
+    events, adapter = recorder
+    await adapter.consume(raw("response.output_text.delta", item_id="m", delta="part"))
+    await adapter.consume(raw("response.output_text.done", item_id="m", text="complete"))
+    await adapter.consume(raw("response.output_item.done", item=message("m", "complete")))
+    await adapter.consume(item("message_output_item", message("m", "complete")))
+    assert [data["text"] for name, data in events if name == "text.completed"] == ["complete"]
+    assert len([1 for name, _ in events if name == "text.started"]) == 1
+
+
+async def test_compaction_has_no_encrypted_content_and_reasoning_is_not_rendered(recorder):
+    events, adapter = recorder
+    payload = {"type": "compaction", "id": "compact1", "encrypted_content": "SECRET-OPAQUE"}
+    await adapter.consume(raw("response.output_item.done", item=payload))
+    await adapter.consume(item("compaction_item", payload))
+    await adapter.consume(raw("response.reasoning_text.delta", item_id="r1", delta="PRIVATE-REASONING"))
+    assert [name for name, _ in events] == ["context.compacted"]
+    assert "SECRET" not in str(events) and "PRIVATE" not in str(events)
+
+
+async def test_artifacts_discovered_once_after_completed_tool():
+    observed = []
+
+    async def emit(kind, data):
+        observed.append(kind)
+
+    async def artifacts():
+        observed.append("scan")
+
+    adapter = runtime_events.RuntimeEvents(emit, artifacts=artifacts)
+    output = item("tool_call_output_item", {"call_id": "c", "output": "done"})
+    await adapter.consume(output)
+    await adapter.consume(output)
+    assert observed == ["tool.started", "tool.completed", "scan"]
+
+
+async def test_multiple_content_parts_keep_their_order_after_done_events(recorder):
+    events, adapter = recorder
+    for index, text in ((0, "First"), (1, " second"), (2, " third")):
+        await adapter.consume(raw("response.output_text.delta", item_id="m", content_index=index, delta=text))
+        await adapter.consume(raw("response.output_text.done", item_id="m", content_index=index, text=text))
+    await adapter.consume(raw("response.output_text.done", item_id="m", content_index=2, text=" third"))
+    assert [data["text"] for name, data in events if name == "text.completed"][-1] == "First second third"
+
+
+async def test_duplicate_raw_sequence_is_ignored_but_equal_distinct_deltas_are_kept(recorder):
+    events, adapter = recorder
+    first = raw("response.output_text.delta", item_id="m", sequence_number=1, delta="哈")
+    await adapter.consume(first)
+    await adapter.consume(first)
+    await adapter.consume(raw("response.output_text.delta", item_id="m", sequence_number=2, delta="哈"))
+    assert [data["delta"] for name, data in events if name == "text.delta"] == ["哈", "哈"]
+
+
+async def test_actual_sdk_events_work_without_provider_calls(recorder):
+    from agents import Agent
+    from agents.items import MessageOutputItem
+    from agents.stream_events import RawResponsesStreamEvent, RunItemStreamEvent
+    from openai.types.responses import ResponseOutputMessage, ResponseTextDeltaEvent
+
+    events, adapter = recorder
+    await adapter.consume(
+        RawResponsesStreamEvent(
+            data=ResponseTextDeltaEvent(
+                type="response.output_text.delta",
+                item_id="m",
+                output_index=0,
+                content_index=0,
+                delta="实测",
+                sequence_number=1,
+                logprobs=[],
+            )
+        )
+    )
+    output = MessageOutputItem(
+        agent=Agent(name="Test"),
+        raw_item=ResponseOutputMessage(
+            id="m",
+            type="message",
+            role="assistant",
+            status="completed",
+            phase="final_answer",
+            content=[{"type": "output_text", "text": "实测", "annotations": [], "logprobs": []}],
+        ),
+    )
+    await adapter.consume(RunItemStreamEvent(name="message_output_created", item=output))
+    assert await adapter.finalize(NS(new_items=[output], final_output="实测")) == ["m"]
+    assert [name for name, _ in events] == ["text.started", "text.delta", "text.completed", "text.phase"]

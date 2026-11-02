@@ -9,9 +9,10 @@ COPY requirements.txt /tmp/requirements.txt
 RUN --mount=type=secret,id=proxy_ca \
     if [ -f /run/secrets/proxy_ca ]; then export PIP_CERT=/run/secrets/proxy_ca; fi; \
     pip install --no-cache-dir --require-hashes -r /tmp/requirements.txt
-# CJK font support is useful for Chinese plots and PDFs; package installation
-# is intentionally performed at image-build time, never inside an agent run.
-RUN apt-get update && apt-get install -y --no-install-recommends fonts-noto-cjk \
+# Native SDK shell/path/PTY tools use standard Unix commands. Include rg for
+# file discovery, procps for timeout cleanup and curl for network-enabled work.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        fonts-noto-cjk ripgrep procps curl ca-certificates \
     && rm -rf /var/lib/apt/lists/* /tmp/requirements.txt \
     && groupadd --gid 1000 sandbox \
     && useradd --uid 1000 --gid 1000 --no-create-home sandbox \
