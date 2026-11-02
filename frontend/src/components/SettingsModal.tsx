@@ -135,6 +135,10 @@ export function SettingsModal({
                 autoComplete="off"
               />
             </label>
+            <p className="admin-section-description">
+              填写 API 根地址（通常以 /v1 结尾），不要附加 /responses 或
+              /chat/completions；请求路径由所选 API 模式自动添加。
+            </p>
             <div className="admin-field-row">
               <label className="admin-field">
                 模型名称

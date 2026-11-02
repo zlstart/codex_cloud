@@ -1,5 +1,7 @@
 # 新实例部署与验收记录
 
+后续新配置的真实模型验收已完成，见 [本轮真实模型记录](VERIFICATION-LIVE-2026-11-02.md)。以下保留前一实例的历史结果。
+
 本次从 `codex/famsun-agent-workspace` 的 `055f22d` 获取源码，在新云实例实际执行。未重用旧实例测试结论；保留原有 Agents SDK、FastAPI、React、PostgreSQL 和 Docker 沙箱架构。
 
 ## 结论

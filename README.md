@@ -40,6 +40,11 @@ AGENT_API_MODE=chat_completions
 
 `AGENT_API_KEY` / `AGENT_BASE_URL` 也分别支持 `OPENAI_API_KEY` / `OPENAI_BASE_URL`。兼容服务应填写其实际 Base URL 和模型名称；管理员可在设置页调整端点、模型与 API 模式。
 
+Base URL 是 API 根地址，不是完整请求地址。例如阿里云兼容接口使用
+`https://dashscope.aliyuncs.com/compatible-mode/v1`，不要在末尾添加
+`/responses` 或 `/chat/completions`。SDK 会根据 API 模式自动拼接请求路径，
+填入完整接口地址会导致路径重复和 404。环境变量修改后需重启应用；如果管理员已在设置页保存地址，该设置优先于环境变量。
+
 | 模式 | 适用情况 |
 | --- | --- |
 | `chat_completions` | 默认。服务需要支持流式 Chat Completions 与 function calling |

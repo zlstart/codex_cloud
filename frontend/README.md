@@ -46,3 +46,7 @@ FAMSUN_DISPOSABLE_DEPLOYMENT=1 FAMSUN_TEST_BASE_URL=http://127.0.0.1:8000 npm ru
 - `src/styles/`：统一视觉样式与响应式布局。
 
 HTML 预览使用 DOMPurify、严格 CSP 与无权限 iframe sandbox；Markdown 不自动加载外部图片。所有文件访问均经过后端身份与归属校验。
+
+## 真实模型与产物验证
+
+完成隔离部署验收后，可按 [真实模型验收记录](../docs/VERIFICATION-LIVE-2026-11-02.md) 运行 Python 模型脚本，再运行 `node tests/live-model-browser.mjs` 验证真实生成的图表预览和刷新恢复。模型脚本需要显式用量授权开关，浏览器脚本读取本地验收登录状态；不要发布这些本地文件。

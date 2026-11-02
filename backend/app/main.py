@@ -249,6 +249,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 )
             ):
                 raise HTTPException(400, "API 地址须为 HTTPS 地址；本机服务可使用 HTTP")
+            if url.path.rstrip("/").endswith(("/responses", "/chat/completions")):
+                raise HTTPException(400, "请填写 API 根地址，去掉末尾 /responses 或 /chat/completions；请求路径由 API 模式自动添加")
             values["base_url"] = values["base_url"].rstrip("/")
         with database.session() as db:
             for key, value in values.items():

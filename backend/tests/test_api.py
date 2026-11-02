@@ -175,6 +175,10 @@ def test_no_provider_key_fails_without_fake_message(client):
 
 def test_provider_settings_and_mcp_allowlist(client):
     register(client)
+    for endpoint in ("responses", "chat/completions/"):
+        response = client.patch("/api/settings", json={"base_url": f"https://compatible.example/v1/{endpoint}"})
+        assert response.status_code == 400
+        assert "API 根地址" in response.json()["detail"]
     assert client.patch("/api/settings", json={"base_url": "http://evil.example/v1"}).status_code == 400
     response = client.patch(
         "/api/settings",
