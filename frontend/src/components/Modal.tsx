@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { X } from "lucide-react";
 export function Modal({
@@ -17,7 +17,7 @@ export function Modal({
   const ref = useRef<HTMLDivElement>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
-  useEffect(() => {
+  useLayoutEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const node = ref.current;
     const focusables = () =>

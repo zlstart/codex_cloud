@@ -249,6 +249,7 @@ try {
     "",
   );
   await page.keyboard.press("Escape");
+  await page.getByRole("dialog").waitFor({ state: "hidden" });
   await page.setViewportSize({ width: 390, height: 844 });
   if (await page.locator(".sidebar.sidebar-open").count()) {
     await page.getByRole("button", { name: "收起导航" }).click();
