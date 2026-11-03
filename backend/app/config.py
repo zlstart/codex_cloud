@@ -21,8 +21,11 @@ class Settings:
             "AGENT_BASE_URL", os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
         )
     )
-    model: str = field(default_factory=lambda: os.getenv("AGENT_MODEL", "gpt-4.1"))
-    api_mode: str = field(default_factory=lambda: os.getenv("AGENT_API_MODE", "chat_completions"))
+    model: str = field(default_factory=lambda: os.getenv("AGENT_MODEL", "gpt-5.6-luna"))
+    api_mode: str = "responses"
+    compaction_threshold: int = field(
+        default_factory=lambda: int(os.getenv("AGENT_COMPACTION_THRESHOLD", "32000"))
+    )
     sandbox_backend: str = field(default_factory=lambda: os.getenv("SANDBOX_BACKEND", "docker"))
     registration_enabled: bool = field(default_factory=lambda: flag("ALLOW_REGISTRATION"))
     cookie_secure: bool = field(default_factory=lambda: flag("COOKIE_SECURE"))
@@ -51,6 +54,9 @@ class Settings:
     )
 
     def __post_init__(self):
+        self.api_mode = "responses"
+        # Accept legacy environment URLs that named the full Responses endpoint.
+        self.base_url = self.base_url.rstrip("/").removesuffix("/responses")
         self.data_dir = self.data_dir.resolve()
         self.data_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
         if not self.database_url:

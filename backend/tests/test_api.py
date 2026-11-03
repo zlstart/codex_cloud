@@ -185,7 +185,7 @@ def test_provider_settings_and_mcp_allowlist(client):
         json={
             "base_url": "https://compatible.example/v1",
             "model": "my-model",
-            "api_mode": "chat_completions",
+            "api_mode": "responses",
         },
     )
     assert response.status_code == 200
@@ -327,6 +327,26 @@ def test_approval_required_and_cancelled_run(client, app, monkeypatch):
     ).json()["id"]
     wait_status(client, second, {"awaiting_approval"})
     assert client.post(f"/api/runs/{second}/cancel").json()["status"] == "cancelled"
+
+
+def test_worker_error_payload_is_redacted_from_status_and_events(client, app, monkeypatch):
+    async def failing_runtime(**kwargs):
+        raise RuntimeError("private-provider-payload-api-key-should-not-escape")
+
+    monkeypatch.setitem(
+        sys.modules,
+        "app.runtime",
+        types.SimpleNamespace(RuntimeConfig=lambda **kwargs: kwargs, run_agent=failing_runtime),
+    )
+    register(client)
+    sid = session(client)
+    app.state.settings.api_key = "test-only-not-a-provider-key"
+    rid = client.post(
+        f"/api/sessions/{sid}/runs", json={"content": "Fail safely", "client_request_id": "request-0001"}
+    ).json()["id"]
+    status = wait_status(client, rid, {"failed"})
+    assert status["error"] == "任务执行失败，请检查模型配置及沙箱服务。"
+    assert "private-provider-payload" not in client.get(f"/api/runs/{rid}/events").text
 
 
 def test_restart_marks_abandoned_run_failed(client, app, monkeypatch):

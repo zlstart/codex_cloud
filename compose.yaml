@@ -29,6 +29,9 @@ services:
       PORT: "8000"
       SANDBOX_BACKEND: docker
       FAMSUN_SANDBOX_IMAGE: ${FAMSUN_SANDBOX_IMAGE:-famsun-sandbox:latest}
+      # The API and its per-chat bind mounts use the same nonroot identity.
+      FAMSUN_SANDBOX_UID: ${FAMSUN_UID:-1000}
+      FAMSUN_SANDBOX_GID: ${FAMSUN_GID:-1000}
     volumes:
       # Same absolute path is essential: sibling sandboxes are created by the host daemon.
       - type: bind

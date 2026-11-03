@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import quote, urlsplit
 
-from fastapi import Depends, FastAPI, File, HTTPException, Request, Response, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Query, Request, Response, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -55,9 +55,13 @@ from .schemas import (
     CreateRun,
     CreateSession,
     CreateSkill,
+    CreateSubagent,
     LoginInput,
+    PatchMCP,
     PatchSession,
     PatchSettings,
+    PatchSkill,
+    PatchSubagent,
     RegisterInput,
     ToggleExtension,
 )
@@ -79,6 +83,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     config = settings or Settings()
     database = Database(config.database_url)
     service = RunService(database, config)
+    preview_slots = asyncio.Semaphore(4)
 
     @asynccontextmanager
     async def lifespan(app):
@@ -225,9 +230,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/api/settings")
     def get_settings():
+        provider = service.provider()
         return {
-            "provider": {**service.provider(), "configured": bool(config.api_key)},
-            "sandbox": {"backend": config.sandbox_backend, "available": app.state.sandbox_available},
+            "provider": {**provider, "configured": bool(config.api_key)},
+            "compaction": {
+                "threshold": provider["compaction_threshold"],
+                "enabled": True,
+                "mode": "responses",
+            },
+            "sandbox": {
+                "backend": config.sandbox_backend,
+                "available": app.state.sandbox_available,
+                "network_enabled": True,
+            },
             "limits": {"max_upload_mb": config.max_upload_mb, "max_turns": config.max_turns},
             "registration_enabled": config.registration_enabled,
         }
@@ -250,15 +265,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             ):
                 raise HTTPException(400, "API 地址须为 HTTPS 地址；本机服务可使用 HTTP")
             if url.path.rstrip("/").endswith(("/responses", "/chat/completions")):
-                raise HTTPException(400, "请填写 API 根地址，去掉末尾 /responses 或 /chat/completions；请求路径由 API 模式自动添加")
+                raise HTTPException(
+                    400, "请填写 API 根地址，去掉末尾 /responses 或 /chat/completions；应用会添加 /responses"
+                )
             values["base_url"] = values["base_url"].rstrip("/")
         with database.session() as db:
             for key, value in values.items():
                 setting = db.get(AppSetting, key)
                 if setting:
-                    setting.value = value
+                    setting.value = str(value)
                 else:
-                    db.add(AppSetting(key=key, value=value))
+                    db.add(AppSetting(key=key, value=str(value)))
             db.commit()
         return get_settings()
 
@@ -454,6 +471,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 },
             )
 
+    @app.get("/api/files/{file_id}/preview")
+    async def preview_file(file_id: str, user: User = Depends(current_user)):
+        from .previews import preview_document
+
+        with database.session() as db:
+            artifact = owned_artifact(db, file_id, user.id)
+            workspace = service.workspace(user.id, artifact.session_id)
+            try:
+                descriptor = open_safe_file(workspace, artifact.path)
+            except (OSError, ValueError, SandboxError):
+                raise HTTPException(404, "文件不存在或路径不安全")
+            name = artifact.name
+        try:
+            async with preview_slots:
+                return await preview_document(descriptor, name)
+        finally:
+            os.close(descriptor)
+
     @app.delete("/api/files/{file_id}")
     async def delete_file(file_id: str, user: User = Depends(current_user)):
         async with service.mutation_lock:
@@ -544,6 +579,40 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         with database.session() as db:
             return run_json(owned_run(db, run_id, user.id))
 
+    @app.get("/api/runs/{run_id}/timeline")
+    def timeline(
+        run_id: str,
+        after: int = Query(default=0, ge=0),
+        limit: int = Query(default=500, ge=1, le=1000),
+        user: User = Depends(current_user),
+    ):
+        with database.session() as db:
+            run = owned_run(db, run_id, user.id)
+            rows = list(
+                db.scalars(
+                    select(RunEvent)
+                    .where(RunEvent.run_id == run_id, RunEvent.id > after)
+                    .order_by(RunEvent.id)
+                    .limit(limit + 1)
+                )
+            )
+            page = rows[:limit]
+            return {
+                "events": [
+                    {
+                        "sequence": event.id,
+                        "run_id": run_id,
+                        "type": event.event,
+                        "data": event.data,
+                        "created_at": event.created_at,
+                    }
+                    for event in page
+                ],
+                "next_cursor": page[-1].id if page else after,
+                "has_more": len(rows) > limit,
+                "status": run.status,
+            }
+
     @app.get("/api/runs/{run_id}/events")
     async def events(run_id: str, request: Request, after: int = 0, user: User = Depends(current_user)):
         with database.session() as db:
@@ -618,7 +687,31 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {
             "skills": [v for v in values if v["type"] == "skill"],
             "mcp_servers": [v for v in values if v["type"] == "mcp"],
+            "subagents": [v for v in values if v["type"] == "subagent"],
         }
+
+    def extension_detail(extension_id: str, user: User, kind: str | None = None):
+        value = next(
+            (
+                item
+                for item in service.extensions(user.id, include_content=True)
+                if item["id"] == extension_id and (kind is None or item["type"] == kind)
+            ),
+            None,
+        )
+        if value is None:
+            raise HTTPException(404, "能力不存在")
+        return value
+
+    def validate_subagent_references(db, values: dict):
+        for field, kind in (("skill_ids", "skill"), ("mcp_server_ids", "mcp")):
+            ids = values.get(field, [])
+            for extension_id in ids:
+                extension = db.get(Extension, extension_id)
+                if not extension or extension.type != kind:
+                    raise HTTPException(400, "子代理引用了不存在或类型不匹配的能力")
+            if field in values:
+                values[field] = list(dict.fromkeys(ids))
 
     @app.post("/api/extensions/skills", status_code=201)
     def add_skill(payload: CreateSkill, user: User = Depends(admin_user)):
@@ -656,6 +749,74 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(404, "Skill 不存在")
         return value
 
+    @app.get("/api/extensions/{extension_id}")
+    def get_extension(extension_id: str, user: User = Depends(current_user)):
+        return extension_detail(extension_id, user)
+
+    @app.patch("/api/extensions/skills/{extension_id}")
+    def edit_skill(extension_id: str, payload: PatchSkill, user: User = Depends(admin_user)):
+        with database.session() as db:
+            item = db.get(Extension, extension_id)
+            if not item or item.type != "skill":
+                raise HTTPException(404, "Skill 不存在")
+            for key, value in payload.model_dump(exclude_none=True).items():
+                setattr(item, key, value)
+            item.config = {**(item.config or {}), "user_modified": True}
+            db.commit()
+        return extension_detail(extension_id, user)
+
+    @app.patch("/api/extensions/mcp/{extension_id}")
+    def edit_mcp(extension_id: str, payload: PatchMCP, user: User = Depends(admin_user)):
+        values = {
+            key: value
+            for key, value in payload.model_dump(exclude_unset=True).items()
+            if value is not None or key == "token_env"
+        }
+        if "url" in values:
+            try:
+                validate_mcp_url(values["url"], config.allowed_mcp_hosts)
+            except ValueError as exc:
+                raise HTTPException(400, str(exc))
+        with database.session() as db:
+            item = db.get(Extension, extension_id)
+            if not item or item.type != "mcp":
+                raise HTTPException(404, "MCP 不存在")
+            for key, value in values.items():
+                setattr(item, key, value)
+            db.commit()
+        return extension_detail(extension_id, user)
+
+    @app.post("/api/extensions/subagents", status_code=201)
+    def add_subagent(payload: CreateSubagent, user: User = Depends(admin_user)):
+        values = payload.model_dump()
+        name, description = values.pop("name"), values.pop("description")
+        with database.session() as db:
+            validate_subagent_references(db, values)
+            item = Extension(name=name, description=description, type="subagent", config=values)
+            db.add(item)
+            db.commit()
+            extension_id = item.id
+        return extension_detail(extension_id, user)
+
+    @app.patch("/api/extensions/subagents/{extension_id}")
+    def edit_subagent(extension_id: str, payload: PatchSubagent, user: User = Depends(admin_user)):
+        values = {
+            key: value
+            for key, value in payload.model_dump(exclude_unset=True).items()
+            if value is not None or key == "model"
+        }
+        with database.session() as db:
+            item = db.get(Extension, extension_id)
+            if not item or item.type != "subagent":
+                raise HTTPException(404, "子代理不存在")
+            validate_subagent_references(db, values)
+            for key in ("name", "description"):
+                if key in values:
+                    setattr(item, key, values.pop(key))
+            item.config = {**(item.config or {}), **values}
+            db.commit()
+        return extension_detail(extension_id, user)
+
     @app.patch("/api/extensions/{extension_id}")
     def toggle_extension(extension_id: str, payload: ToggleExtension, user: User = Depends(current_user)):
         with database.session() as db:
@@ -679,6 +840,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 raise HTTPException(404, "能力不存在")
             if item.builtin:
                 raise HTTPException(400, "内置能力可关闭，无需删除")
+            for child in db.scalars(select(Extension).where(Extension.type == "subagent")):
+                options = dict(child.config or {})
+                for field in ("skill_ids", "mcp_server_ids"):
+                    options[field] = [value for value in options.get(field, []) if value != extension_id]
+                child.config = options
             db.delete(item)
             db.commit()
         return {"ok": True}

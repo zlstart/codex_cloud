@@ -60,7 +60,7 @@ def main():
         "使用 Python 工具分析上传的 production.csv，按 line 汇总 output，报告总量。"
         "生成 outputs/summary.xlsx（列名 line,output，只有 A、B 两行汇总数据）和 outputs/production.png 柱状图。"
         "必须实际执行并检查文件，最后列出汇总结果与文件名。", [uploaded["id"]])
-    assert '"name":"python"' in events.replace(" ", "")
+    assert '"name":"exec_command"' in events.replace(" ", "")
     assert "460" in answer
     files = {f["name"]: f for f in detail["files"] if f["kind"] == "output"}
     workbook = request("GET", files["summary.xlsx"]["url"] + "?download=true").content

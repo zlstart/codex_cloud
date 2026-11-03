@@ -24,6 +24,7 @@ from .models import (
     ExtensionPreference,
     Message,
     RunEvent,
+    User,
     now,
     uid,
 )
@@ -119,16 +120,17 @@ class RunService:
         values = {
             "base_url": self.settings.base_url,
             "model": self.settings.model,
-            "api_mode": self.settings.api_mode,
+            "compaction_threshold": self.settings.compaction_threshold,
         }
         with self.db.session() as db:
             for row in db.scalars(select(AppSetting)).all():
                 if row.key in values:
-                    values[row.key] = row.value
-        return values
+                    values[row.key] = int(row.value) if row.key == "compaction_threshold" else row.value
+        return {**values, "api_mode": "responses"}
 
     def extensions(self, user_id: str, *, include_content: bool = False) -> list[dict]:
         with self.db.session() as db:
+            user = db.get(User, user_id)
             preferences = {
                 p.extension_id: p.enabled
                 for p in db.scalars(select(ExtensionPreference).where(ExtensionPreference.user_id == user_id))
@@ -143,14 +145,24 @@ class RunService:
                     "enabled": preferences.get(item.id, True),
                     "status": "available",
                     "builtin": item.builtin,
+                    "editable": bool(user and user.role == "admin"),
                 }
+                if item.type == "subagent":
+                    value["config"] = {
+                        key: entry for key, entry in (item.config or {}).items() if key != "instructions"
+                    }
                 if include_content:
-                    value.update(content=item.content, url=item.url, token_env=item.token_env)
+                    value.update(
+                        content=item.content, url=item.url, token_env=item.token_env, config=item.config or {}
+                    )
                 result.append(value)
             return result
 
     def recover(self):
         with self.db.session() as db:
+            obsolete_mode = db.get(AppSetting, "api_mode")
+            if obsolete_mode:
+                obsolete_mode.value = "responses"
             for run in db.scalars(select(AgentRun).where(AgentRun.status.in_(ACTIVE))):
                 run.status = "failed"
                 run.error = "服务已重启，此任务已中断。请重新发送消息。"
@@ -158,12 +170,14 @@ class RunService:
                 db.add(RunEvent(run_id=run.id, event="run.failed", data={"error": run.error}))
             db.commit()
         try:
-            from .extensions import BUILTIN_SKILLS
+            from .extensions import BUILTIN_SKILLS, BUILTIN_SUBAGENTS
         except ImportError:
             BUILTIN_SKILLS = []
+            BUILTIN_SUBAGENTS = []
         with self.db.session() as db:
             for item in BUILTIN_SKILLS:
-                if not db.get(Extension, item["id"]):
+                existing = db.get(Extension, item["id"])
+                if not existing:
                     db.add(
                         Extension(
                             id=item["id"],
@@ -172,8 +186,17 @@ class RunService:
                             content=item["content"],
                             type="skill",
                             builtin=True,
+                            config={"bundle_version": 2},
                         )
                     )
+                elif not (existing.config or {}).get("bundle_version") and not (existing.config or {}).get(
+                    "user_modified"
+                ):
+                    existing.content = item["content"]
+                    existing.config = {**(existing.config or {}), "bundle_version": 2}
+            for item in BUILTIN_SUBAGENTS:
+                if not db.get(Extension, item["id"]):
+                    db.add(Extension(**item, type="subagent", builtin=True))
             db.commit()
 
     async def shutdown(self):
@@ -189,7 +212,41 @@ class RunService:
         # Bound untrusted tool output before durable storage and SSE delivery.
         encoded = json.dumps(data, ensure_ascii=False, default=str)
         if len(encoded) > 200000:
-            data = {"name": data.get("name", "tool"), "output": encoded[:190000] + "\n[输出已截断]"}
+            data = dict(data)
+            for field in ("arguments", "output", "text", "delta"):
+                if field not in data:
+                    continue
+                value = data[field]
+                rendered = (
+                    value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, default=str)
+                )
+                if len(rendered) > 45000:
+                    preview = rendered[:45000] + "\n[内容已截断]"
+                    data[field] = (
+                        {"preview": preview, "truncated": True}
+                        if field == "arguments" and isinstance(value, dict)
+                        else preview
+                    )
+            data["truncated"] = True
+            encoded = json.dumps(data, ensure_ascii=False, default=str)
+        if len(encoded) > 200000:
+            identity = {
+                key: data[key]
+                for key in (
+                    "item_id",
+                    "id",
+                    "tool",
+                    "call_id",
+                    "agent_id",
+                    "agent_name",
+                    "parent_call_id",
+                    "phase",
+                    "name",
+                    "status",
+                )
+                if key in data
+            }
+            data = {**identity, "output": encoded[:180000] + "\n[输出已截断]", "truncated": True}
         with self.db.session() as db:
             if db.get(AgentRun, run_id):
                 db.add(RunEvent(run_id=run_id, event=event, data=data))
@@ -266,22 +323,34 @@ class RunService:
         self.cancellations[run_id] = cancel_event
         self.tasks[run_id] = asyncio.create_task(self.execute(run_id, cancel_event))
 
-    async def finish(self, run_id: str, status: str, error: str | None = None, content: str | None = None):
+    async def finish(
+        self,
+        run_id: str,
+        status: str,
+        error: str | None = None,
+        content: str | None = None,
+        final_item_ids: list[str] | None = None,
+    ):
         with self.db.session() as db:
             run = db.get(AgentRun, run_id)
             if not run or run.status in TERMINAL:
                 return
             run.status, run.error, run.updated_at = status, error, now()
+            payload = {"error": error} if error else {}
             if content is not None:
-                db.add(Message(session_id=run.session_id, run_id=run_id, role="assistant", content=content))
+                message = Message(session_id=run.session_id, run_id=run_id, role="assistant", content=content)
+                db.add(message)
+                db.flush()
+                payload.update(message_id=message.id, final_item_ids=final_item_ids or [])
             session = db.get(ChatSession, run.session_id)
             session.updated_at = now()
-            db.add(RunEvent(run_id=run_id, event=f"run.{status}", data={"error": error} if error else {}))
+            db.add(RunEvent(run_id=run_id, event=f"run.{status}", data=payload))
             db.commit()
 
     async def execute(self, run_id: str, cancel_event: asyncio.Event):
         try:
-            from .runtime import RuntimeConfig, run_agent
+            from .runtime import RuntimeConfig
+            from .runtime_worker import run_agent_in_worker
 
             with self.db.session() as db:
                 run = db.get(AgentRun, run_id)
@@ -303,6 +372,7 @@ class RunService:
                 db.commit()
                 workspace = self.workspace(user_id, session.id)
             await self.emit(run_id, "run.started", {})
+            final_item_ids = []
 
             async def emit(event: str, data: dict):
                 if cancel_event.is_set():
@@ -310,6 +380,8 @@ class RunService:
                 if event == "artifact.discovered":
                     await self.register_output(run_id, workspace, data["path"])
                 else:
+                    if event == "text.phase" and data.get("phase") == "final" and data.get("item_id"):
+                        final_item_ids.append(data["item_id"])
                     await self.emit(run_id, event, data)
 
             config = RuntimeConfig(
@@ -320,9 +392,13 @@ class RunService:
                 max_runtime_seconds=self.settings.max_runtime_seconds,
                 extensions=[e for e in self.extensions(user_id, include_content=True) if e["enabled"]],
                 allowed_mcp_hosts=self.settings.allowed_mcp_hosts,
+                state_dir=self.settings.data_dir / "history",
+                user_id=user_id,
+                session_id=session.id,
+                run_id=run_id,
             )
             async with asyncio.timeout(self.settings.max_runtime_seconds):
-                result = await run_agent(
+                result = await run_agent_in_worker(
                     config=config,
                     workspace=workspace,
                     messages=messages,
@@ -332,7 +408,7 @@ class RunService:
                 )
             if cancel_event.is_set():
                 raise asyncio.CancelledError
-            await self.finish(run_id, "completed", content=str(result))
+            await self.finish(run_id, "completed", content=str(result), final_item_ids=final_item_ids)
         except asyncio.CancelledError:
             await self.finish(run_id, "cancelled")
         except TimeoutError:
@@ -345,9 +421,11 @@ class RunService:
                 "PermissionDeniedError": "模型服务拒绝访问，请检查模型权限。",
                 "RateLimitError": "模型服务请求过于频繁或配额不足，请稍后重试。",
                 "APIConnectionError": "无法连接模型服务，请检查 API 地址和网络。",
-                "BadRequestError": "模型服务拒绝了请求，请检查模型及 API 协议是否兼容。",
+                "BadRequestError": "模型服务拒绝了 Responses 请求。请确认支持自定义工具、流式工具往返及 context_management 上下文压缩。",
                 "MaxTurnsExceeded": "任务达到最大工具轮数，请拆分任务后继续。",
             }.get(name, "任务执行失败，请检查模型配置及沙箱服务。")
+            if name == "AgentRuntimeError":
+                safe = str(exc)
             logger.warning("Agent run %s failed (%s)", run_id, name)
             await self.finish(run_id, "failed", safe)
         finally:
@@ -369,3 +447,7 @@ class RunService:
         root = self.settings.data_dir / "workspaces" / user_id / session_id
         if root.exists():
             await asyncio.to_thread(shutil.rmtree, root)
+        # SDK histories are deliberately outside the model-visible workspace.
+        history = self.settings.data_dir / "history" / user_id / f"{session_id}.sqlite3"
+        for suffix in ("", "-wal", "-shm", "-journal"):
+            history.with_name(history.name + suffix).unlink(missing_ok=True)

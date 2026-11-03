@@ -35,6 +35,7 @@ export function useWorkspace() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState("");
   const [notice, setNotice] = useState("");
+  const [runSyncError, setRunSyncError] = useState("");
   const [preview, setPreview] = useState<Artifact | null>(null);
   const [rename, setRename] = useState<Session | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -45,6 +46,20 @@ export function useWorkspace() {
   const loadId = useRef(0);
   const identity = useRef(0);
   const navigation = useRef(0);
+  const terminalSync = useRef<{
+    runId: string;
+    sessionId: string;
+    actor: number;
+    page: number;
+  } | null>(null);
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      terminalSync.current = null;
+      if (syncTimer.current) clearTimeout(syncTimer.current);
+    },
+    [],
+  );
   const notify = useCallback((message: string) => setToast(message), []);
   useEffect(() => {
     const media = window.matchMedia("(min-width: 1081px)");
@@ -80,7 +95,48 @@ export function useWorkspace() {
       ["queued", "running", "awaiting_approval"].includes(r.status),
     );
     setRun(active ?? null);
+    return next;
   }, []);
+  function clearTerminalSync() {
+    terminalSync.current = null;
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    syncTimer.current = null;
+    setRunSyncError("");
+  }
+  async function reconcileTerminal(
+    target: NonNullable<typeof terminalSync.current>,
+    attempt = 0,
+  ): Promise<boolean> {
+    const valid = () =>
+      terminalSync.current === target &&
+      identity.current === target.actor &&
+      navigation.current === target.page &&
+      activeId.current === target.sessionId;
+    if (!valid()) return false;
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    syncTimer.current = null;
+    try {
+      const next = await reloadDetail(target.sessionId);
+      if (!valid() || !next) return false;
+      clearTerminalSync();
+      return true;
+    } catch (e) {
+      if (!valid()) return false;
+      setRunSyncError(
+        `执行已结束，会话暂未同步：${errorMessage(e)}。可重试同步，已生成的内容会保留。`,
+      );
+      if (attempt < 3)
+        syncTimer.current = setTimeout(() => {
+          void reconcileTerminal(target, attempt + 1);
+        }, [750, 2000, 5000][attempt]);
+      return false;
+    }
+  }
+  async function retryRunSync() {
+    return terminalSync.current
+      ? reconcileTerminal(terminalSync.current)
+      : true;
+  }
   useEffect(() => {
     let live = true;
     const actor = identity.current;
@@ -129,6 +185,7 @@ export function useWorkspace() {
     }
   }
   function resetChat() {
+    clearTerminalSync();
     navigation.current++;
     loadId.current++;
     setLoading(false);
@@ -143,6 +200,7 @@ export function useWorkspace() {
     setSessionSearch(false);
   }
   async function selectSession(session: Session | string) {
+    clearTerminalSync();
     const id = typeof session === "string" ? session : session.id;
     navigation.current++;
     activeId.current = id;
@@ -183,15 +241,31 @@ export function useWorkspace() {
   }, []);
   const stream = useRunStream(
     run,
-    (status, error) => {
+    (status, error, runId) => {
+      const sessionId = activeId.current;
+      setRun((current) =>
+        current?.id === runId
+          ? {
+              ...current,
+              status: status.slice(4) as Run["status"],
+              error: error || undefined,
+            }
+          : current,
+      );
       if (status === "run.failed")
         setNotice(error || "任务执行失败，请检查模型连接或稍后重试。");
       if (status === "run.cancelled")
         setNotice("任务已停止。你可以补充要求，继续这段对话。");
-      if (activeId.current)
-        void reloadDetail(activeId.current).catch((e) =>
-          notify(errorMessage(e)),
-        );
+      if (sessionId) {
+        const target = {
+          runId,
+          sessionId,
+          actor: identity.current,
+          page: navigation.current,
+        };
+        terminalSync.current = target;
+        void reconcileTerminal(target);
+      }
       void refreshSessions().catch(() => {});
     },
     (file) =>
@@ -221,13 +295,26 @@ export function useWorkspace() {
     return session.id;
   }
   async function send() {
-    if (run) {
+    if (
+      run &&
+      ["queued", "running", "awaiting_approval"].includes(run.status)
+    ) {
       try {
         await api(`/runs/${run.id}/cancel`, { method: "POST" });
       } catch (e) {
         notify(errorMessage(e));
       }
       return;
+    }
+    if (run) {
+      const actor = identity.current;
+      const page = navigation.current;
+      if (
+        !(await retryRunSync()) ||
+        actor !== identity.current ||
+        page !== navigation.current
+      )
+        return;
     }
     if (sending || uploading || !draft.trim()) return;
     if (!user) {
@@ -294,8 +381,12 @@ export function useWorkspace() {
       setAuth(true);
       return;
     }
-    if (uploading || run) {
-      notify(run ? "任务运行期间请稍候再上传文件。" : "文件正在上传，请稍候。");
+    const activeRun =
+      run && ["queued", "running", "awaiting_approval"].includes(run.status);
+    if (uploading || activeRun) {
+      notify(
+        activeRun ? "任务运行期间请稍候再上传文件。" : "文件正在上传，请稍候。",
+      );
       return;
     }
     const max = settings?.limits.max_upload_mb ?? 25;
@@ -335,11 +426,13 @@ export function useWorkspace() {
   }
   async function approve(approved: boolean) {
     if (!run || !stream.approval) return;
-    await api(`/runs/${run.id}/approve`, {
+    const expectedRunId = run.id;
+    const expectedApprovalId = stream.approval.id;
+    await api(`/runs/${expectedRunId}/approve`, {
       method: "POST",
-      body: JSON.stringify({ approval_id: stream.approval.id, approved }),
+      body: JSON.stringify({ approval_id: expectedApprovalId, approved }),
     });
-    stream.setApproval(null);
+    stream.clearApproval(expectedRunId, expectedApprovalId);
   }
   async function logout() {
     const actor = ++identity.current;
@@ -469,6 +562,8 @@ export function useWorkspace() {
     toast,
     setToast,
     notice,
+    runSyncError,
+    retryRunSync,
     setNotice,
     preview,
     setPreview,

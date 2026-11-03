@@ -7,9 +7,11 @@ from urllib.parse import urlsplit
 
 import pytest
 from app.config import Settings
-from app.db import Base
+from app.db import Base, Database
 from app.main import create_app
+from app.models import Extension, ExtensionPreference, User
 from fastapi.testclient import TestClient
+from sqlalchemy import inspect, text
 
 
 @pytest.mark.skipif(not os.getenv("FAMSUN_TEST_DATABASE_URL"), reason="PostgreSQL integration is opt-in")
@@ -55,3 +57,48 @@ def test_postgres_auth_artifacts_preferences_and_restart(tmp_path):
         assert client.get(f"/api/extensions/skills/{created['id']}").json()["enabled"] is False
         assert client.delete(f"/api/sessions/{sid}").status_code == 200
         assert client.get(artifact["url"]).status_code == 404
+
+
+@pytest.mark.skipif(not os.getenv("FAMSUN_TEST_DATABASE_URL"), reason="PostgreSQL integration is opt-in")
+def test_postgres_additive_extension_migration_preserves_existing_data():
+    """A pre-subagent schema gains config without resetting edits or preferences."""
+    url = os.environ["FAMSUN_TEST_DATABASE_URL"]
+    assert urlsplit(url).path.endswith(("_test", "_qa")), "Use a disposable test database"
+    database = Database(url)
+    try:
+        Base.metadata.drop_all(database.engine)
+        Base.metadata.create_all(database.engine)
+        with database.session.begin() as session:
+            session.add(User(id="legacy-user", email="legacy@example.com", name="旧用户",
+                             password_hash="retained-password-hash", role="admin"))
+            session.add(Extension(id="legacy-skill", name="用户修改的技能", type="skill",
+                                  description="保留自定义描述", content="# 已修改\n不能被重置",
+                                  builtin=True))
+            session.flush()
+            session.add(ExtensionPreference(user_id="legacy-user", extension_id="legacy-skill",
+                                             enabled=False))
+        # Reproduce the deployed schema before the additive config migration.
+        with database.engine.begin() as connection:
+            connection.execute(text("ALTER TABLE extensions DROP COLUMN config"))
+        assert "config" not in {column["name"] for column in inspect(database.engine).get_columns("extensions")}
+
+        database.initialize()
+        with database.session.begin() as session:
+            legacy = session.get(Extension, "legacy-skill")
+            assert legacy.content == "# 已修改\n不能被重置"
+            assert legacy.name == "用户修改的技能" and legacy.config == {}
+            assert session.get(User, "legacy-user").password_hash == "retained-password-hash"
+            assert session.get(ExtensionPreference, ("legacy-user", "legacy-skill")).enabled is False
+            session.add(Extension(id="new-specialist", name="分析专家", type="subagent", config={
+                "instructions": "分析真实资料", "skill_ids": ["legacy-skill"], "max_turns": 7,
+            }))
+
+        # Restart-style initialization must preserve newly stored JSON too.
+        database.initialize()
+        with database.session() as session:
+            assert session.get(Extension, "new-specialist").config == {
+                "instructions": "分析真实资料", "skill_ids": ["legacy-skill"], "max_turns": 7,
+            }
+            assert session.get(Extension, "legacy-skill").config == {}
+    finally:
+        database.engine.dispose()

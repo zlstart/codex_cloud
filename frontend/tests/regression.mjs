@@ -20,7 +20,7 @@ const settings = {
   provider: {
     base_url: "https://api.example.com/v1",
     model: "test-model",
-    api_mode: "chat_completions",
+    api_mode: "responses",
     configured: true,
   },
   sandbox: { backend: "docker", available: true },
@@ -108,10 +108,34 @@ await page.route("**/api/**", async (route) => {
         "base64",
       ),
     });
-  if (path === "/api/runs/finished/events")
-    return route.fulfill({
-      contentType: "text/event-stream",
-      body: 'id: 1\nevent: tool.started\ndata: {"name":"python","arguments":{"code":"print(1)"}}\n\nid: 2\nevent: tool.completed\ndata: {"name":"python","output":"1"}\n\nid: 3\nevent: run.completed\ndata: {}\n\n',
+  if (path === "/api/runs/finished/timeline")
+    return json(route, {
+      events: [
+        {
+          sequence: 1,
+          run_id: "finished",
+          type: "tool.started",
+          data: { name: "python", arguments: { code: "print(1)" } },
+          created_at: now,
+        },
+        {
+          sequence: 2,
+          run_id: "finished",
+          type: "tool.completed",
+          data: { name: "python", output: "1" },
+          created_at: now,
+        },
+        {
+          sequence: 3,
+          run_id: "finished",
+          type: "run.completed",
+          data: {},
+          created_at: now,
+        },
+      ],
+      next_cursor: 3,
+      has_more: false,
+      status: "completed",
     });
   return json(route, []);
 });

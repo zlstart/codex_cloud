@@ -1,8 +1,7 @@
-"""A narrow container boundary for model-generated code.
+"""Safe application file delivery and deployment-owned orphan reconciliation.
 
-Only this module launches a command. The application never executes model code
-on the API host. A session owns the mounted directory; every invocation gets a
-fresh, network-disabled container and retains files in that directory.
+Model execution is provided by the native Agents SDK in sdk_sandbox.py. These
+helpers protect upload/download endpoints and bounded artifact/quota scanning.
 """
 from __future__ import annotations
 
@@ -11,21 +10,11 @@ import contextlib
 import hashlib
 import os
 import stat
-import uuid
-from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 
 class SandboxError(RuntimeError):
     """A safe-to-display workspace or container error."""
-
-
-@dataclass(frozen=True)
-class ExecutionResult:
-    exit_code: int
-    stdout: str
-    stderr: str
-    truncated: bool = False
 
 
 def deployment_label(data_dir: Path) -> str:
@@ -218,149 +207,3 @@ def write_text_file(workspace: Path, path: str, content: str, *, max_bytes: int 
     except OSError as exc:
         raise SandboxError("文件写入失败。") from exc
     return full.relative_to(workspace).as_posix()
-
-
-class DockerSandbox:
-    def __init__(self, workspace: Path, *, backend: str = "docker", timeout: int = 60,
-                 max_output_bytes: int = 64_000, max_workspace_bytes: int = 250 * 1024 * 1024):
-        self.workspace = workspace.absolute()
-        self.backend = backend
-        self.timeout = min(max(timeout, 1), 120)
-        self.max_output_bytes = max_output_bytes
-        self.max_workspace_bytes = max_workspace_bytes
-        self.image = os.getenv("FAMSUN_SANDBOX_IMAGE", "famsun-sandbox:latest")
-
-    def command(self, container_name: str, executable: list[str]) -> list[str]:
-        root = safe_path(self.workspace, ".")
-        if "," in str(root):
-            raise SandboxError("工作空间根目录不能含逗号。")
-        uid = int(os.getenv("FAMSUN_SANDBOX_UID", str(os.getuid() or 1000)))
-        gid = int(os.getenv("FAMSUN_SANDBOX_GID", str(os.getgid() or 1000)))
-        if uid == 0:
-            raise SandboxError("代码执行容器禁止使用 root 用户。")
-        return [
-            "docker", "run", "--rm", "--pull=never", "--name", container_name,
-            "--label", "app=famsun-agent", "--label",
-            f"famsun.deployment={deployment_label(root.parents[2] if len(root.parents) > 2 else root.parent)}",
-            "--network=none", "--read-only",
-            "--cap-drop=ALL", "--security-opt=no-new-privileges:true",
-            "--memory=512m", "--memory-swap=512m", "--cpus=1", "--pids-limit=64",
-            "--ulimit", "nofile=128:128", "--ulimit", "fsize=52428800:52428800",
-            "--user", f"{uid}:{gid}", "--workdir", "/workspace",
-            "--tmpfs", "/tmp:rw,noexec,nosuid,size=128m,mode=1777",
-            "--mount", f"type=bind,src={root},dst=/workspace",
-            "--mount", f"type=bind,src={root / 'uploads'},dst=/workspace/uploads,readonly",
-            "--env", "HOME=/tmp", "--env", "MPLCONFIGDIR=/tmp/matplotlib",
-            "--env", "PYTHONDONTWRITEBYTECODE=1", "--env", "MPLBACKEND=Agg",
-            "--env", "LANG=C.UTF-8", "--env", "LC_ALL=C.UTF-8",
-            "--env", "HTTP_PROXY=", "--env", "HTTPS_PROXY=", "--env", "ALL_PROXY=",
-            "--env", "http_proxy=", "--env", "https_proxy=", "--env", "all_proxy=",
-            "--env", "NO_PROXY=", "--env", "no_proxy=",
-            self.image, "/usr/bin/timeout", "--signal=TERM", "--kill-after=5s",
-            f"{self.timeout}s", *executable,
-        ]
-
-    async def _remove_container(self, name: str) -> None:
-        try:
-            process = await asyncio.create_subprocess_exec(
-                "docker", "rm", "-f", name, stdout=asyncio.subprocess.DEVNULL,
-                stderr=asyncio.subprocess.DEVNULL,
-            )
-            try:
-                await asyncio.wait_for(process.wait(), 5)
-            except TimeoutError:
-                process.kill()
-                await process.wait()
-        except OSError:
-            pass
-
-    async def execute(self, executable: list[str], cancel_event: asyncio.Event) -> ExecutionResult:
-        if self.backend != "docker":
-            raise SandboxError("代码执行尚未启用。请管理员配置 Docker 沙箱后重试。")
-        if cancel_event.is_set():
-            raise asyncio.CancelledError
-        safe_path(self.workspace, ".")
-        for folder in ("uploads", "outputs"):
-            safe_path(self.workspace, folder).mkdir(parents=True, exist_ok=True)
-        name = f"famsun-{uuid.uuid4().hex}"
-        try:
-            process = await asyncio.create_subprocess_exec(
-                *self.command(name, executable), stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-        except (OSError, PermissionError) as exc:
-            raise SandboxError("Docker 执行环境不可用，请检查 Docker 服务和权限。") from exc
-
-        truncated = False
-
-        async def consume(stream: asyncio.StreamReader) -> bytes:
-            nonlocal truncated
-            buffer = bytearray()
-            while chunk := await stream.read(8192):
-                remaining = self.max_output_bytes - len(buffer)
-                buffer.extend(chunk[:max(0, remaining)])
-                if len(chunk) > remaining:
-                    truncated = True
-            return bytes(buffer)
-
-        async def quota_monitor() -> None:
-            while process.returncode is None:
-                count, size = await asyncio.to_thread(workspace_usage, self.workspace)
-                if count > 1000 or size > self.max_workspace_bytes:
-                    raise SandboxError("会话工作空间达到文件数量或容量限制。")
-                await asyncio.sleep(0.25)
-
-        stdout_task = asyncio.create_task(consume(process.stdout))
-        stderr_task = asyncio.create_task(consume(process.stderr))
-        exit_task = asyncio.create_task(process.wait())
-        cancellation = asyncio.create_task(cancel_event.wait())
-        quota_task = asyncio.create_task(quota_monitor())
-        interrupted = False
-        try:
-            done, _ = await asyncio.wait(
-                {exit_task, cancellation, quota_task}, timeout=self.timeout,
-                return_when=asyncio.FIRST_COMPLETED,
-            )
-            if cancellation in done:
-                interrupted = True
-                raise asyncio.CancelledError
-            if quota_task in done and quota_task.exception():
-                interrupted = True
-                raise quota_task.exception()
-            if exit_task not in done and process.returncode is None:
-                interrupted = True
-                raise SandboxError(f"代码执行超过 {self.timeout} 秒，已停止容器。")
-            stdout, stderr = await asyncio.gather(stdout_task, stderr_task)
-            if process.returncode == 125:
-                raise SandboxError("Docker 沙箱启动失败。请检查服务权限及 famsun-sandbox 镜像是否已构建。")
-            return ExecutionResult(process.returncode or 0, stdout.decode("utf-8", "replace"),
-                                   stderr.decode("utf-8", "replace"), truncated)
-        except asyncio.CancelledError:
-            interrupted = True
-            raise
-        finally:
-            for task in (cancellation, quota_task, exit_task):
-                if not task.done():
-                    task.cancel()
-            if interrupted or process.returncode is None:
-                # Killing the Docker CLI alone would leave the container alive.
-                await asyncio.shield(self._remove_container(name))
-                if process.returncode is None:
-                    with contextlib.suppress(ProcessLookupError):
-                        process.kill()
-                    await process.wait()
-            for task in (stdout_task, stderr_task):
-                if not task.done():
-                    task.cancel()
-            await asyncio.gather(cancellation, quota_task, exit_task, stdout_task, stderr_task,
-                                 return_exceptions=True)
-
-    async def python(self, code: str, cancel_event: asyncio.Event) -> ExecutionResult:
-        if len(code.encode("utf-8")) > 64_000:
-            raise SandboxError("Python 代码过长，请分步骤执行。")
-        return await self.execute(["python", "-c", code], cancel_event)
-
-    async def shell(self, command: str, cancel_event: asyncio.Event) -> ExecutionResult:
-        if len(command.encode("utf-8")) > 32_000:
-            raise SandboxError("Shell 命令过长，请分步骤执行。")
-        return await self.execute(["/bin/sh", "-c", command], cancel_event)

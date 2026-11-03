@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Check,
   CircleHelp,
   Cpu,
+  Layers3,
   KeyRound,
   LoaderCircle,
   Server,
@@ -12,6 +13,7 @@ import type { Settings, User } from "../types";
 import { api } from "../lib/api";
 import { Modal } from "./Modal";
 import "../styles/admin.css";
+import "../styles/capabilities.css";
 
 interface Props {
   user: User | null;
@@ -31,14 +33,19 @@ export function SettingsModal({
   const [data, setData] = useState(settings);
   const [baseUrl, setBaseUrl] = useState(settings?.provider.base_url ?? "");
   const [model, setModel] = useState(settings?.provider.model ?? "");
-  const [mode, setMode] = useState<"responses" | "chat_completions">(
-    settings?.provider.api_mode ?? "chat_completions",
+  const [compactionThreshold, setCompactionThreshold] = useState(
+    settings?.provider.compaction_threshold ?? 32000,
   );
   const [loading, setLoading] = useState(!!user && !settings);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const saveRequest = useRef<AbortController | null>(null);
+  const currentUser = useRef(user?.id);
+  currentUser.current = user?.id;
   const isAdmin = user?.role === "admin";
+
+  useEffect(() => () => saveRequest.current?.abort(), [user?.id]);
 
   useEffect(() => {
     if (!user || settings) return;
@@ -49,7 +56,7 @@ export function SettingsModal({
         setData(next);
         setBaseUrl(next.provider.base_url);
         setModel(next.provider.model);
-        setMode(next.provider.api_mode);
+        setCompactionThreshold(next.provider.compaction_threshold ?? 32000);
       })
       .catch((e: Error) => live && setError(e.message))
       .finally(() => live && setLoading(false));
@@ -63,22 +70,30 @@ export function SettingsModal({
     setSaving(true);
     setError("");
     setSaved(false);
+    const owner = user?.id;
+    const controller = new AbortController();
+    saveRequest.current = controller;
     try {
       const next = await api<Settings>("/settings", {
         method: "PATCH",
+        signal: controller.signal,
         body: JSON.stringify({
           base_url: baseUrl.trim(),
           model: model.trim(),
-          api_mode: mode,
+          api_mode: "responses",
+          compaction_threshold: compactionThreshold,
         }),
       });
+      if (controller.signal.aborted || currentUser.current !== owner) return;
       setData(next);
       onSave(next);
       setSaved(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "保存失败，请稍后重试。");
+      if (!controller.signal.aborted && currentUser.current === owner)
+        setError(e instanceof Error ? e.message : "保存失败，请稍后重试。");
     } finally {
-      setSaving(false);
+      if (!controller.signal.aborted && currentUser.current === owner)
+        setSaving(false);
     }
   }
 
@@ -117,7 +132,7 @@ export function SettingsModal({
               </span>
             </div>
             <p className="admin-section-description">
-              支持 OpenAI 与兼容 OpenAI 协议的模型服务。
+              使用支持 Responses API 的模型服务。
             </p>
             <label className="admin-field">
               API 地址
@@ -136,10 +151,9 @@ export function SettingsModal({
               />
             </label>
             <p className="admin-section-description">
-              填写 API 根地址（通常以 /v1 结尾），不要附加 /responses 或
-              /chat/completions；请求路径由所选 API 模式自动添加。
+              填写 API 根地址（通常以 /v1 结尾），不要附加 /responses。
             </p>
-            <div className="admin-field-row">
+            <div>
               <label className="admin-field">
                 模型名称
                 <input
@@ -155,21 +169,10 @@ export function SettingsModal({
                   disabled={!isAdmin || saving}
                 />
               </label>
-              <label className="admin-field">
-                接口协议
-                <select
-                  className="input"
-                  value={mode}
-                  onChange={(e) => {
-                    setMode(e.target.value as typeof mode);
-                    setSaved(false);
-                  }}
-                  disabled={!isAdmin || saving}
-                >
-                  <option value="chat_completions">Chat Completions</option>
-                  <option value="responses">Responses API</option>
-                </select>
-              </label>
+            </div>
+            <div className="settings-fixed-protocol">
+              <span>接口协议</span>
+              <strong>Responses API</strong>
             </div>
             <div className="admin-note">
               <KeyRound size={17} />
@@ -188,6 +191,40 @@ export function SettingsModal({
               </p>
             )}
           </section>
+          <section className="admin-settings-section">
+            <div className="admin-section-title">
+              <Layers3 size={18} />
+              <h3>长对话与上下文</h3>
+              <span className="admin-status is-ready">
+                <i />
+                自动压缩
+              </span>
+            </div>
+            <p className="admin-section-description">
+              在长任务中压缩较早的上下文，保留继续处理任务需要的信息。对话记录仍可在工作台查看。
+            </p>
+            <label className="admin-field">
+              压缩触发阈值（token）
+              <input
+                className="input"
+                type="number"
+                min={1024}
+                max={1000000}
+                step={1}
+                required
+                value={compactionThreshold}
+                onChange={(e) => {
+                  setCompactionThreshold(Number(e.target.value));
+                  setSaved(false);
+                }}
+                disabled={!isAdmin || saving}
+              />
+              <span className="admin-field-help">
+                应低于所选模型的上下文上限。模型服务需支持 Responses
+                上下文压缩。
+              </span>
+            </label>
+          </section>
           <section className="admin-settings-section environment-section">
             <div className="admin-section-title">
               <Server size={18} />
@@ -196,7 +233,7 @@ export function SettingsModal({
             <div className="admin-setting-row">
               <div>
                 <strong>会话独立环境</strong>
-                <p>每个会话拥有专属文件目录与执行空间</p>
+                <p>每个会话拥有专属文件目录与执行空间，允许访问网络</p>
               </div>
               <span
                 className={`admin-status ${data?.sandbox.available ? "is-ready" : ""}`}

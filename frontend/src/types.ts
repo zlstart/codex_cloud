@@ -54,7 +54,8 @@ export interface Settings {
   provider: {
     base_url: string;
     model: string;
-    api_mode: "responses" | "chat_completions";
+    api_mode: "responses";
+    compaction_threshold?: number;
     configured: boolean;
   };
   sandbox: { backend: string; available: boolean };
@@ -65,11 +66,21 @@ export interface Extension {
   id: string;
   name: string;
   description: string;
-  type: "skill" | "mcp";
+  type: "skill" | "mcp" | "subagent";
   enabled: boolean;
   status?: string;
   content?: string;
   url?: string;
+  token_env?: string | null;
+  builtin?: boolean;
+  editable?: boolean;
+  config?: {
+    instructions: string;
+    model?: string | null;
+    max_turns: number;
+    skill_ids: string[];
+    mcp_server_ids: string[];
+  };
 }
 export interface ToolEvent {
   id: string;
@@ -84,3 +95,57 @@ export interface Approval {
   arguments: unknown;
 }
 export type View = "chat" | "files" | "capabilities";
+
+export interface RunEvent {
+  sequence: number;
+  run_id: string;
+  type: string;
+  data: Record<string, unknown>;
+  created_at: string;
+}
+export interface TimelinePage {
+  events: RunEvent[];
+  next_cursor: number;
+  has_more: boolean;
+  status: Run["status"];
+}
+interface TimelineIdentity {
+  id: string;
+  sequence: number;
+  agent_id?: string;
+  agent_name?: string;
+  parent_call_id?: string;
+}
+export interface TextTimelineItem extends TimelineIdentity {
+  kind: "text";
+  text: string;
+  phase: "pending" | "intermediate" | "final";
+}
+export interface ToolTimelineItem extends TimelineIdentity {
+  kind: "tool";
+  call_id?: string;
+  name: string;
+  arguments: unknown;
+  output?: unknown;
+  status: "running" | "completed" | "failed" | "cancelled" | "interrupted";
+}
+export interface PlanTimelineItem extends TimelineIdentity {
+  kind: "plan";
+  steps: string[];
+  current_step: number;
+  completed: boolean;
+}
+export interface NoticeTimelineItem extends TimelineIdentity {
+  kind: "notice";
+  text: string;
+}
+export type TimelineItem =
+  TextTimelineItem | ToolTimelineItem | PlanTimelineItem | NoticeTimelineItem;
+export interface TimelineState {
+  items: TimelineItem[];
+  seen: ReadonlySet<number>;
+  cursor: number;
+  status: Run["status"];
+  error?: string;
+  approval: Approval | null;
+}

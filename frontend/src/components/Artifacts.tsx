@@ -23,8 +23,7 @@ import {
   safeArtifactUrl,
 } from "../lib/api";
 import type { Artifact, User } from "../types";
-import { Modal } from "./Modal";
-import DOMPurify from "dompurify";
+import { FilePreview } from "./previews/FilePreview";
 export function FileIcon({
   file,
   size = 20,
@@ -34,7 +33,7 @@ export function FileIcon({
 }) {
   const name = file.name.toLowerCase();
   if (file.mime_type.startsWith("image/")) return <FileImage size={size} />;
-  if (/\.(csv|xlsx?)$/.test(name)) return <FileSpreadsheet size={size} />;
+  if (/\.(csv|tsv|xlsx?)$/.test(name)) return <FileSpreadsheet size={size} />;
   if (/\.(py|js|ts|json|html|css|sh)$/.test(name))
     return <FileCode2 size={size} />;
   return <FileText size={size} />;
@@ -219,18 +218,34 @@ export function FilesView({
   onPreview: (f: Artifact) => void;
   onOpenSession: (id: string) => void;
 }) {
-  const [files, setFiles] = useState<Artifact[]>([]);
+  const [loadedFiles, setLoadedFiles] = useState<{
+    userId: string;
+    files: Artifact[];
+  } | null>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "upload" | "output">("all");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const files =
+    loadedFiles?.userId === user?.id ? (loadedFiles?.files ?? []) : [];
   useEffect(() => {
+    const controller = new AbortController();
+    setLoadedFiles(null);
+    setError("");
     if (!user) return;
     setLoading(true);
-    api<Artifact[]>("/files")
-      .then(setFiles)
-      .catch((e) => setError(errorMessage(e)))
-      .finally(() => setLoading(false));
+    api<Artifact[]>("/files", { signal: controller.signal })
+      .then((result) => {
+        if (!controller.signal.aborted)
+          setLoadedFiles({ userId: user.id, files: result });
+      })
+      .catch((e) => {
+        if (!controller.signal.aborted) setError(errorMessage(e));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
   }, [user]);
   const shown = files.filter(
     (f) =>
@@ -358,36 +373,6 @@ export function FilesView({
     </section>
   );
 }
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = "";
-  let quote = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (c === '"') {
-      if (quote && text[i + 1] === '"') {
-        field += '"';
-        i++;
-      } else quote = !quote;
-    } else if (c === "," && !quote) {
-      row.push(field);
-      field = "";
-    } else if ((c === "\n" || c === "\r") && !quote) {
-      if (c === "\r" && text[i + 1] === "\n") i++;
-      row.push(field);
-      rows.push(row);
-      field = "";
-      row = [];
-      if (rows.length >= 101) break;
-    } else field += c;
-  }
-  if (rows.length < 101 && (field || row.length)) {
-    row.push(field);
-    rows.push(row);
-  }
-  return rows;
-}
 export function ArtifactPreview({
   file,
   onClose,
@@ -395,150 +380,5 @@ export function ArtifactPreview({
   file: Artifact;
   onClose: () => void;
 }) {
-  const [content, setContent] = useState("");
-  const [blob, setBlob] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const image = file.mime_type.startsWith("image/");
-  const pdf =
-    file.mime_type === "application/pdf" || file.name.endsWith(".pdf");
-  const html = /\.html?$/i.test(file.name);
-  const csv = /\.csv$/i.test(file.name);
-  const text =
-    file.mime_type.startsWith("text/") ||
-    /\.(json|py|js|ts|tsx|jsx|md|yaml|yml|xml|sql|sh|log|css|csv|html?)$/i.test(
-      file.name,
-    );
-  const previewable = image || pdf || text;
-  useEffect(() => {
-    const abort = new AbortController();
-    let blobUrl = "";
-    setLoading(true);
-    setError("");
-    async function load() {
-      if (!previewable) {
-        setLoading(false);
-        return;
-      }
-      if (
-        file.size > 20 * 1024 * 1024 ||
-        (text && file.size > 2 * 1024 * 1024)
-      ) {
-        setError("文件较大，请下载后查看完整内容。");
-        setLoading(false);
-        return;
-      }
-      try {
-        const url = safeArtifactUrl(file.url);
-        if (!url) throw new Error("文件链接无效");
-        const res = await fetch(url, {
-          credentials: "include",
-          signal: abort.signal,
-        });
-        if (!res.ok)
-          throw new Error("无法读取此文件，可能已被删除或无权访问。");
-        if (text) {
-          setContent(await res.text());
-        } else {
-          blobUrl = URL.createObjectURL(await res.blob());
-          setBlob(blobUrl);
-        }
-      } catch (e) {
-        if (!abort.signal.aborted) setError(errorMessage(e));
-      } finally {
-        if (!abort.signal.aborted) setLoading(false);
-      }
-    }
-    void load();
-    return () => {
-      abort.abort();
-      if (blobUrl) URL.revokeObjectURL(blobUrl);
-    };
-  }, [file.id, file.url, file.size, previewable, text]);
-  const rows = csv ? parseCsv(content) : [];
-  const cleanedHtml = DOMPurify.sanitize(content, {
-    FORBID_TAGS: ["meta", "base", "form", "iframe", "object", "embed", "link"],
-    FORBID_ATTR: [
-      "href",
-      "xlink:href",
-      "srcset",
-      "action",
-      "formaction",
-      "target",
-    ],
-  });
-  const secureHtml = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: blob:; style-src 'unsafe-inline'; font-src data:; base-uri 'none'; form-action 'none';">${cleanedHtml}`;
-  return (
-    <Modal
-      title={file.name}
-      description={`${formatSize(file.size)} · ${file.kind === "output" ? "助手生成" : "上传资料"}`}
-      onClose={onClose}
-      className="preview-modal"
-    >
-      <div className={`preview-body ${image ? "image-preview" : ""}`}>
-        {loading ? (
-          <div className="empty-state">
-            <LoaderCircle className="spin" />
-            <p>正在打开文件…</p>
-          </div>
-        ) : error ? (
-          <div className="empty-state">
-            <File size={32} />
-            <p>{error}</p>
-          </div>
-        ) : image ? (
-          <img src={blob} alt={file.name} />
-        ) : pdf ? (
-          <iframe src={blob} title={file.name} sandbox="" />
-        ) : html ? (
-          <iframe srcDoc={secureHtml} title={file.name} sandbox="" />
-        ) : csv ? (
-          <div className="csv-preview">
-            <table>
-              <thead>
-                <tr>
-                  {rows[0]?.map((cell, i) => (
-                    <th key={i}>{cell || `列 ${i + 1}`}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.slice(1).map((row, i) => (
-                  <tr key={i}>
-                    {row.map((cell, j) => (
-                      <td key={j}>{cell}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {rows.length >= 101 && <p>预览前 100 行，下载文件查看全部数据。</p>}
-          </div>
-        ) : text ? (
-          <pre className="text-preview">{content}</pre>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-symbol">
-              <FileIcon file={file} size={36} />
-            </div>
-            <h3>文件已就绪</h3>
-            <p>此格式可下载后使用对应应用打开。</p>
-          </div>
-        )}
-      </div>
-      <footer className="preview-footer">
-        <span>
-          {html ? "安全预览 · 已禁用脚本与外部连接" : "文件仅对所属账号可见"}
-        </span>
-        <a
-          className="button primary"
-          href={`${safeArtifactUrl(file.url)}?download=true`}
-          download
-        >
-          <Download size={16} />
-          下载文件
-        </a>
-      </footer>
-    </Modal>
-  );
+  return <FilePreview key={file.id} file={file} onClose={onClose} />;
 }

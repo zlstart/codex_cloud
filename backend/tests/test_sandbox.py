@@ -1,9 +1,7 @@
-import asyncio
 import os
 
 import pytest
 from app.sandbox import (
-    DockerSandbox,
     SandboxError,
     open_safe_file,
     read_text_file,
@@ -84,36 +82,3 @@ def test_read_write_nested_and_binary_limit(workspace):
         write_text_file(workspace, "uploads/changed.txt", "forbidden")
     (workspace / "uploads" / "big.txt").write_bytes(b"x" * 100)
     assert "截断" in read_text_file(workspace, "uploads/big.txt", max_bytes=10)
-
-
-def test_command_enforces_isolation(workspace, monkeypatch):
-    monkeypatch.setenv("FAMSUN_SANDBOX_UID", "1000")
-    monkeypatch.setenv("FAMSUN_SANDBOX_GID", "1000")
-    monkeypatch.setenv("OPENAI_API_KEY", "must-not-pass")
-    command = DockerSandbox(workspace, timeout=30).command("test-container", ["python", "-c", "print(1)"])
-    for flag in ("--network=none", "--read-only", "--cap-drop=ALL", "--memory=512m", "--cpus=1", "--pids-limit=64", "--pull=never"):
-        assert flag in command
-    assert "--security-opt=no-new-privileges:true" in command
-    assert command[command.index("--user") + 1] == "1000:1000"
-    assert any("dst=/workspace/uploads,readonly" in item for item in command)
-    assert "must-not-pass" not in str(command)
-    assert "HTTP_PROXY=" in command and "HTTPS_PROXY=" in command
-    assert command[-7:] == ["/usr/bin/timeout", "--signal=TERM", "--kill-after=5s", "30s", "python", "-c", "print(1)"]
-
-
-async def test_disabled_backend_never_starts_host_process(workspace, monkeypatch):
-    async def forbidden(*args, **kwargs):
-        pytest.fail("No process should start when sandbox is disabled")
-    monkeypatch.setattr(asyncio, "create_subprocess_exec", forbidden)
-    with pytest.raises(SandboxError, match="尚未启用"):
-        await DockerSandbox(workspace, backend="disabled").python("print('no')", asyncio.Event())
-
-
-async def test_already_cancelled_never_starts_process(workspace, monkeypatch):
-    async def forbidden(*args, **kwargs):
-        pytest.fail("No process should start for cancelled run")
-    monkeypatch.setattr(asyncio, "create_subprocess_exec", forbidden)
-    event = asyncio.Event()
-    event.set()
-    with pytest.raises(asyncio.CancelledError):
-        await DockerSandbox(workspace).python("print('no')", event)

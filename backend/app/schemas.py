@@ -47,7 +47,8 @@ class ApproveRun(Input):
 class PatchSettings(Input):
     base_url: str | None = Field(default=None, max_length=2048)
     model: str | None = Field(default=None, min_length=1, max_length=200)
-    api_mode: Literal["responses", "chat_completions"] | None = None
+    api_mode: Literal["responses"] | None = None
+    compaction_threshold: int | None = Field(default=None, ge=1024, le=1000000)
 
 
 class ToggleExtension(Input):
@@ -65,3 +66,36 @@ class CreateMCP(Input):
     description: str = Field(default="", max_length=1000)
     url: str = Field(min_length=8, max_length=2048)
     token_env: str | None = Field(default=None, pattern=r"^MCP_[A-Z0-9_]+_TOKEN$", max_length=100)
+
+
+class PatchSkill(Input):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    description: str | None = Field(default=None, max_length=1000)
+    content: str | None = Field(default=None, min_length=1, max_length=100000)
+
+
+class PatchMCP(Input):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    description: str | None = Field(default=None, max_length=1000)
+    url: str | None = Field(default=None, min_length=8, max_length=2048)
+    token_env: str | None = Field(default=None, pattern=r"^MCP_[A-Z0-9_]+_TOKEN$", max_length=100)
+
+
+class CreateSubagent(Input):
+    name: str = Field(min_length=1, max_length=100)
+    description: str = Field(default="", max_length=1000)
+    instructions: str = Field(min_length=1, max_length=100000)
+    model: str | None = Field(default=None, min_length=1, max_length=200)
+    max_turns: int = Field(default=12, ge=1, le=100)
+    skill_ids: list[str] = Field(default_factory=list, max_length=100)
+    mcp_server_ids: list[str] = Field(default_factory=list, max_length=50)
+
+
+class PatchSubagent(Input):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    description: str | None = Field(default=None, max_length=1000)
+    instructions: str | None = Field(default=None, min_length=1, max_length=100000)
+    model: str | None = Field(default=None, min_length=1, max_length=200)
+    max_turns: int | None = Field(default=None, ge=1, le=100)
+    skill_ids: list[str] | None = Field(default=None, max_length=100)
+    mcp_server_ids: list[str] | None = Field(default=None, max_length=50)
