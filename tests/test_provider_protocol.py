@@ -165,6 +165,25 @@ def harness(monkeypatch, tmp_path):
     return execute, requests, events, tmp_path
 
 
+async def test_unknown_function_tool_is_reported_and_model_can_recover(harness):
+    execute, requests, events, tmp_path = harness
+
+    def provider(body, sequence):
+        if sequence == 1:
+            return response_sse([call("write_file", {"path": "unexpected.txt", "content": "bad"})])
+        missing = [item for item in body["input"] if item.get("type") == "function_call_output"]
+        assert missing
+        assert json.loads(missing[0]["output"])["isError"] is True
+        if sequence == 2:
+            return response_sse([call("update_plan", {"steps": ["检查现有工具"], "current_step": 0}, "valid")])
+        return response_sse([message("已使用提供的工具继续。")])
+
+    assert await execute(provider) == "已使用提供的工具继续。"
+    assert len(requests) == 3
+    assert not (tmp_path / "workspace" / "unexpected.txt").exists()
+    assert any(name == "plan.updated" for name, _ in events)
+
+
 async def test_responses_native_tools_compaction_and_full_history(harness):
     execute, requests, events, tmp_path = harness
 

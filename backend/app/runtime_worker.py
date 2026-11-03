@@ -4,6 +4,8 @@ SDK 0.24 uses synchronous docker-py calls inside async lifecycle methods. Each
 run therefore owns a worker event loop for its entire native session lifetime;
 only application callbacks cross back to the API loop. Cancellation joins that
 lifetime, including native cleanup and executor shutdown, before returning.
+The runtime also closes its SDK trace inside this worker lifetime; the SDK's
+background batch exporter and process-exit flush own trace delivery.
 """
 
 from __future__ import annotations

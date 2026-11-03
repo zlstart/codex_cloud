@@ -157,3 +157,130 @@ async def test_aggregate_quota_interrupts_run_and_deletes_native_session(tmp_pat
                     stream.truncate(2 * 1024 * 1024)
                 await asyncio.Event().wait()
     assert calls == ["aclose", "delete", "close"]
+
+
+async def test_daemon_timeout_allows_observed_slow_native_container_creation(tmp_path, monkeypatch):
+    module = sdk()
+    observed = {}
+
+    class Docker:
+        containers = object()
+        def close(self):
+            pass
+
+    class Session:
+        async def start(self):
+            pass
+        async def aclose(self):
+            pass
+
+    class Client:
+        def __init__(self, docker):
+            pass
+        async def create(self, **kwargs):
+            # The real vfs daemon needed 22.281 seconds for this request.
+            if observed["timeout"] < 23:
+                from requests.exceptions import ReadTimeout
+                raise ReadTimeout("daemon create response not ready")
+            return Session()
+        async def delete(self, session):
+            pass
+
+    def factory(**kwargs):
+        observed.update(kwargs)
+        return Docker()
+
+    monkeypatch.delenv("FAMSUN_DOCKER_TIMEOUT_SECONDS", raising=False)
+    monkeypatch.setattr(module.docker, "from_env", factory)
+    monkeypatch.setattr(module, "DockerSandboxClient", Client)
+    async with module.open_chat_sandbox(tmp_path, chat_id="slow", user_id="u"):
+        pass
+    assert 23 <= observed["timeout"] <= 300
+
+
+async def test_ambiguous_create_timeout_cleans_only_its_delayed_attempt(tmp_path, monkeypatch):
+    from app.sandbox import SandboxError
+    from docker.errors import NotFound
+    from requests.exceptions import ReadTimeout
+
+    module = sdk()
+    calls = []
+
+    class Container:
+        def __init__(self):
+            self.labels = {}
+        def remove(self, force=False):
+            calls.append(("remove", force))
+
+    class Containers:
+        attempts = 0
+        created = None
+        def create(self, **kwargs):
+            self.created = kwargs
+            raise ReadTimeout("PRIVATE-DOCKER-REQUEST")
+        def get(self, name):
+            assert name == self.created["name"]
+            self.attempts += 1
+            if self.attempts == 1:
+                raise NotFound("creation still in progress")
+            container = Container()
+            container.labels = self.created["labels"]
+            return container
+
+    containers = Containers()
+    class Docker:
+        def __init__(self):
+            self.containers = containers
+        def close(self):
+            calls.append("close")
+
+    class Client:
+        def __init__(self, docker):
+            self.docker = docker
+        async def create(self, **kwargs):
+            return self.docker.containers.create(image="test", labels=kwargs["options"].labels)
+
+    monkeypatch.setattr(module.docker, "from_env", lambda **kwargs: Docker())
+    monkeypatch.setattr(module, "DockerSandboxClient", Client)
+    with pytest.raises(SandboxError, match="Docker.*超时") as error:
+        async with module.open_chat_sandbox(tmp_path, chat_id="slow", user_id="u"):
+            pass
+    assert "PRIVATE" not in str(error.value)
+    assert containers.created["labels"]["famsun.attempt"]
+    assert containers.attempts == 2
+    assert calls == [("remove", True), "close"]
+
+
+async def test_failed_creation_reconciliation_never_removes_another_owner(tmp_path):
+    module = sdk()
+    (tmp_path / "uploads").mkdir()
+    class Other:
+        def __init__(self):
+            self.labels = {"app": "famsun-agent", "famsun.attempt": "different-attempt"}
+        def remove(self, **kwargs):
+            pytest.fail("another attempt must never be removed")
+    class Containers:
+        def create(self, **kwargs):
+            return Other()
+        def get(self, name):
+            return Other()
+    adapter = module.PolicyContainers(Containers(), module.SandboxPolicy.from_environment(tmp_path))
+    adapter.create(image="test", labels={"app": "famsun-agent"})
+    assert not await adapter.reconcile_failed_creation(timeout=1)
+
+
+async def test_missing_container_after_ambiguous_create_is_not_claimed_clean(tmp_path):
+    from docker.errors import NotFound
+    from requests.exceptions import ReadTimeout
+
+    module = sdk()
+    (tmp_path / "uploads").mkdir()
+    class Containers:
+        def create(self, **kwargs):
+            raise ReadTimeout("daemon may still finish creating")
+        def get(self, name):
+            raise NotFound("not visible yet")
+    adapter = module.PolicyContainers(Containers(), module.SandboxPolicy.from_environment(tmp_path))
+    with pytest.raises(ReadTimeout):
+        adapter.create(image="test", labels={"app": "famsun-agent"})
+    assert not await adapter.reconcile_failed_creation(timeout=0)

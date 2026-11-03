@@ -11,8 +11,11 @@ RUN --mount=type=secret,id=proxy_ca \
     pip install --no-cache-dir --require-hashes -r /tmp/requirements.txt
 # Native SDK shell/path/PTY tools use standard Unix commands. Include rg for
 # file discovery, procps for timeout cleanup and curl for network-enabled work.
+# Node validates and executes generated JavaScript without a package manager.
+# WenQuanYi provides TrueType CJK outlines that ReportLab can embed in PDFs;
+# Noto CJK remains available for charts and other font consumers.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        fonts-noto-cjk ripgrep procps curl ca-certificates \
+        fonts-noto-cjk fonts-wqy-zenhei nodejs ripgrep procps curl ca-certificates \
     && rm -rf /var/lib/apt/lists/* /tmp/requirements.txt \
     && groupadd --gid 1000 sandbox \
     && useradd --uid 1000 --gid 1000 --no-create-home sandbox \

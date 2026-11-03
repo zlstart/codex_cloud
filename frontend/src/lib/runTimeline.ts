@@ -148,7 +148,12 @@ export function reduceRunEvent(
         call_id: callId ?? existing?.call_id,
         name: value(data, "name") ?? existing?.name ?? "工具",
         arguments: data.arguments ?? existing?.arguments ?? {},
-        output: data.output ?? existing?.output,
+        output:
+          data.output ??
+          (event.type === "tool.failed"
+            ? (data.error ?? data.message)
+            : undefined) ??
+          existing?.output,
         status,
       },
       index,
@@ -190,6 +195,23 @@ export function reduceRunEvent(
   } else if (event.type === "approval.resolved") {
     if (next.approval?.id === data.id) next.approval = null;
     next.status = "running";
+  } else if (event.type === "run.tracing") {
+    if (
+      data.provider === "openai" &&
+      ["enabled", "disabled", "missing_key"].includes(String(data.status))
+    ) {
+      next.tracing = {
+        provider: "openai",
+        status: data.status as "enabled" | "disabled" | "missing_key",
+        trace_id:
+          typeof data.trace_id === "string" &&
+          /^trace_[a-zA-Z0-9]{32}$/.test(data.trace_id)
+            ? data.trace_id
+            : null,
+        workflow_name: value(data, "workflow_name") ?? "",
+        sensitive_data: data.sensitive_data === true,
+      };
+    }
   } else if (event.type === "run.started") {
     next.status = "running";
   } else if (

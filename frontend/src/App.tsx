@@ -81,6 +81,7 @@ function App() {
     run,
     uploading,
     sending,
+    stopping,
     loading,
     toast,
     setToast,
@@ -170,6 +171,8 @@ function App() {
             {view === "chat" && (
               <button
                 className={`button workspace-toggle ${workspace ? "active" : ""}`}
+                aria-label="工作空间"
+                aria-expanded={workspace}
                 onClick={() => setWorkspace(!workspace)}
               >
                 <PanelRight size={16} />
@@ -246,6 +249,7 @@ function App() {
                           setPending((p) => p.filter((f) => f.id !== id))
                         }
                         busy={runBusy}
+                        stopping={stopping}
                         uploading={uploading || sending}
                         onCapabilities={() => navigate("capabilities")}
                       />

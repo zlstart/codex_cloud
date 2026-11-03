@@ -21,7 +21,7 @@ docker build -t famsun-sandbox:latest sandbox
 1. 复制 `.env.example` 为 `.env`。
 2. 设置 `DATA_DIR=/srv/famsun/data`，创建目录并赋予应用用户读写权限。
 3. 设置 `FAMSUN_UID` / `FAMSUN_GID` 为该非 root 用户的数字 UID / GID；设置 `DOCKER_GID` 为 `stat -c '%g' /var/run/docker.sock` 的结果。
-4. 设置强随机 `POSTGRES_PASSWORD`；用于连接 URL 的值须正确进行 URL 编码，或使用足够长的随机十六进制密码。
+4. 保持 `DATABASE_URL` 留空，应用数据库将保存在上述目录的 `app.db`；已有 SQLite 部署继续使用原数据目录。
 5. 填写 Responses 模型地址、模型与密钥，构建并启动。
 
 ```bash
@@ -32,7 +32,7 @@ docker compose ps
 curl --fail http://127.0.0.1:8080/health
 ```
 
-Compose 只公开 `127.0.0.1:8080`，数据库没有宿主公开端口。前端静态文件和 API 同源提供。设置 HTTPS 反向代理后配置：
+Compose 只运行应用服务并公开 `127.0.0.1:8080`；SQLite 数据文件通过 `DATA_DIR` 的宿主目录挂载持久化，不需要数据库服务或数据库密码。前端静态文件和 API 同源提供。设置 HTTPS 反向代理后配置：
 
 ```dotenv
 COOKIE_SECURE=true
@@ -103,13 +103,18 @@ location / {
 | `AGENT_BASE_URL` | API 根地址；支持 `OPENAI_BASE_URL`，不填写完整 `/responses` 路径 |
 | `AGENT_MODEL` | 模型名称，默认 `gpt-5.6-luna`，与 SDK 0.24 默认模型一致；已配置值不变 |
 | `AGENT_COMPACTION_THRESHOLD` | 原生压缩阈值，默认 32000，需适合目标模型上下文 |
-| `AGENT_MAX_TURNS` | 主代理最大轮数，默认 20 |
-| `AGENT_TIMEOUT_SECONDS` | 单次任务最长时间，默认 300 秒，包含等待审批 |
-| `DATA_DIR` | 工作区与本地 SDK 历史目录 |
-| `DATABASE_URL` | 应用数据库；留空使用 `DATA_DIR/app.db` |
+| `AGENT_MAX_TURNS` | 主代理最大轮数，默认 40；代码生成、自检及多格式产物可能需要多轮工具往返，仍受总时间上限约束 |
+| `AGENT_TIMEOUT_SECONDS` | 单次任务最长时间，默认 900 秒，包含等待审批；复杂代码及多格式报告需要更长生成时间，用户仍可随时停止任务 |
+| `AGENT_TRACING_ENABLED` | 默认 `false`；设置 `true` 启用 SDK 原生 OpenAI Traces |
+| `OPENAI_TRACING_API_KEY` | 独立的 OpenAI 项目密钥；留空时使用 `OPENAI_API_KEY`，不会使用第三方 `AGENT_API_KEY` |
+| `AGENT_TRACING_WORKFLOW_NAME` | 默认 `FAMSUN conversation` |
+| `AGENT_TRACING_INCLUDE_SENSITIVE_DATA` | 默认 `false`；显式开启 SDK 正文采集策略，具体字段受 SDK 与模型协议限制 |
+| `DATA_DIR` | 应用 SQLite 数据库、工作区与本地 SDK 历史目录 |
+| `DATABASE_URL` | 仅支持 SQLite；留空使用 `DATA_DIR/app.db`；可指定 `sqlite:////absolute/path/app.db` |
 | `ALLOWED_MCP_HOSTS` | MCP HTTPS 主机允许列表，逗号分隔 |
 | `MAX_UPLOAD_MB` / `MAX_SESSION_MB` | 默认 25 / 250 MB |
 | `FAMSUN_SANDBOX_IMAGE` | 默认 `famsun-sandbox:latest` |
+| `FAMSUN_DOCKER_TIMEOUT_SECONDS` | Docker 请求超时，默认 60 秒，范围 1–300 秒；较大镜像或慢存储可能超过 15 秒。创建响应超时后会按本次任务唯一标识等待并清理迟到的容器，不重试创建 |
 | `FAMSUN_SANDBOX_UID` / `FAMSUN_SANDBOX_GID` | 沙箱非 root 身份；Compose 从 `FAMSUN_UID` / `FAMSUN_GID` 传入 |
 | `FAMSUN_SANDBOX_CA_BUNDLE` | 可选，只读可信证书包的宿主 / API 共用路径 |
 | `FAMSUN_DEPLOYMENT_ID` | 可选部署标签；默认从数据目录生成，用于限定遗留容器清理 |
@@ -127,7 +132,13 @@ docker build -t famsun-sandbox:latest sandbox
 
 ## 备份、升级与重启
 
-一致性备份包含应用数据库和整个 `DATA_DIR`：工作区文件以及 `history/<user>/<session>.sqlite3`。即使应用使用 PostgreSQL，SDK 历史仍在本地 SQLite，不能只做 `pg_dump`。
+OpenAI Traces 使用 SDK 后台导出，配置、隐私策略和第三方 Responses 可观测字段说明见 [追踪指南](TRACING.md)。运行页的追踪链接表示已配置采集，不代表服务端已成功接收；无需为追踪另外部署数据库。
+
+一致性备份包含整个 `DATA_DIR`：`app.db`、工作区文件以及 `history/<user>/<session>.sqlite3`。如自定义 `DATABASE_URL` 指向其他 SQLite 文件，也要将该文件纳入备份；Compose 中须额外挂载其所在目录并赋予应用用户写权限。SQLite URL 支持 `sqlite:///` 与 `sqlite+pysqlite:///`，其他数据库或驱动配置会在启动时明确报错，不会自动切换数据库或搬迁数据。
+
+SQLite 使用 WAL、外键约束和 30 秒锁等待，支持单个应用进程内的并行聊天；写事务由 SQLite 串行处理。数据目录使用支持 SQLite 文件锁的本地持久磁盘，保持一个 API worker、一个应用副本。不要直接复制正在写入的 `.db` 文件并遗漏 `-wal` / `-shm` 文件。
+
+最简单的一致性备份方式是先等待活动任务结束并停止应用（`docker compose stop app`），备份整个数据目录，再启动应用（`docker compose start app`）。恢复时同样先停止应用，完整恢复数据目录和原属主 / 权限后启动。需要在线备份时须使用 SQLite backup API，并协调所有应用数据库、SDK 历史与工作区文件的一致性。
 
 升级前停止接收新任务，等待活动任务结束，再备份。应用启动会创建缺失表，并为旧扩展表补充 JSON `config` 列；旧 API 模式设置归一为 Responses。旧聊天的 user / assistant 文本在第一次运行时导入空 SDK 历史，之后以完整 SDK 项目为准。后续复杂迁移仍需单独设计和演练。
 
@@ -136,6 +147,10 @@ docker build -t famsun-sandbox:latest sandbox
 Docker socket 使控制面具有较高宿主权限，应使用专用执行主机。要扩展到多个 worker / 副本，需先实现持久队列、分布式锁、任务所有权和共享存储。企业 SSO、业务系统用户身份映射及更强执行隔离需要另行接入。
 
 ## 目标环境验证
+
+文件预览使用应用镜像中的 `openpyxl`、`python-docx`、`python-pptx` 和图像解析依赖，不依赖外部 Office 转换服务或宿主机 LibreOffice。升级这些能力时需重新构建应用镜像，并等待当前任务结束后重启单实例服务；仅替换静态前端不会更新已加载的后端预览模块。
+
+反向代理应保留应用 HTML 的 `Content-Security-Policy: frame-src 'none'; object-src 'none'`，以及文件读取响应自带的 sandbox CSP。前端入口还提供相同的 frame 限制，开发和生产都允许受限 srcdoc 内联交互，禁止该 iframe 导航到外部页面。不要为 HTML 游戏开启 `allow-same-origin` 或放宽为任意远端 iframe。Office 的具体预览范围与资源限制见 [API 文档](API.md#office-预览)。
 
 这些是复跑命令，不代表已在当前目标环境通过：
 
@@ -147,5 +162,7 @@ PYTHONPATH=backend uv run python tests/docker_smoke.py
 Docker smoke 直接使用 SDK 原生沙箱，覆盖文件 / 补丁 / 命令 / Skills、资源配置、网络 TLS、隔离和清理；不调用模型。以应用的非 root 用户运行，先构建镜像并保证数据目录权限与 UID / GID 对齐。
 
 运行界面回归前启动开发服务，再在 `frontend/` 执行 `npm run test:ui`；该脚本使用模拟 API。真实部署可运行 `npm run test:deployment`，需要独立验收环境；模型端到端脚本另需 `FAMSUN_LIVE_MODEL_TEST=1` 和已配置模型服务，会产生真实模型调用费用。
+
+`FAMSUN_TEST_BASE_URL=http://127.0.0.1:8000 npm run test:previews` 可针对已构建前端验证交互 HTML、隔离边界、Office 内容和异常图片/幻灯片尺寸；此套件使用明确标记的模拟 API 与人工构造文件，不能替代真实模型产物验收。真实验收还需在应用内生成并操作文件，核对下载字节、图表/表格内容和实际截图。
 
 上线时另验收两个账号的隔离、真实 Responses 工具循环、连续多轮历史、压缩、子代理、MCP 允许 / 拒绝、取消、SSE 重连、文件预览和备份恢复。记录实际执行命令、环境和结果；历史验证报告不自动适用于当前部署。

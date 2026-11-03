@@ -107,6 +107,8 @@
 .timeline-tool-name {
   overflow-wrap: anywhere;
   min-width: 0;
+  flex-shrink: 0;
+  max-width: 50%;
   font-weight: 500;
 }
 .timeline-tool-status {
@@ -137,18 +139,53 @@
   border-top: 1px solid #e8edf3;
   padding: 12px;
 }
-.timeline-tool-detail pre {
+.timeline-tool-detail .code-block {
+  margin: 6px 0 12px;
+}
+.timeline-tool-command {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+  color: #7b889b;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
+}
+.tool-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 18px;
+  margin: 0 0 10px;
   font-size: 11px;
   line-height: 1.7;
-  overflow: auto;
-  max-height: 270px;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  color: #5d6a7c;
-  margin: 5px 0 13px;
 }
-.timeline-tool-detail pre:last-child {
-  margin-bottom: 0;
+.tool-metadata > div {
+  display: flex;
+  gap: 7px;
+  min-width: 0;
+}
+.tool-metadata dt {
+  color: #7b889b;
+  flex-shrink: 0;
+}
+.tool-metadata dd {
+  margin: 0;
+  color: #495d75;
+  overflow-wrap: anywhere;
+}
+.tool-extra {
+  margin: 8px 0;
+  font-size: 11px;
+  color: #6c7e94;
+}
+.tool-extra summary {
+  cursor: pointer;
+  padding: 3px 0;
+}
+.tool-result {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e3e8ef;
 }
 .timeline-agent {
   display: inline-flex;
@@ -256,6 +293,9 @@
   }
   .timeline-tool-status {
     font-size: 9px;
+  }
+  .timeline-tool-command {
+    display: none;
   }
   .process-count {
     font-size: 10px;

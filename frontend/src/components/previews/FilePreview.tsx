@@ -8,17 +8,22 @@ import {
   RefreshCw,
   ShieldCheck,
 } from "lucide-react";
-import DOMPurify from "dompurify";
 import type { Artifact } from "../../types";
 import { api, errorMessage, formatSize, safeArtifactUrl } from "../../lib/api";
 import { Modal } from "../Modal";
 import { Markdown } from "../Markdown";
+import { CodeBlock } from "../CodeBlock";
 import { SpreadsheetPreview } from "./SpreadsheetPreview";
+import { DocumentPreview } from "./DocumentPreview";
+import { PresentationPreview } from "./PresentationPreview";
+import { isolatedHtmlDocument } from "./htmlPreview";
 import {
   boundedBlob,
+  decodePreviewText,
   kindLabel,
   parseDelimited,
   previewKind,
+  previewLanguage,
 } from "./previewData";
 import type { ParsedPreview } from "./previewData";
 import "../../styles/previews.css";
@@ -48,7 +53,8 @@ export function FilePreview({
 }) {
   const kind = previewKind(file);
   const textual = ["text", "markdown", "html", "csv"].includes(kind);
-  const parsed = kind === "spreadsheet" || kind === "document";
+  const parsed =
+    kind === "spreadsheet" || kind === "document" || kind === "presentation";
   const [content, setContent] = useState("");
   const [blob, setBlob] = useState<Blob | null>(null);
   const [blobUrl, setBlobUrl] = useState("");
@@ -95,9 +101,8 @@ export function FilePreview({
         );
         if (controller.signal.aborted) return;
         if (textual) {
-          const text = await data.text();
-          if (!controller.signal.aborted)
-            setContent(text.replace(/^\uFEFF/, ""));
+          const text = await decodePreviewText(data);
+          if (!controller.signal.aborted) setContent(text);
         } else {
           setBlob(data);
           if (kind !== "pdf") {
@@ -116,48 +121,47 @@ export function FilePreview({
       controller.abort();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [file.id, file.url, file.size, kind, parsed, textual, retry]);
+  }, [
+    file.id,
+    file.url,
+    file.size,
+    file.created_at,
+    kind,
+    parsed,
+    textual,
+    retry,
+  ]);
   const renderedContent = content.slice(0, MAX_RENDER_CHARS);
   const csvSheet = useMemo(
     () =>
       kind === "csv"
-        ? parseDelimited(content, /\.tsv$/i.test(file.name) ? "\t" : ",")
+        ? parseDelimited(
+            content,
+            /\.tsv$/i.test(file.name) ||
+              file.mime_type.split(";")[0].trim().toLowerCase() ===
+                "text/tab-separated-values"
+              ? "\t"
+              : ",",
+          )
         : null,
-    [kind, content, file.name],
+    [kind, content, file.name, file.mime_type],
   );
-  const secureHtml = useMemo(() => {
-    if (kind !== "html" || !content) return "";
-    const clean = DOMPurify.sanitize(renderedContent, {
-      FORBID_TAGS: [
-        "meta",
-        "base",
-        "form",
-        "iframe",
-        "object",
-        "embed",
-        "link",
-        "input",
-        "button",
-        "textarea",
-        "select",
-      ],
-      FORBID_ATTR: [
-        "href",
-        "xlink:href",
-        "srcset",
-        "action",
-        "formaction",
-        "target",
-        "ping",
-      ],
-    });
-    return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: blob:; style-src 'unsafe-inline'; font-src data:; base-uri 'none'; form-action 'none';"><meta name="referrer" content="no-referrer"></head><body>${clean}</body></html>`;
-  }, [kind, content, renderedContent]);
+  // Render complete, byte-bounded HTML. Slicing markup can break embedded
+  // images or executable apps; only the source-code view is character-limited.
+  const secureHtml = useMemo(
+    () => (kind === "html" && content ? isolatedHtmlDocument(content) : ""),
+    [kind, content],
+  );
   const sourceAvailable =
     kind === "markdown" || kind === "html" || kind === "csv";
   const downloadUrl = safeArtifactUrl(file.url);
   const displayedText = useMemo(() => {
-    if (!/\.json$/i.test(file.name) || content.length > MAX_RENDER_CHARS)
+    const isJson =
+      /\.(json|ipynb)$/i.test(file.name) || previewLanguage(file) === "json";
+    const isJsonLines =
+      /\.(jsonl|ndjson)$/i.test(file.name) ||
+      file.mime_type.startsWith("application/x-ndjson");
+    if (!isJson || isJsonLines || content.length > MAX_RENDER_CHARS)
       return renderedContent;
     try {
       const formatted = JSON.stringify(JSON.parse(content), null, 2);
@@ -165,13 +169,14 @@ export function FilePreview({
     } catch {
       return renderedContent;
     }
-  }, [content, renderedContent, file.name]);
+  }, [content, renderedContent, file]);
   return (
     <Modal
       title={file.name}
       description={`${formatSize(file.size)} · ${file.kind === "output" ? "助手生成" : "上传资料"}`}
       onClose={onClose}
       className="preview-modal file-preview-modal"
+      allowFullscreen
     >
       <div className="file-preview-toolbar">
         <span className="preview-format">
@@ -199,14 +204,16 @@ export function FilePreview({
           </div>
         )}
       </div>
-      {content.length > MAX_RENDER_CHARS && (source || kind !== "csv") && (
-        <div className="preview-notice" role="status">
-          预览显示前 {MAX_RENDER_CHARS.toLocaleString()}{" "}
-          个字符，下载文件可查看完整内容。
-        </div>
-      )}
+      {content.length > MAX_RENDER_CHARS &&
+        (source || (kind !== "csv" && kind !== "html")) && (
+          <div className="preview-notice" role="status">
+            预览显示前 {MAX_RENDER_CHARS.toLocaleString()}{" "}
+            个字符，下载文件可查看完整内容。
+          </div>
+        )}
       <div
         className={`preview-body preview-kind-${kind}${kind === "image" ? " image-preview" : ""}`}
+        aria-busy={loading}
       >
         {loading ? (
           <Loading />
@@ -224,30 +231,31 @@ export function FilePreview({
             </button>
           </div>
         ) : source ? (
-          <pre className="text-preview" tabIndex={0}>
-            {renderedContent}
-          </pre>
+          <CodeBlock
+            code={renderedContent}
+            filename={file.name}
+            language={
+              kind === "markdown"
+                ? "markdown"
+                : kind === "html"
+                  ? "html"
+                  : undefined
+            }
+            className="file-code-preview"
+            maxHeight="none"
+          />
         ) : kind === "spreadsheet" && structured?.kind === "spreadsheet" ? (
           <SpreadsheetPreview
             sheets={structured.sheets}
             truncated={structured.truncated}
+            showFormatNotice
           />
         ) : kind === "csv" && csvSheet ? (
           <SpreadsheetPreview sheets={[csvSheet]} />
         ) : kind === "document" && structured?.kind === "document" ? (
-          <div className="document-preview">
-            <div className="document-page">
-              <div className="document-preview-label">文档内容</div>
-              {structured.paragraphs.map((paragraph, index) => (
-                <p key={index}>{paragraph}</p>
-              ))}
-              {!structured.paragraphs.length && <p>文档没有可提取的正文。</p>}
-            </div>
-            <div className="preview-notice">
-              文本预览，原始排版、图片与图表请下载查看。
-              {structured.truncated && "内容已截取。"}
-            </div>
-          </div>
+          <DocumentPreview document={structured} />
+        ) : kind === "presentation" && structured?.kind === "presentation" ? (
+          <PresentationPreview presentation={structured} />
         ) : kind === "markdown" ? (
           <article className="markdown-preview message-content">
             <Markdown
@@ -260,7 +268,7 @@ export function FilePreview({
           <iframe
             srcDoc={secureHtml}
             title={file.name}
-            sandbox=""
+            sandbox="allow-scripts"
             referrerPolicy="no-referrer"
           />
         ) : kind === "pdf" && blob ? (
@@ -305,9 +313,13 @@ export function FilePreview({
             />
           </div>
         ) : kind === "text" ? (
-          <pre className="text-preview" tabIndex={0}>
-            {displayedText}
-          </pre>
+          <CodeBlock
+            code={displayedText}
+            filename={file.name}
+            language={previewLanguage(file)}
+            className="file-code-preview"
+            maxHeight="none"
+          />
         ) : (
           <div className="preview-empty">
             <File size={36} />
@@ -320,7 +332,7 @@ export function FilePreview({
         <span>
           <ShieldCheck size={13} />
           {kind === "html"
-            ? "安全预览 · 已禁用脚本与外部连接"
+            ? "隔离预览 · 已禁用外部连接"
             : "文件仅对所属账号可见"}
         </span>
         {downloadUrl && (

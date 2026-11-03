@@ -4,6 +4,7 @@ import { initialTimeline, reduceRunEvent } from "./runTimeline";
 
 const eventTypes = [
   "run.started",
+  "run.tracing",
   "text.started",
   "text.delta",
   "text.completed",

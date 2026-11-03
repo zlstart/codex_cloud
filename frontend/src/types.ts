@@ -148,4 +148,13 @@ export interface TimelineState {
   status: Run["status"];
   error?: string;
   approval: Approval | null;
+  tracing?: RunTracing;
+}
+
+export interface RunTracing {
+  provider: "openai";
+  status: "enabled" | "disabled" | "missing_key";
+  trace_id: string | null;
+  workflow_name: string;
+  sensitive_data: boolean;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   ArrowUpRight,
   Download,
@@ -24,6 +24,7 @@ import {
 } from "../lib/api";
 import type { Artifact, User } from "../types";
 import { FilePreview } from "./previews/FilePreview";
+import { previewKind } from "./previews/previewData";
 export function FileIcon({
   file,
   size = 20,
@@ -31,10 +32,14 @@ export function FileIcon({
   file: Artifact;
   size?: number;
 }) {
-  const name = file.name.toLowerCase();
-  if (file.mime_type.startsWith("image/")) return <FileImage size={size} />;
-  if (/\.(csv|tsv|xlsx?)$/.test(name)) return <FileSpreadsheet size={size} />;
-  if (/\.(py|js|ts|json|html|css|sh)$/.test(name))
+  const kind = previewKind(file);
+  if (kind === "image") return <FileImage size={size} />;
+  if (kind === "csv" || kind === "spreadsheet")
+    return <FileSpreadsheet size={size} />;
+  if (
+    kind === "html" ||
+    (kind === "text" && !/\.(txt|text|log)$/i.test(file.name))
+  )
     return <FileCode2 size={size} />;
   return <FileText size={size} />;
 }
@@ -57,7 +62,7 @@ export function FileTile({
         <FileIcon file={file} />
       </button>
       <button className="file-tile-info" onClick={() => onPreview(file)}>
-        <strong>{file.name}</strong>
+        <strong title={file.name}>{file.name}</strong>
         <small>
           {formatSize(file.size)} ·{" "}
           {file.kind === "output" ? "助手生成" : "已上传"}
@@ -91,9 +96,23 @@ export function Workspace({
   uploading: boolean;
 }) {
   const input = useRef<HTMLInputElement>(null);
+  const tabId = useId();
   const [drag, setDrag] = useState(false);
-  const [filter, setFilter] = useState<"all" | "output">("all");
-  const shown = files.filter((f) => filter === "all" || f.kind === "output");
+  const [filter, setFilter] = useState<"all" | "upload" | "output">("all");
+  const shown = files.filter((f) => filter === "all" || f.kind === filter);
+  const tabs = [
+    { key: "all", label: "全部文件", count: files.length },
+    {
+      key: "upload",
+      label: "已上传",
+      count: files.filter((f) => f.kind === "upload").length,
+    },
+    {
+      key: "output",
+      label: "生成成果",
+      count: files.filter((f) => f.kind === "output").length,
+    },
+  ] as const;
   return (
     <aside className="workspace-panel">
       <header>
@@ -111,22 +130,45 @@ export function Workspace({
         </button>
       </header>
       <div className="workspace-scroll">
-        {files.length > 0 ? (
-          <>
-            <div className="file-tabs">
-              <button
-                className={filter === "all" ? "active" : ""}
-                onClick={() => setFilter("all")}
-              >
-                全部文件
-              </button>
-              <button
-                className={filter === "output" ? "active" : ""}
-                onClick={() => setFilter("output")}
-              >
-                生成成果
-              </button>
-            </div>
+        <div className="file-tabs" role="tablist" aria-label="工作空间文件来源">
+          {tabs.map((tab, index) => (
+            <button
+              key={tab.key}
+              id={`${tabId}-${tab.key}`}
+              type="button"
+              role="tab"
+              aria-selected={filter === tab.key}
+              aria-controls={`${tabId}-panel`}
+              aria-label={`${tab.label}（${tab.count}）`}
+              tabIndex={filter === tab.key ? 0 : -1}
+              className={filter === tab.key ? "active" : ""}
+              onClick={() => setFilter(tab.key)}
+              onKeyDown={(event) => {
+                let next = index;
+                if (event.key === "ArrowRight")
+                  next = (index + 1) % tabs.length;
+                else if (event.key === "ArrowLeft")
+                  next = (index - 1 + tabs.length) % tabs.length;
+                else if (event.key === "Home") next = 0;
+                else if (event.key === "End") next = tabs.length - 1;
+                else return;
+                event.preventDefault();
+                setFilter(tabs[next].key);
+                document.getElementById(`${tabId}-${tabs[next].key}`)?.focus();
+              }}
+            >
+              {tab.label}
+              <span aria-hidden="true">{tab.count}</span>
+            </button>
+          ))}
+        </div>
+        <div
+          id={`${tabId}-panel`}
+          role="tabpanel"
+          aria-labelledby={`${tabId}-${filter}`}
+          tabIndex={0}
+        >
+          {files.length > 0 || filter !== "all" ? (
             <div className="workspace-files">
               {shown.map((f) => (
                 <FileTile
@@ -137,33 +179,37 @@ export function Workspace({
                 />
               ))}
               {!shown.length && (
-                <p className="small-empty">助手生成的成果会出现在这里。</p>
+                <p className="small-empty" role="status">
+                  {filter === "upload"
+                    ? "还没有上传文件。上传的资料会出现在这里。"
+                    : "助手生成的成果会出现在这里。"}
+                </p>
               )}
             </div>
-          </>
-        ) : (
-          <div className="workspace-empty">
-            <div className="folder-art" aria-hidden="true">
-              <div className="folder-paper">
-                <i />
-                <i />
-                <i />
-              </div>
-              <div className="folder-back" />
-              <div className="folder-front">
-                <div>
-                  <Upload size={27} strokeWidth={1.5} />
+          ) : (
+            <div className="workspace-empty">
+              <div className="folder-art" aria-hidden="true">
+                <div className="folder-paper">
+                  <i />
+                  <i />
+                  <i />
+                </div>
+                <div className="folder-back" />
+                <div className="folder-front">
+                  <div>
+                    <Upload size={27} strokeWidth={1.5} />
+                  </div>
                 </div>
               </div>
+              <h3>让文件成为思考的起点</h3>
+              <p>
+                上传资料，或在对话中
+                <br />
+                生成新的成果。
+              </p>
             </div>
-            <h3>让文件成为思考的起点</h3>
-            <p>
-              上传资料，或在对话中
-              <br />
-              生成新的成果。
-            </p>
-          </div>
-        )}
+          )}
+        </div>
         <button
           className={`upload-drop ${drag ? "drag-over" : ""} ${files.length ? "upload-drop-small" : ""}`}
           onClick={() => input.current?.click()}
@@ -176,7 +222,8 @@ export function Workspace({
           onDrop={(e) => {
             e.preventDefault();
             setDrag(false);
-            onUpload(Array.from(e.dataTransfer.files));
+            if (!uploading && e.dataTransfer.files.length)
+              onUpload(Array.from(e.dataTransfer.files));
           }}
         >
           {uploading ? (
@@ -265,7 +312,7 @@ export function FilesView({
         </div>
       </div>
       <div className="list-toolbar">
-        <div className="segmented">
+        <div className="segmented" role="group" aria-label="文件来源">
           {(
             [
               { key: "all", label: "全部文件" },
@@ -276,6 +323,7 @@ export function FilesView({
             <button
               key={t.key}
               className={filter === t.key ? "active" : ""}
+              aria-pressed={filter === t.key}
               onClick={() => setFilter(t.key)}
             >
               {t.label}

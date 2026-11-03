@@ -1,11 +1,5 @@
-"""Optional production-database integration, enabled by FAMSUN_TEST_DATABASE_URL.
+"""SQLite persistence and upgrade checks run with disposable local files in every test run."""
 
-The supplied database must be disposable and its name end in _test or _qa.
-"""
-import os
-from urllib.parse import urlsplit
-
-import pytest
 from app.config import Settings
 from app.db import Base, Database
 from app.main import create_app
@@ -14,20 +8,16 @@ from fastapi.testclient import TestClient
 from sqlalchemy import inspect, text
 
 
-@pytest.mark.skipif(not os.getenv("FAMSUN_TEST_DATABASE_URL"), reason="PostgreSQL integration is opt-in")
-def test_postgres_auth_artifacts_preferences_and_restart(tmp_path):
-    url = os.environ["FAMSUN_TEST_DATABASE_URL"]
-    assert urlsplit(url).path.endswith(("_test", "_qa")), "Use a disposable test database"
+def test_sqlite_auth_artifacts_preferences_and_restart(tmp_path):
+    url = f"sqlite:///{tmp_path / 'app.db'}"
     settings = Settings(
         data_dir=tmp_path, database_url=url, sandbox_backend="disabled",
         registration_enabled=True, api_key="",
     )
     app = create_app(settings)
-    # The explicit opt-in URL above must designate an expendable database.
-    Base.metadata.drop_all(app.state.db.engine)
     with TestClient(app) as client:
         registered = client.post("/api/auth/register", json={
-            "email": "postgres-qa@example.com", "name": "持久化验证", "password": "test-password-12345",
+            "email": "sqlite-qa@example.com", "name": "持久化验证", "password": "test-password-12345",
         })
         assert registered.status_code == 201, registered.text
         assert registered.json()["role"] == "admin"
@@ -41,14 +31,14 @@ def test_postgres_auth_artifacts_preferences_and_restart(tmp_path):
         assert "A,100" in client.get(artifact["url"]).text
         client.patch(f"/api/sessions/{sid}", json={"pinned": True})
         created = client.post("/api/extensions/skills", json={
-            "name": "Postgres Skill", "description": "JSON + unicode persistence", "content": "# 数据库验证\n读取文件",
+            "name": "SQLite Skill", "description": "JSON + unicode persistence", "content": "# 数据库验证\n读取文件",
         }).json()
         assert client.patch(f"/api/extensions/{created['id']}", json={"enabled": False}).status_code == 200
 
     # The second app uses entirely new DB sessions, as after a process restart.
     app = create_app(settings)
     with TestClient(app) as client:
-        result = client.post("/api/auth/login", json={"email": "postgres-qa@example.com", "password": "test-password-12345"})
+        result = client.post("/api/auth/login", json={"email": "sqlite-qa@example.com", "password": "test-password-12345"})
         assert result.status_code == 200, result.text
         detail = client.get(f"/api/sessions/{sid}").json()
         assert detail["session"]["pinned"] is True
@@ -59,14 +49,11 @@ def test_postgres_auth_artifacts_preferences_and_restart(tmp_path):
         assert client.get(artifact["url"]).status_code == 404
 
 
-@pytest.mark.skipif(not os.getenv("FAMSUN_TEST_DATABASE_URL"), reason="PostgreSQL integration is opt-in")
-def test_postgres_additive_extension_migration_preserves_existing_data():
+def test_sqlite_additive_extension_migration_preserves_existing_data(tmp_path):
     """A pre-subagent schema gains config without resetting edits or preferences."""
-    url = os.environ["FAMSUN_TEST_DATABASE_URL"]
-    assert urlsplit(url).path.endswith(("_test", "_qa")), "Use a disposable test database"
+    url = f"sqlite:///{tmp_path / 'app.db'}"
     database = Database(url)
     try:
-        Base.metadata.drop_all(database.engine)
         Base.metadata.create_all(database.engine)
         with database.session.begin() as session:
             session.add(User(id="legacy-user", email="legacy@example.com", name="旧用户",

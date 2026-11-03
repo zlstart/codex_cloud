@@ -12,9 +12,11 @@ function columnLabel(column: number): string {
 export function SpreadsheetPreview({
   sheets,
   truncated = false,
+  showFormatNotice = false,
 }: {
   sheets: PreviewSheet[];
   truncated?: boolean;
+  showFormatNotice?: boolean;
 }) {
   const [selected, setSelected] = useState(0);
   const [page, setPage] = useState(0);
@@ -84,6 +86,16 @@ export function SpreadsheetPreview({
         </span>
         <span>只读预览</span>
       </div>
+      {showFormatNotice && (
+        <div className="preview-notice" role="note">
+          数据预览，图表、图片及复杂格式请下载原文件查看；公式显示文件中已保存的计算结果。
+        </div>
+      )}
+      {sheet.number_format_fallback && (
+        <div className="preview-notice" role="note">
+          部分数字或日期格式暂不支持，已显示原始值；完整格式请下载查看。
+        </div>
+      )}
       {(truncated || sheet.truncated) && (
         <div className="preview-notice" role="status">
           已截取部分内容进行预览，下载文件可查看完整数据。
@@ -124,7 +136,9 @@ export function SpreadsheetPreview({
                           typeof row[column] === "number" ? "cell-number" : ""
                         }
                       >
-                        {row[column] == null ? "" : String(row[column])}
+                        {sheet.display_rows?.[page * pageSize + index]?.[
+                          column
+                        ] ?? (row[column] == null ? "" : String(row[column]))}
                       </td>
                     ))}
                   </tr>

@@ -153,6 +153,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         response.headers["X-Frame-Options"] = "SAMEORIGIN"
         if request.url.path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-store"
+        elif response.headers.get("content-type", "").startswith("text/html"):
+            # Opaque-origin srcdoc apps may execute inline scripts, but must not
+            # navigate their frame to any URL. Child CSP does not block a frame's
+            # own navigation, so the embedding document enforces this boundary.
+            response.headers["Content-Security-Policy"] = "frame-src 'none'; object-src 'none'"
         return response
 
     def rate_limit(request: Request):

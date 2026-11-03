@@ -28,7 +28,7 @@ from .models import (
     now,
     uid,
 )
-from .sandbox import open_safe_file
+from .sandbox import SandboxError, open_safe_file
 
 logger = logging.getLogger(__name__)
 ACTIVE = {"queued", "running", "awaiting_approval"}
@@ -396,6 +396,10 @@ class RunService:
                 user_id=user_id,
                 session_id=session.id,
                 run_id=run_id,
+                tracing_enabled=self.settings.tracing_enabled,
+                tracing_api_key=self.settings.tracing_api_key,
+                tracing_workflow_name=self.settings.tracing_workflow_name,
+                tracing_include_sensitive_data=self.settings.tracing_include_sensitive_data,
             )
             async with asyncio.timeout(self.settings.max_runtime_seconds):
                 result = await run_agent_in_worker(
@@ -423,8 +427,9 @@ class RunService:
                 "APIConnectionError": "无法连接模型服务，请检查 API 地址和网络。",
                 "BadRequestError": "模型服务拒绝了 Responses 请求。请确认支持自定义工具、流式工具往返及 context_management 上下文压缩。",
                 "MaxTurnsExceeded": "任务达到最大工具轮数，请拆分任务后继续。",
+                "ModelBehaviorError": "模型返回了无法执行的工具请求或响应格式。已保留工作空间文件，请重试或调整模型。",
             }.get(name, "任务执行失败，请检查模型配置及沙箱服务。")
-            if name == "AgentRuntimeError":
+            if name == "AgentRuntimeError" or isinstance(exc, SandboxError):
                 safe = str(exc)
             logger.warning("Agent run %s failed (%s)", run_id, name)
             await self.finish(run_id, "failed", safe)

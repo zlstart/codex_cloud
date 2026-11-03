@@ -5,7 +5,7 @@
 ```mermaid
 flowchart LR
   Browser[React 工作台] -->|Cookie / JSON / SSE| API[FastAPI 身份与归属校验]
-  API --> DB[(应用 SQLite / PostgreSQL)]
+  API --> DB[(本地应用 SQLite)]
   API --> History[(本地 SDK SQLiteSession)]
   API --> Runner[SDK Runner / SandboxAgent]
   Runner -->|Responses / store=false| Provider[模型服务与原生 compaction]
@@ -35,7 +35,7 @@ SSE 是观察通道；断开浏览器连接不会取消任务。取消通过独�
 
 ```text
 DATA_DIR/
-  app.db                              # 应用使用本地 SQLite 时
+  app.db                              # 默认应用 SQLite 数据库
   history/
     <user-id>/<session-id>.sqlite3     # SDK 完整会话项目，始终本地保存
   workspaces/
@@ -49,7 +49,7 @@ Session ID 是查找标识，不是授权凭据。FastAPI 对会话、任务、�
 
 应用 `Message` 保存用户界面中的对话和最终答案；SDK `SQLiteSession` 保存完整模型项目，包括工具 call / output。`RunEvent` 保存可重放的执行视图。三者用途不同，不能用 UI 文本重新构建每一轮模型历史。删除聊天会清理其关联记录、文件和本地 SDK 历史。
 
-路径与文件访问拒绝目录穿越、符号链接逃逸和非普通文件；上传受文件大小与聊天容量限制。数据库备份与整个 `DATA_DIR` 必须保持一致，使用 PostgreSQL 也不能漏掉本地 SDK 历史。
+路径与文件访问拒绝目录穿越、符号链接逃逸和非普通文件；上传受文件大小与聊天容量限制。应用数据库统一使用 SQLite，启用 WAL、外键约束和 30 秒锁等待；数据库备份与整个 `DATA_DIR` 必须保持一致，包括本地 SDK 历史。
 
 ## 沙箱与网络
 
@@ -83,7 +83,9 @@ SDK 原始 Responses / RunItem 事件统一映射为持久化事件，以递增 
 
 SSE 和 `/api/runs/{id}/timeline` 返回同一批事件。前端使用同一 reducer 还原过程，`text.completed` 是文本权威内容，`text.phase` 识别最终答案，`run.completed` 关联最终 Message。历史和实时视图都把执行过程与最终答复分开。
 
-Office 预览在独立的受限解析进程中处理已授权文件描述符，只返回表格值或 DOCX 文本，不运行公式、宏或外部链接。预览有文件、解压体积、行列、文本、时间和内存上限。HTML 通过清洗和受限 iframe 渲染，PDF 在浏览器分页呈现；音视频取决于浏览器支持的格式。预览不等同于 Office 完整版式渲染，超限或不支持的文件仍可下载。
+Office 预览在独立的受限解析进程中处理已授权文件描述符，返回表格值、DOCX 有序正文/表格/内嵌图片，以及 PPTX 幻灯片的文字、简单形状、表格、图片和坐标。解析器不运行公式、宏或外部链接；它有文件、解压体积、行列、文本、图片字节/像素/数量、时间和内存上限。此进程是解析资源隔离，不是模型执行的 Docker 沙箱。预览不复刻全部 Office 排版，遗漏或简化的内容有相应提示，原文件仍可下载。
+
+HTML 在 2 MiB 读取上限内使用完整内容，源码视图单独截断。DOMPurify 保留内联脚本和事件后，内容只进入 `sandbox="allow-scripts"` 的 srcdoc iframe；不启用 `allow-same-origin`，因此无法读取应用 DOM、Cookie 或存储。子文档 CSP 限制脚本、图片、样式、连接和嵌套框架；父应用的 HTTP CSP 与入口 HTML meta 同时设置 `frame-src 'none'`，阻止 iframe 自行导航到外部页面。只设置子文档 CSP 不足以保证这个导航边界。文件读取接口直接打开时继续使用禁止脚本的 CSP；下载返回原始字节。PDF 在浏览器分页呈现，音视频取决于浏览器支持的格式。
 
 ## 运行拓扑
 

@@ -45,7 +45,7 @@ FAMSUN_DISPOSABLE_DEPLOYMENT=1 FAMSUN_TEST_BASE_URL=http://127.0.0.1:8000 npm ru
 - `src/components/`：对话、文件预览、能力管理、设置与登录。
 - `src/styles/`：统一视觉样式与响应式布局。
 
-HTML 预览使用 DOMPurify、严格 CSP 与无权限 iframe sandbox；Markdown 不自动加载外部图片。所有文件访问均经过后端身份与归属校验。
+HTML 预览经过 DOMPurify 清理，在不授予同源权限的隔离 iframe 中运行内联脚本；严格 CSP 禁止外部资源、网络请求和页面跳转。Markdown 不自动加载外部图片，所有文件访问均经过后端身份与归属校验。各类文件预览均可切换全屏；浏览器不支持原生全屏时采用视口全屏。
 
 ## 真实模型与产物验证
 

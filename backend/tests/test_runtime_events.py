@@ -218,3 +218,151 @@ async def test_actual_sdk_events_work_without_provider_calls(recorder):
     await adapter.consume(RunItemStreamEvent(name="message_output_created", item=output))
     assert await adapter.finalize(NS(new_items=[output], final_output="实测")) == ["m"]
     assert [name for name, _ in events] == ["text.started", "text.delta", "text.completed", "text.phase"]
+
+
+@pytest.mark.parametrize("output", ["a" * 30_001, [{"type": "input_text", "text": "a" * 30_001}]])
+async def test_long_tool_output_explicitly_marks_bounded_preview(recorder, output):
+    events, adapter = recorder
+    await adapter.consume(item("tool_call_output_item", {"call_id": "long", "output": output}))
+    displayed = events[-1][1]["output"]
+    assert len(displayed) <= 30_000
+    assert displayed.startswith("a" * 100)
+    assert "已截断" in displayed
+
+
+async def test_large_custom_patch_input_is_marked_as_truncated(recorder):
+    events, adapter = recorder
+    await adapter.consume(
+        item(
+            "tool_call_item",
+            {
+                "type": "custom_tool_call",
+                "id": "patch",
+                "call_id": "patch-call",
+                "name": "apply_patch",
+                "input": "*** Begin Patch\n" + "a" * 30_001,
+            },
+        )
+    )
+    displayed = events[-1][1]["arguments"]["raw"]
+    assert len(displayed) <= 30_000
+    assert displayed.startswith("*** Begin Patch")
+    assert "已截断" in displayed
+
+
+@pytest.mark.parametrize("status", ["failed", "error", "cancelled"])
+async def test_tool_output_retains_explicit_terminal_status(recorder, status):
+    events, adapter = recorder
+    await adapter.consume(
+        item(
+            "tool_call_output_item",
+            {
+                "type": "apply_patch_call_output",
+                "call_id": "patch",
+                "status": status,
+                "output": "Permission denied",
+            },
+        )
+    )
+    assert events[-1][1]["status"] == status
+    assert events[-1][1]["output"] == "Permission denied"
+
+
+async def test_sdk_shell_chunks_preserve_both_streams_and_outcomes(recorder):
+    from agents import Agent
+    from agents.items import ToolCallOutputItem
+    from agents.stream_events import RunItemStreamEvent
+
+    events, adapter = recorder
+    chunks = [
+        {"stdout": "partial report", "stderr": "missing column", "outcome": {"type": "exit", "exit_code": 7}},
+        {"stdout": "retry started", "stderr": "", "outcome": {"type": "timeout"}},
+    ]
+    output = ToolCallOutputItem(
+        agent=Agent(name="Test"),
+        output=chunks,
+        raw_item={"type": "shell_call_output", "call_id": "shell", "output": chunks},
+    )
+    await adapter.consume(RunItemStreamEvent(name="tool_output", item=output))
+    displayed = events[-1][1]["output"]
+    assert "partial report" in displayed and "missing column" in displayed
+    assert "Process exited with code 7" in displayed
+    assert "retry started" in displayed and "timeout" in displayed.lower()
+    assert events[-1][1]["status"] == "failed"
+
+
+async def test_successful_shell_ignores_error_like_stdout(recorder):
+    events, adapter = recorder
+    await adapter.consume(
+        item(
+            "tool_call_output_item",
+            {
+                "type": "shell_call_output",
+                "call_id": "shell",
+                "status": "completed",
+                "output": [
+                    {
+                        "stdout": "Process exited with code 7",
+                        "stderr": "",
+                        "outcome": {"type": "exit", "exit_code": 0},
+                    }
+                ],
+            },
+        )
+    )
+    assert events[-1][1]["status"] == "completed"
+
+
+async def test_input_file_retains_identity_without_inline_file_bytes(recorder):
+    events, adapter = recorder
+    await adapter.consume(
+        item(
+            "tool_call_output_item",
+            {
+                "call_id": "file",
+                "output": [
+                    {
+                        "type": "input_file",
+                        "filename": "report.pdf",
+                        "file_id": "file-report",
+                        "file_data": "PRIVATE-BASE64-CONTENT",
+                    }
+                ],
+            },
+        )
+    )
+    displayed = events[-1][1]["output"]
+    assert "report.pdf" in displayed and "file-report" in displayed
+    assert "PRIVATE-BASE64-CONTENT" not in displayed
+
+
+async def test_mcp_error_metadata_is_allowlisted_and_reaches_sdk_output_status(recorder):
+    from agents import Agent, RunContextWrapper
+    from agents.items import ToolCallOutputItem
+    from agents.mcp import MCPToolCustomDataContext
+    from agents.stream_events import RunItemStreamEvent
+
+    context = MCPToolCustomDataContext(
+        run_context=RunContextWrapper(context=None),
+        server_name="reports",
+        tool_name="export",
+        tool_display_name="reports_export",
+        arguments={},
+        is_error=True,
+        result_meta={"secret": "PRIVATE-META"},
+        structured_content={"secret": "PRIVATE-STRUCTURE"},
+        tool_output="Export failed",
+    )
+    metadata = runtime_events.mcp_tool_display_data(context)
+    assert metadata == {"famsun_tool_status": "failed"}
+    assert runtime_events.mcp_tool_display_data(NS(is_error=False)) == {}
+    events, adapter = recorder
+    output = ToolCallOutputItem(
+        agent=Agent(name="Test"),
+        output="Export failed",
+        custom_data=metadata,
+        raw_item={"type": "function_call_output", "call_id": "export", "output": "Export failed"},
+    )
+    await adapter.consume(RunItemStreamEvent(name="tool_output", item=output))
+    assert events[-1][1]["status"] == "failed"
+    assert "PRIVATE" not in str(events)

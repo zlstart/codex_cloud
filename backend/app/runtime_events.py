@@ -13,7 +13,22 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any
 
+from agents.mcp import MCPToolCustomDataContext
+
 Emit = Callable[[str, dict], Awaitable[None]]
+_DISPLAY_LIMIT = 30_000
+_TRUNCATION_NOTICE = "\n\n[内容过长，显示已截断。]"
+
+
+def mcp_tool_display_data(context: MCPToolCustomDataContext) -> dict:
+    """Retain the SDK's MCP error signal without copying server metadata."""
+    return {"famsun_tool_status": "failed"} if context.is_error is True else {}
+
+
+def _bounded_text(text: str) -> str:
+    if len(text) <= _DISPLAY_LIMIT:
+        return text
+    return text[: _DISPLAY_LIMIT - len(_TRUNCATION_NOTICE)] + _TRUNCATION_NOTICE
 
 
 def _get(value: Any, key: str, default: Any = None) -> Any:
@@ -34,23 +49,46 @@ def _arguments(value: Any) -> Any:
     try:
         return json.loads(value)
     except (ValueError, TypeError):
-        return {"raw": value[:30_000]}
+        return {"raw": _bounded_text(value)}
 
 
-def _output(value: Any) -> str:
+def _shell_chunk(part: Any) -> str:
+    outcome = _get(part, "outcome", {})
+    sections = []
+    if _get(outcome, "type") == "exit":
+        sections.append(f"Process exited with code {_get(outcome, 'exit_code')}")
+    elif _get(outcome, "type") == "timeout":
+        sections.append("Process stopped: timeout")
+    for stream in ("stdout", "stderr"):
+        content = _get(part, stream)
+        if content:
+            sections.append(f"{stream}:\n{content}")
+    return "\n".join(sections)
+
+
+def _output(value: Any, *, shell: bool = False) -> str:
     """Use model-facing text, without dumping inline image/file data into the UI."""
     if isinstance(value, str):
-        return value[:30_000]
+        return _bounded_text(value)
     if isinstance(value, list):
         texts = []
         for part in value:
             kind = _get(part, "type", "")
-            if kind in {"input_image", "image", "input_file"}:
+            if shell:
+                texts.append(_shell_chunk(part))
+            elif kind == "input_file":
+                metadata = ["[文件内容已交给模型]"]
+                for key, label in (("filename", "文件名"), ("file_id", "文件 ID")):
+                    identifier = _get(part, key)
+                    if isinstance(identifier, str) and identifier:
+                        metadata.append(f"{label}: {identifier}")
+                texts.append("\n".join(metadata))
+            elif kind in {"input_image", "image"}:
                 texts.append("[图片或文件内容已交给模型]")
             else:
                 texts.append(str(_get(part, "text", "")))
-        return "\n".join(texts)[:30_000]
-    return json.dumps(value, ensure_ascii=False, default=str)[:30_000]
+        return _bounded_text("\n".join(texts))
+    return _bounded_text(json.dumps(value, ensure_ascii=False, default=str))
 
 
 @dataclass
@@ -141,7 +179,12 @@ class RuntimeEvents:
         await self.emit("tool.started", payload)
 
     async def _complete_tool(
-        self, raw: Any, agent_id: str, agent_name: str, parent_call_id: str | None
+        self,
+        raw: Any,
+        agent_id: str,
+        agent_name: str,
+        parent_call_id: str | None,
+        custom_data: Any = None,
     ) -> None:
         raw_call_id = str(_get(raw, "call_id") or _get(raw, "id") or "")
         if not raw_call_id:
@@ -152,7 +195,24 @@ class RuntimeEvents:
         if call_id not in self._calls:
             await self._start_tool(raw, agent_id, agent_name, parent_call_id)
         self._completed_calls.add(call_id)
-        payload = {**self._calls[call_id], "output": _output(_get(raw, "output", ""))}
+        payload = {
+            **self._calls[call_id],
+            "output": _output(_get(raw, "output", ""), shell=_get(raw, "type") == "shell_call_output"),
+        }
+        status = _get(raw, "status")
+        if _get(raw, "type") == "shell_call_output" and status in (None, "completed"):
+            for chunk in _get(raw, "output", []) or []:
+                outcome = _get(chunk, "outcome", {})
+                exit_code = _get(outcome, "exit_code")
+                if _get(outcome, "type") == "timeout" or (
+                    _get(outcome, "type") == "exit" and isinstance(exit_code, int) and exit_code != 0
+                ):
+                    status = "failed"
+                    break
+        if _get(custom_data, "famsun_tool_status") == "failed":
+            status = "failed"
+        if status in ("completed", "failed", "error", "cancelled"):
+            payload["status"] = status
         await self.emit("tool.completed", payload)
         if self.artifacts:
             await self.artifacts()
@@ -189,7 +249,9 @@ class RuntimeEvents:
                 elif kind in {"tool_call_item", "tool_search_call_item"}:
                     await self._start_tool(raw, agent_id, agent_name, parent_call_id, _get(item, "tool_name"))
                 elif kind in {"tool_call_output_item", "tool_search_output_item"}:
-                    await self._complete_tool(raw, agent_id, agent_name, parent_call_id)
+                    await self._complete_tool(
+                        raw, agent_id, agent_name, parent_call_id, _get(item, "custom_data")
+                    )
                 elif kind == "compaction_item":
                     await self._compacted(raw, agent_id, agent_name, parent_call_id)
 
