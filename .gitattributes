@@ -1,0 +1,4 @@
+# Preserve acceptance report bytes and SHA-256 evidence across checkouts.
+docs/reports/** -text
+# Review downloaded originals as binary evidence and retain their line endings.
+docs/reports/*.assets/downloads/** binary

@@ -28,10 +28,11 @@ from agents.tool_context import ToolContext
 from openai import AsyncOpenAI, BadRequestError
 
 from .extensions import mcp_headers, validate_mcp_url
-from .runtime_events import RuntimeEvents
+from .runtime_events import RuntimeEvents, mcp_tool_display_data
 from .runtime_history import open_history
 from .sandbox import regular_files
 from .sdk_sandbox import build_skills, open_chat_sandbox
+from .tracing import run_trace
 
 Emit = Callable[[str, dict], Awaitable[None]]
 Approval = Callable[[str, dict], Awaitable[bool]]
@@ -48,9 +49,13 @@ class RuntimeConfig:
     session_id: str = ""
     user_id: str = ""
     run_id: str = ""
+    tracing_enabled: bool = False
+    tracing_api_key: str = field(default="", repr=False)
+    tracing_workflow_name: str = "FAMSUN conversation"
+    tracing_include_sensitive_data: bool = False
     compaction_threshold: int = 32_000
-    max_turns: int = 20
-    max_runtime_seconds: int = 300
+    max_turns: int = 40
+    max_runtime_seconds: int = 900
     extensions: list[dict] = field(default_factory=list)
     allowed_mcp_hosts: list[str] = field(default_factory=list)
 
@@ -99,10 +104,20 @@ def _capabilities(config: RuntimeConfig, extensions: list[dict], identity: str) 
 def _plan_tool(emit: Emit):
     # There is no SDK general-purpose plan tool. Only this product-specific
     # operation remains custom; filesystem and command tools are SDK capabilities.
-    @function_tool
-    async def update_plan(context: ToolContext, steps: list[str], current_step: int, completed: bool) -> str:
-        """记录任务计划。current_step 从 0 开始；任务完成时 completed=true。"""
-        if not steps or len(steps) > 12 or any(len(step) > 300 for step in steps):
+    def plan_error(context, error):
+        # Never echo validation payloads or persistence exceptions into model/UI output.
+        return json.dumps({
+            "isError": True,
+            "error": "计划未更新。请使用 JSON：steps 为 1 至 12 个非空步骤（每项不超过 300 字）；"
+                     "current_step 为从 0 开始且小于步骤数的整数；completed 为布尔值，默认 false。",
+        }, ensure_ascii=False)
+
+    @function_tool(failure_error_function=plan_error)
+    async def update_plan(
+        context: ToolContext, steps: list[str], current_step: int, completed: bool = False
+    ) -> str:
+        """记录任务计划。current_step 从 0 开始；completed 默认 false，任务完成时设为 true。"""
+        if not steps or len(steps) > 12 or any(not step.strip() or len(step) > 300 for step in steps):
             raise ValueError("计划应包含 1 至 12 个简明步骤。")
         if not 0 <= current_step < len(steps):
             raise ValueError("当前步骤编号超出范围。")
@@ -118,6 +133,15 @@ def _plan_tool(emit: Emit):
         return json.dumps(plan, ensure_ascii=False)
 
     return update_plan
+
+
+def _tool_error_message(error: Any) -> str | None:
+    if error.kind == "tool_not_found":
+        return json.dumps({
+            "isError": True,
+            "error": "请求的工具不存在，未执行任何操作。请改用当前提供的工具继续任务。",
+        }, ensure_ascii=False)
+    return None
 
 
 INSTRUCTIONS = """你是丰尚公司的通用智能体助手。使用中文，准确、清晰地帮助用户完成任务。
@@ -191,6 +215,8 @@ async def run_agent(
 
     async def execute() -> str:
         async with AsyncExitStack() as stack:
+            tracing = stack.enter_context(run_trace(config))
+            await emit("run.tracing", tracing.event())
             history, current_input = await stack.enter_async_context(
                 open_history(
                     state_dir=config.state_dir,
@@ -243,6 +269,7 @@ async def run_agent(
                         client_session_timeout_seconds=30,
                         max_retry_attempts=0,
                         max_list_pages=10,
+                        custom_data_extractor=mcp_tool_display_data,
                     )
                     servers[extension["id"]] = await stack.enter_async_context(server)
                 except Exception as exc:
@@ -250,6 +277,8 @@ async def run_agent(
 
             run_config = RunConfig(
                 sandbox=SandboxRunConfig(session=sandbox),
+                tool_not_found_behavior="return_error_to_model",
+                tool_error_formatter=_tool_error_message,
                 # A SandboxAgent instance cannot enter two concurrent runs. The
                 # SDK's executor queues repeated specialist calls safely while
                 # preserving their distinct histories and stream identities.
@@ -257,10 +286,7 @@ async def run_agent(
                 call_model_input_filter=ToolOutputTrimmer(
                     recent_turns=2, max_output_chars=8000, preview_chars=2000
                 ),
-                tracing_disabled=True,
-                trace_include_sensitive_data=False,
-                workflow_name="FAMSUN conversation",
-                group_id=config.session_id,
+                **tracing.run_config(),
             )
             settings = ModelSettings(store=False, parallel_tool_calls=True)
             tools = [_plan_tool(emit)]

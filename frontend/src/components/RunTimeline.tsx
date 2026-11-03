@@ -16,41 +16,109 @@ import type {
   ToolTimelineItem,
 } from "../types";
 import { Markdown } from "./Markdown";
+import { CodeBlock } from "./CodeBlock";
+import { TraceStatus } from "./TraceStatus";
+import {
+  toolInput,
+  toolOutput,
+  type ToolPresentation,
+} from "../lib/toolPresentation";
 import { partitionTimeline } from "../lib/runTimeline";
 import "../styles/timeline.css";
 
-function printable(value: unknown) {
-  if (typeof value === "string") return value;
-  return JSON.stringify(value, null, 2) ?? "";
+function ToolPayload({
+  payload,
+  empty,
+}: {
+  payload: ToolPresentation;
+  empty: string;
+}) {
+  return (
+    <>
+      {payload.metadata.length > 0 && (
+        <dl className="tool-metadata">
+          {payload.metadata.map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {payload.blocks.map((block, index) => (
+        <div className="tool-payload" key={index}>
+          <span className="trace-label">{block.label}</span>
+          <CodeBlock
+            code={block.code}
+            language={block.language}
+            maxHeight={280}
+          />
+        </div>
+      ))}
+      {payload.extra && (
+        <details className="tool-extra">
+          <summary>其他参数与元数据</summary>
+          <CodeBlock
+            code={JSON.stringify(payload.extra, null, 2)}
+            language="json"
+            maxHeight={200}
+          />
+        </details>
+      )}
+      {!payload.blocks.length && !payload.metadata.length && !payload.extra && (
+        <p className="timeline-empty">{empty}</p>
+      )}
+    </>
+  );
 }
 
 function ToolStep({ item }: { item: ToolTimelineItem }) {
   const running = item.status === "running";
-  const success = item.status === "completed";
+  const input = toolInput(item.name, item.arguments);
+  const output = toolOutput(item.name, item.output);
+  const failed =
+    item.status === "failed" || (item.status === "completed" && output.failed);
+  const returned = item.status === "completed" && !failed;
+  const processRunning = returned && output.processRunning;
   const status = running
     ? "执行中"
-    : success
-      ? "已完成"
-      : item.status === "cancelled"
-        ? "已取消"
-        : item.status === "interrupted"
-          ? "已中断"
-          : "执行失败";
-  const args = printable(item.arguments);
-  const output = printable(item.output);
+    : failed
+      ? "执行失败"
+      : processRunning
+        ? "已转入后台"
+        : returned
+          ? output.exitCode === 0
+            ? "已完成"
+            : "已返回"
+          : item.status === "cancelled"
+            ? "已取消"
+            : item.status === "interrupted"
+              ? "已中断"
+              : "执行失败";
+  const summary =
+    input.blocks[0]?.language === "bash"
+      ? input.blocks[0].code.split("\n")[0]
+      : undefined;
   return (
     <details
-      className={`timeline-tool ${success ? "" : item.status}`}
+      className={`timeline-tool ${failed ? "failed" : processRunning ? "running" : returned ? "" : item.status}`}
       data-call-id={item.call_id}
     >
       <summary>
         <Terminal size={15} aria-hidden="true" />
         <span className="timeline-tool-name">{item.name}</span>
+        {summary && (
+          <span className="timeline-tool-command" title={summary}>
+            {summary}
+          </span>
+        )}
         <span className="timeline-tool-status">
           {running ? (
             <LoaderCircle size={12} className="spin" />
-          ) : success ? (
+          ) : returned && !processRunning ? (
             <Check size={12} />
+          ) : processRunning ? (
+            <Terminal size={12} />
           ) : (
             <CircleAlert size={12} />
           )}
@@ -63,23 +131,11 @@ function ToolStep({ item }: { item: ToolTimelineItem }) {
         />
       </summary>
       <div className="timeline-tool-detail">
-        <span className="trace-label">输入</span>
-        <pre>{args.slice(0, 16000)}</pre>
-        {args.length > 16000 && (
-          <p className="timeline-truncation">
-            输入较长，仅显示前 16,000 个字符。
-          </p>
-        )}
+        <ToolPayload payload={input} empty="无输入参数。" />
         {item.output !== undefined && (
-          <>
-            <span className="trace-label">结果</span>
-            <pre>{output.slice(0, 24000)}</pre>
-            {output.length > 24000 && (
-              <p className="timeline-truncation">
-                结果较长，仅显示前 24,000 个字符。
-              </p>
-            )}
-          </>
+          <div className="tool-result">
+            <ToolPayload payload={output} empty="工具未返回文本结果。" />
+          </div>
         )}
       </div>
     </details>
@@ -192,7 +248,7 @@ export function RunTimeline({
         : "执行过程";
   return (
     <>
-      {(process.length > 0 || history) && (
+      {(process.length > 0 || history || timeline.tracing) && (
         <section className="run-process">
           <button
             className="process-toggle"
@@ -215,6 +271,7 @@ export function RunTimeline({
           </button>
           {expanded && (
             <div id={contentId} className="process-content">
+              <TraceStatus tracing={timeline.tracing} />
               <ol className="timeline-list">
                 {process.map((item) => (
                   <ProcessItem

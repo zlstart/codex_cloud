@@ -4,6 +4,8 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .db import sqlite_url
+
 
 def flag(name: str, default: bool = False) -> bool:
     return os.getenv(name, str(default)).lower() in {"1", "true", "yes"}
@@ -23,6 +25,17 @@ class Settings:
     )
     model: str = field(default_factory=lambda: os.getenv("AGENT_MODEL", "gpt-5.6-luna"))
     api_mode: str = "responses"
+    tracing_enabled: bool = field(default_factory=lambda: flag("AGENT_TRACING_ENABLED"))
+    tracing_api_key: str = field(
+        default_factory=lambda: os.getenv("OPENAI_TRACING_API_KEY") or os.getenv("OPENAI_API_KEY", ""),
+        repr=False,
+    )
+    tracing_workflow_name: str = field(
+        default_factory=lambda: os.getenv("AGENT_TRACING_WORKFLOW_NAME", "FAMSUN conversation")
+    )
+    tracing_include_sensitive_data: bool = field(
+        default_factory=lambda: flag("AGENT_TRACING_INCLUDE_SENSITIVE_DATA")
+    )
     compaction_threshold: int = field(
         default_factory=lambda: int(os.getenv("AGENT_COMPACTION_THRESHOLD", "32000"))
     )
@@ -32,8 +45,8 @@ class Settings:
     session_days: int = 7
     max_upload_mb: int = field(default_factory=lambda: int(os.getenv("MAX_UPLOAD_MB", "25")))
     max_session_mb: int = field(default_factory=lambda: int(os.getenv("MAX_SESSION_MB", "250")))
-    max_turns: int = field(default_factory=lambda: int(os.getenv("AGENT_MAX_TURNS", "20")))
-    max_runtime_seconds: int = field(default_factory=lambda: int(os.getenv("AGENT_TIMEOUT_SECONDS", "300")))
+    max_turns: int = field(default_factory=lambda: int(os.getenv("AGENT_MAX_TURNS", "40")))
+    max_runtime_seconds: int = field(default_factory=lambda: int(os.getenv("AGENT_TIMEOUT_SECONDS", "900")))
     allowed_origins: list[str] = field(
         default_factory=lambda: [
             x.strip().rstrip("/")
@@ -61,7 +74,4 @@ class Settings:
         self.data_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
         if not self.database_url:
             self.database_url = f"sqlite:///{self.data_dir / 'app.db'}"
-        if self.database_url.startswith("postgres://"):
-            self.database_url = self.database_url.replace("postgres://", "postgresql+psycopg://", 1)
-        elif self.database_url.startswith("postgresql://"):
-            self.database_url = self.database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+        sqlite_url(self.database_url)

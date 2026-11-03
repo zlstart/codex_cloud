@@ -1,21 +1,5 @@
 name: famsun-agent
 services:
-  database:
-    image: postgres:17-bookworm
-    environment:
-      POSTGRES_DB: famsun
-      POSTGRES_USER: famsun
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a strong POSTGRES_PASSWORD in .env}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: [CMD-SHELL, "pg_isready -U famsun -d famsun"]
-      interval: 5s
-      timeout: 3s
-      retries: 12
-    restart: unless-stopped
-    networks: [backend]
-
   app:
     build: .
     image: famsun-agent:latest
@@ -24,7 +8,7 @@ services:
       - "${DOCKER_GID:?Set DOCKER_GID to the host Docker socket group}"
     env_file: .env
     environment:
-      DATABASE_URL: postgresql+psycopg://famsun:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@database:5432/famsun
+      DATABASE_URL: ${DATABASE_URL:-}
       DATA_DIR: ${DATA_DIR:?Set DATA_DIR to an absolute host path}
       PORT: "8000"
       SANDBOX_BACKEND: docker
@@ -42,9 +26,6 @@ services:
         target: /var/run/docker.sock
     ports:
       - "127.0.0.1:${APP_PORT:-8080}:8000"
-    depends_on:
-      database:
-        condition: service_healthy
     read_only: true
     tmpfs:
       - /tmp:size=128m,mode=1777
@@ -54,9 +35,6 @@ services:
     stop_grace_period: 30s
     restart: unless-stopped
     networks: [backend]
-
-volumes:
-  postgres_data:
 
 networks:
   backend:

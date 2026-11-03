@@ -11,6 +11,8 @@ import asyncio
 import os
 import shutil
 import stat
+import time
+import uuid
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -23,6 +25,7 @@ from agents.sandbox.capabilities import Skill, Skills
 from agents.sandbox.sandboxes.docker import DockerSandboxClient, DockerSandboxClientOptions
 from agents.sandbox.session import SandboxSession
 from docker.types import Mount, Ulimit
+from requests.exceptions import ConnectionError, RequestException, Timeout
 
 from .sandbox import SandboxError, deployment_label, safe_path, workspace_usage
 
@@ -55,6 +58,9 @@ class PolicyContainers:
     def __init__(self, containers: Any, policy: SandboxPolicy):
         self._containers = containers
         self._policy = policy
+        self._attempt = uuid.uuid4().hex
+        self._creation_name: str | None = None
+        self._creation_returned = False
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._containers, name)
@@ -80,7 +86,10 @@ class PolicyContainers:
                                 type="bind", read_only=True))
             environment.update({key: "/run/famsun-ca.pem" for key in
                                 ("SSL_CERT_FILE", "REQUESTS_CA_BUNDLE", "PIP_CERT")})
+        self._creation_name = f"famsun-sandbox-{self._attempt}"
         kwargs.update(
+            name=self._creation_name,
+            labels={**(kwargs.get("labels") or {}), "famsun.attempt": self._attempt},
             user=f"{policy.uid}:{policy.gid}", working_dir="/workspace",
             read_only=True, cap_drop=["ALL"], security_opt=["no-new-privileges:true"],
             mem_limit="512m", memswap_limit="512m", nano_cpus=1_000_000_000, pids_limit=64,
@@ -92,7 +101,42 @@ class PolicyContainers:
             # docker-py applies the administrator's Docker proxy defaults, if present.
             use_config_proxy=True,
         )
-        return self._containers.create(**kwargs)
+        container = self._containers.create(**kwargs)
+        self._creation_returned = True
+        return container
+
+    async def reconcile_failed_creation(self, *, timeout: float) -> bool:
+        """Remove only this attempt, including a late daemon create response.
+
+        docker-py can time out after POST create but before returning a container
+        to the SDK. A known name and unguessable attempt label let us reconcile
+        that narrow gap without retrying creation or touching another run.
+        """
+        if self._creation_name is None:
+            return True
+        deadline = time.monotonic() + timeout
+        while True:
+            try:
+                container = await asyncio.to_thread(self._containers.get, self._creation_name)
+            except docker.errors.NotFound:
+                if self._creation_returned:
+                    return True
+                if time.monotonic() >= deadline:
+                    return False
+                await asyncio.sleep(0.25)
+                continue
+            except RequestException:
+                return False
+            labels = container.labels or {}
+            if labels.get("app") != "famsun-agent" or labels.get("famsun.attempt") != self._attempt:
+                return False
+            try:
+                await asyncio.to_thread(container.remove, force=True)
+            except docker.errors.NotFound:
+                pass
+            except RequestException:
+                return False
+            return True
 
 
 class PolicyDockerClient:
@@ -156,8 +200,18 @@ async def open_chat_sandbox(workspace: Path, *, chat_id: str, user_id: str) -> A
             raise SandboxError("会话工作空间达到文件数量或容量限制，任务已停止。")
 
     await asyncio.to_thread(check_quota)
-    raw_client = docker.from_env(timeout=15)
-    client = DockerSandboxClient(PolicyDockerClient(raw_client, policy))
+    try:
+        docker_timeout = int(os.getenv("FAMSUN_DOCKER_TIMEOUT_SECONDS", "60"))
+        if not 1 <= docker_timeout <= 300:
+            raise ValueError
+    except ValueError:
+        raise SandboxError("FAMSUN_DOCKER_TIMEOUT_SECONDS 必须为 1 至 300 秒。") from None
+    try:
+        raw_client = docker.from_env(timeout=docker_timeout)
+    except RequestException as exc:
+        raise SandboxError("无法连接 Docker 沙箱服务，请检查 Docker 服务状态。") from exc
+    policy_client = PolicyDockerClient(raw_client, policy)
+    client = DockerSandboxClient(policy_client)
     session = None
     failed = False
     monitor = None
@@ -177,16 +231,34 @@ async def open_chat_sandbox(workspace: Path, *, chat_id: str, user_id: str) -> A
             await asyncio.sleep(0.25)
 
     try:
-        session = await client.create(
-            manifest=Manifest(root="/workspace"),
-            options=DockerSandboxClientOptions(
-                image=os.getenv("FAMSUN_SANDBOX_IMAGE", "famsun-sandbox:latest"),
-                labels={"app": "famsun-agent", "famsun.chat": chat_id, "famsun.user": user_id,
-                        "famsun.deployment": deployment_label(
-                            workspace.parents[2] if len(workspace.parents) > 2 else workspace.parent)},
-            ),
-        )
-        await session.start()
+        try:
+            session = await client.create(
+                manifest=Manifest(root="/workspace"),
+                options=DockerSandboxClientOptions(
+                    image=os.getenv("FAMSUN_SANDBOX_IMAGE", "famsun-sandbox:latest"),
+                    labels={"app": "famsun-agent", "famsun.chat": chat_id, "famsun.user": user_id,
+                            "famsun.deployment": deployment_label(
+                                workspace.parents[2] if len(workspace.parents) > 2 else workspace.parent)},
+                ),
+            )
+            await session.start()
+        except RequestException as exc:
+            if session is None and isinstance(exc, (Timeout, ConnectionError)):
+                reconciliation = asyncio.create_task(
+                    policy_client.containers.reconcile_failed_creation(timeout=max(60, docker_timeout))
+                )
+                try:
+                    reconciled = await asyncio.shield(reconciliation)
+                except asyncio.CancelledError:
+                    await reconciliation
+                    raise
+                if not reconciled:
+                    raise SandboxError("Docker 沙箱启动失败且清理未完成，请管理员检查 Docker 服务。") from exc
+            if isinstance(exc, Timeout):
+                raise SandboxError(
+                    "Docker 沙箱启动超时，请检查 Docker 负载、镜像和 FAMSUN_DOCKER_TIMEOUT_SECONDS 设置。"
+                ) from exc
+            raise SandboxError("Docker 沙箱启动失败，请检查 Docker 服务和沙箱镜像。") from exc
         monitor = asyncio.create_task(watch_quota())
         yield session
         if quota_error is not None:

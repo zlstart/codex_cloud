@@ -35,7 +35,7 @@
 
 ### Office 预览
 
-`/preview` 接受 `.xlsx`、`.xlsm`、`.xls`、`.docx`。其他格式返回 415，可通过 `/content` 在浏览器预览或下载。超过独立的 25 MB 预览上限返回 413；损坏、加密、解析超时或资源超限返回 422。
+`/preview` 接受 `.xlsx`、`.xlsm`、`.xls`、`.docx`、`.pptx`。其他格式返回 415，可通过 `/content` 在浏览器预览或下载。超过独立的 25 MiB 预览上限返回 413；损坏、加密、解析超时或资源超限返回 422。
 
 表格响应：
 
@@ -53,9 +53,45 @@
 }
 ```
 
-DOCX 响应为 `{kind:"document",paragraphs:[...],truncated:false}`，段落和表格行作为文本返回，不承诺保留原始版式。
+XLSX/XLSM 工作表还返回可选 `display_rows:(string|null)[][]`，与 `rows` 同坐标。非空值用于展示常见小数位、百分比、千分位及带引号的单位；原始 `rows` 保持数值类型。`number_format_fallback:true` 表示存在暂不支持的格式或显示预算不足，相应单元格回退原值并提示。多段格式、条件、颜色、区域码、分数、科学计数和自定义日期格式不作猜测性转换。
 
-预览最多 20 个工作表，每表 1,000 行 / 50 列，文本总预算 2,000,000 字符，单个文本值最多 4,096 字符；DOCX 最多 2,000 个文本块。Office ZIP 文件还检查条目数、展开体积与压缩比例。解析在独立进程中进行，限制内存、CPU 与 15 秒等待时间；公式使用已有缓存值，不计算公式、执行宏或获取外部链接。`truncated` 表示预览不完整，原文件不被修改。
+DOCX 保留有序正文、标题、表格和内嵌图片；`paragraphs` 保留为旧客户端的纯文本兼容字段：
+
+```json
+{
+  "kind": "document",
+  "paragraphs": ["生产报告", "产线 | 产量", "A | 120"],
+  "blocks": [
+    {"type": "paragraph", "text": "生产报告", "heading": 1},
+    {"type": "table", "rows": [["产线", "产量"], ["A", "120"]]},
+    {"type": "image", "src": "data:image/png;base64,...", "alt": "文档内嵌图片", "width": 640, "height": 360}
+  ],
+  "truncated": false
+}
+```
+
+PPTX 响应为 `{kind:"presentation",width,height,total_slides,slides,truncated}`。`slides` 按页序排列，每页包含 `title`、可选 `background` 和 `elements`。各元素使用 CSS 像素坐标 `x,y,width,height`（96 dpi），类型如下：
+
+| `type` | 内容 |
+| --- | --- |
+| `text` | `paragraphs:[{text,font_size?,color?,bold?,italic?,align?}]`，可选 `fill,stroke,shape` |
+| `shape` | 可选 `fill,stroke`；`shape` 为 `rect`、`ellipse` 或 `roundRect` |
+| `table` | `rows:string[][]`，可选 `column_widths`、`row_heights`、`cells`（对应单元格段落、填充及文本边距） |
+| `image` | `src` 为内嵌图片 data URL，可选 `alt` |
+
+PPTX 文本段落还可包含 `font_family`、`space_before`、`space_after` 及 `line_spacing:{kind:"multiple"|"pixels",value}`。文本形状与表格单元格的 `text_frame` 可包含四边 `margins`、`vertical_align`、`word_wrap`；原件明确使用 `SHAPE_TO_FIT_TEXT` 时返回 `auto_size:"shape_to_fit_text"`，按原语义自动增高。原生缩小字体以适应框体、合并表格和复杂主题继承未完整复现，会标记简化；前端不会自行缩小字体掩盖溢出。缺少这些扩展字段的旧响应仍使用基本预览。
+
+表格预览最多 20 个工作表，每表 1,000 行 / 50 列、总计 50,000 单元格。DOCX 最多 2,000 个块；PPTX 最多 30 页、每页 200 个形状、总计 2,000 个段落；两者表格共享 20,000 单元格预算。文本总预算为 2,000,000 字符，单个文本值最多 4,096 字符。DOCX/PPTX 内嵌图片只接受静态 PNG/JPEG/GIF/WebP：最多 64 张、原图字节合计 5 MiB、总计 64 百万像素；单张不超过 2 MiB、16 百万像素、最长边 8,192 像素。data URL 的 Base64 编码会增加响应体积。
+
+Office ZIP 最多 5,000 个条目、100 MiB 展开体积；大条目压缩比例不超过 250。最多四个解析进程并发，每个限制 768 MiB 地址空间、10 秒 CPU、15 秒等待时间和禁止文件写入。解析器不计算公式、执行宏或获取外部链接；公式只显示文件已有的缓存结果，可能为空。
+
+预览不等于完整 Office 渲染：XLSX 不展示图表、图片或复杂格式；DOCX 不复刻分页、页眉页脚和复杂排版；PPTX 不复刻主题、动画、原生图表、分组图形或复杂变换。`truncated` 标记超限、已识别的省略或简化内容，不能据其为 `false` 推断版式完全一致。原文件不被修改，下载始终返回原始文件。
+
+### HTML 与其他浏览器预览
+
+HTML 最多读取 2 MiB，预览使用完整的有界 HTML，避免截断脚本或 Base64 图片；只有源码视图按 250,000 字符截取。清洗后的内联脚本和事件处理器在 `sandbox="allow-scripts"` 的不透明来源 iframe 中执行，不授予 `allow-same-origin`、顶层导航、弹窗、表单提交或下载权限。子文档 CSP 禁止外部资源；应用文档的 `frame-src 'none'` 同时阻止 iframe 自身导航到其他 URL。外部脚本、样式依赖与跨文件资源不会加载；需要持久化存储的应用应处理不透明来源下的存储不可用情况。
+
+`/content` 直接打开时仍有禁止脚本的 sandbox CSP，交互只在上述隔离预览中运行。PDF 由浏览器逐页渲染；代码使用语法高亮，Markdown、CSV、图片和浏览器支持的音视频采用各自预览。下载保留原始字节，不注入预览策略或改变内容。
 
 ## 任务与审批
 
@@ -110,12 +146,14 @@ JSON 分页响应：
 | 事件 | 主要字段与处理 |
 | --- | --- |
 | `run.started` | 任务开始 |
+| `run.tracing` | `provider,status,trace_id,url,workflow_name,sensitive_data`；状态为 `enabled` / `disabled` / `missing_key`，详见 [追踪指南](TRACING.md) |
 | `text.started` | `item_id,phase`，创建文字块 |
 | `text.delta` | `item_id,delta,phase`，追加到相同文字块 |
 | `text.completed` | `item_id,text,phase`，`text` 替换为完整权威文本 |
 | `text.phase` | `item_id,phase`，将根代理最终答案标为 `final` |
 | `tool.started` | `call_id,item_id,name,arguments` |
-| `tool.completed` | `call_id,item_id,name,output`，按 call ID 完成原工具块 |
+| `tool.completed` | `call_id,item_id,name,output,status?`，按 call ID 完成原工具块；`status=failed/error` 表示工具返回失败，不能显示为成功 |
+| `tool.failed` | 相同工具身份和可读失败输出；保留在执行过程内，不替代任务终态 |
 | `context.compacted` | 压缩 item 的身份信息；不返回加密载荷 |
 | `plan.updated` | `steps,current_step,completed`，可附 call / agent 信息 |
 | `artifact.created` | `artifact` 文件记录 |

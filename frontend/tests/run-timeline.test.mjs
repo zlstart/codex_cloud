@@ -163,3 +163,75 @@ test("cancelling during the final answer preserves its partial text in the proce
   );
   assert.equal(partitionTimeline(state.items).final.length, 0);
 });
+
+test("trace metadata survives replay and terminal events without accepting arbitrary URLs", () => {
+  const traceId = `trace_${"a".repeat(32)}`;
+  const events = [
+    event(1, "run.started"),
+    event(2, "run.tracing", {
+      provider: "openai",
+      status: "enabled",
+      trace_id: traceId,
+      workflow_name: "FAMSUN conversation",
+      sensitive_data: false,
+      url: "javascript:alert(1)",
+    }),
+    event(3, "run.completed"),
+  ];
+  const state = replayEvents(events);
+  assert.equal(state.tracing.trace_id, traceId);
+  assert.equal(state.tracing.status, "enabled");
+  assert.equal(state.tracing.sensitive_data, false);
+  assert.equal(state.tracing.url, undefined);
+  assert.deepEqual(replayEvents(events, state), state);
+});
+
+test("tracing config states and invalid trace IDs remain safe during hydration", () => {
+  assert.equal(initialTimeline().tracing, undefined);
+  for (const status of ["disabled", "missing_key"]) {
+    const state = replayEvents([
+      event(1, "run.tracing", {
+        provider: "openai",
+        status,
+        trace_id: null,
+      }),
+    ]);
+    assert.equal(state.tracing.status, status);
+    assert.equal(state.tracing.trace_id, null);
+  }
+  const invalid = replayEvents([
+    event(1, "run.tracing", {
+      provider: "openai",
+      status: "enabled",
+      trace_id: "../../evil",
+      sensitive_data: "false",
+    }),
+  ]);
+  assert.equal(invalid.tracing.trace_id, null);
+  assert.equal(invalid.tracing.sensitive_data, false);
+  assert.equal(
+    replayEvents([
+      event(1, "run.tracing", {
+        provider: "other",
+        status: "enabled",
+      }),
+    ]).tracing,
+    undefined,
+  );
+});
+
+test("failed tools retain error payload for readable execution history", () => {
+  const state = replayEvents([
+    event(1, "tool.started", {
+      call_id: "call-error",
+      name: "exec_command",
+      arguments: {},
+    }),
+    event(2, "tool.failed", {
+      call_id: "call-error",
+      error: "Permission denied",
+    }),
+  ]);
+  assert.equal(state.items[0].status, "failed");
+  assert.equal(state.items[0].output, "Permission denied");
+});

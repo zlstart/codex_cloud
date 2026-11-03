@@ -21,6 +21,7 @@ export function Composer({
   attachments,
   onRemove,
   busy,
+  stopping = false,
   uploading,
   onCapabilities,
   compact = false,
@@ -32,6 +33,7 @@ export function Composer({
   attachments: Artifact[];
   onRemove: (id: string) => void;
   busy: boolean;
+  stopping?: boolean;
   uploading: boolean;
   onCapabilities: () => void;
   compact?: boolean;
@@ -160,14 +162,18 @@ export function Composer({
           </div>
         </div>
         <div className="send-controls">
-          <span className="enter-hint">Enter 发送</span>
+          <span className="enter-hint" role={stopping ? "status" : undefined}>
+            {stopping ? "正在停止并清理任务…" : "Enter 发送"}
+          </span>
           <button
             className={`send-button ${busy ? "stop-button" : ""}`}
-            aria-label={busy ? "停止生成" : "发送消息"}
+            aria-label={stopping ? "正在停止" : busy ? "停止生成" : "发送消息"}
             onClick={onSend}
-            disabled={uploading || (!busy && !value.trim())}
+            disabled={stopping || uploading || (!busy && !value.trim())}
           >
-            {busy ? (
+            {stopping ? (
+              <LoaderCircle className="spin" size={17} />
+            ) : busy ? (
               <Square size={16} fill="currentColor" />
             ) : (
               <ArrowUp size={21} strokeWidth={2.3} />

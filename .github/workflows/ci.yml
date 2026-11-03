@@ -7,20 +7,6 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17-bookworm
-        env:
-          POSTGRES_DB: famsun_test
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ci-disposable-password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 12
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -35,8 +21,6 @@ jobs:
       - run: uv sync --frozen
       - run: uv run ruff check backend tests
       - run: uv run pytest -q
-        env:
-          FAMSUN_TEST_DATABASE_URL: postgresql+psycopg://postgres:ci-disposable-password@127.0.0.1:5432/famsun_test
       - run: npm ci && npm run build
         working-directory: frontend
       - run: npx playwright install --with-deps chromium
@@ -55,3 +39,4 @@ jobs:
           npm run test:timeline
           npm run test:capabilities
           npm run test:previews
+          npm run test:rendering

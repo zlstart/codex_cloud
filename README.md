@@ -2,7 +2,7 @@
 
 基于 **OpenAI Python Agents SDK 0.24** 的多用户智能体工作台。浏览器中完成资料上传、对话、隔离代码执行、文件生成和预览，并通过可编辑的 Skills、MCP 和子代理扩展业务能力。
 
-前端使用 React 19、TypeScript、Vite；后端使用 Python、FastAPI、SQLAlchemy。应用数据支持 SQLite / PostgreSQL，完整 SDK 会话历史保存在本地 SQLite。模型接入仅使用 **Responses API**。
+前端使用 React 19、TypeScript、Vite；后端使用 Python、FastAPI、SQLAlchemy。应用数据和完整 SDK 会话历史统一保存在本地 SQLite。模型接入仅使用 **Responses API**。
 
 ![原生子代理执行过程](docs/screenshots/sdk-native-timeline.png)
 
@@ -44,12 +44,14 @@ Base URL 应为 API 根地址，不能带 `/responses` 等请求路径。运行�
 - **连续上下文**：`SQLiteSession` 保存消息和完整工具往返；原生压缩缩短模型上下文，`ToolOutputTrimmer` 在本地减少较早的大型工具输出。
 - **子代理**：通过 SDK `Agent.as_tool()` 委派任务，独立任务上下文、共享当前聊天沙箱；可配置指令、模型、轮数及使用的 Skills / MCP。
 - **有序过程与最终答复**：文字、工具、审批和子代理活动按事件顺序显示；执行过程可折叠，最终答案独立保留。持久化事件支持刷新后回放和 SSE 断线重连。
-- **文件预览**：表格工作表、PDF 分页、Markdown / HTML、图片、文本 / 代码 / JSON、DOCX 文本以及浏览器支持的音视频。大型或不支持的文件保留授权下载入口。
+- **OpenAI Traces**：可选启用 SDK 原生追踪，按用户、会话和运行关联；执行记录提供查看入口。追踪凭据与第三方模型配置独立，正文采集默认关闭，详见 [追踪配置](docs/TRACING.md)。
+- **文件预览**：表格数据、PDF 分页、Markdown、隔离交互 HTML、图片、代码高亮、DOCX 正文/表格/图片、PPTX 分页内容与简单布局，以及浏览器支持的音视频。所有格式均提供全屏/退出全屏；手机不支持原生全屏时自动铺满视口。复杂 Office 排版或不支持的内容保留授权下载入口。
+- **代码与文件展示**：工作空间支持全部文件、已上传和生成成果筛选；Markdown、代码文件和工具详情共享语法高亮、复制和滚动显示，长输出标明截断。
 - **能力编辑**：管理员创建、编辑、删除共享 Skills / MCP / 子代理；每位用户独立控制启用状态。远程 MCP 工具通过 SDK 原生审批机制先审批、后执行。
 
 每次任务创建一个 SDK Docker 容器，任务中的工具和子代理共享该容器；结束、失败或取消时清理容器。文件保存在 `DATA_DIR/workspaces/<user>/<session>/`，跨任务保留。`uploads/` 只读，成果写入 `outputs/`。网络默认启用；容器以非 root 用户运行，限制 CPU、内存和进程数量，不挂载模型密钥、历史数据库、其他聊天或 Docker socket。
 
-SDK 历史位于 `DATA_DIR/history/<user>/<session>.sqlite3`，在模型工作空间之外。即使应用数据库使用 PostgreSQL，这些历史文件仍需一起持久化和备份。
+应用数据库默认位于 `DATA_DIR/app.db`；SDK 历史位于 `DATA_DIR/history/<user>/<session>.sqlite3`，均在模型工作空间之外。开发和 Compose 部署都使用 SQLite，不需要单独的数据库服务；这些文件与聊天工作区需一起持久化和备份。已有 SQLite 文件会继续使用，并按需执行保留数据的增量迁移。
 
 ## 扩展业务能力
 
@@ -78,6 +80,7 @@ PYTHONPATH=backend uv run python tests/docker_smoke.py
 - [架构与运行边界](docs/ARCHITECTURE.md)
 - [Skills / MCP / 子代理](docs/EXTENSIONS.md)
 - [API 与事件契约](docs/API.md)
+- [OpenAI Traces 配置与验证边界](docs/TRACING.md)
 - [SDK 能力复用审计](docs/SDK-CAPABILITY-AUDIT.md)
 
 当前部署使用 **一个 API worker、一个应用副本**。不同用户和聊天可以并行运行，但同一聊天只允许一个活动任务。重启会将未完成任务标记为中断，不会自动重放可能有副作用的工具。横向扩容需要额外的持久任务队列、分布式调度和共享存储设计。

@@ -168,7 +168,10 @@ assert.equal(
   "/api/files/file1/content",
 );
 await page.getByRole("button", { name: "执行记录" }).click();
-await page.getByText("python", { exact: true }).waitFor();
+await page
+  .locator(".timeline-tool-name")
+  .filter({ hasText: /^python$/ })
+  .waitFor();
 await page.getByRole("button", { name: "查看图表", exact: true }).click();
 await page.getByRole("dialog", { name: "chart.png" }).waitFor();
 await page.close();

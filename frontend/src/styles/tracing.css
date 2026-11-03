@@ -1,0 +1,27 @@
+.run-tracing {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0 0 12px;
+  color: var(--text-muted, #64748b);
+  font-size: 12px;
+}
+.run-tracing a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--accent, #c56a32);
+  text-decoration: none;
+}
+.run-tracing a:hover {
+  text-decoration: underline;
+}
+.run-tracing a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+.run-tracing-detail {
+  font-size: 11px;
+}

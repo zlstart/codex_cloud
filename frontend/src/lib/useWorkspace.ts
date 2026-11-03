@@ -32,6 +32,10 @@ export function useWorkspace() {
   const [run, setRun] = useState<Run | null>(null);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [stoppingRunIds, setStoppingRunIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const stopRequests = useRef(new Set<string>());
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState("");
   const [notice, setNotice] = useState("");
@@ -268,17 +272,22 @@ export function useWorkspace() {
       }
       void refreshSessions().catch(() => {});
     },
-    (file) =>
+    (file) => {
       setDetail((current) =>
         current && current.session.id === file.session_id
           ? {
               ...current,
               files: current.files.some((f) => f.id === file.id)
-                ? current.files
+                ? current.files.map((existing) =>
+                    existing.id === file.id ? file : existing,
+                  )
                 : [...current.files, file],
             }
           : current,
-      ),
+      );
+      // A model may append or correct the same file over several tool calls.
+      setPreview((current) => (current?.id === file.id ? file : current));
+    },
     setNotice,
   );
   async function ensureSession(actor: number, page: number) {
@@ -299,10 +308,17 @@ export function useWorkspace() {
       run &&
       ["queued", "running", "awaiting_approval"].includes(run.status)
     ) {
+      const runId = run.id;
+      if (stopRequests.current.has(runId)) return;
+      stopRequests.current.add(runId);
+      setStoppingRunIds(new Set(stopRequests.current));
       try {
-        await api(`/runs/${run.id}/cancel`, { method: "POST" });
+        await api(`/runs/${runId}/cancel`, { method: "POST" });
       } catch (e) {
         notify(errorMessage(e));
+      } finally {
+        stopRequests.current.delete(runId);
+        setStoppingRunIds(new Set(stopRequests.current));
       }
       return;
     }
@@ -558,6 +574,7 @@ export function useWorkspace() {
     setRun,
     uploading,
     sending,
+    stopping: !!run && stoppingRunIds.has(run.id),
     loading,
     toast,
     setToast,

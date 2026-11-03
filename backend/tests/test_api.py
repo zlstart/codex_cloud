@@ -349,6 +349,32 @@ def test_worker_error_payload_is_redacted_from_status_and_events(client, app, mo
     assert "private-provider-payload" not in client.get(f"/api/runs/{rid}/events").text
 
 
+def test_docker_startup_error_is_actionable_without_exposing_request_cause(client, app, monkeypatch, caplog):
+    from app.sandbox import SandboxError
+    from requests.exceptions import ReadTimeout
+
+    message = "Docker 沙箱启动超时，请检查 Docker 负载、镜像和 FAMSUN_DOCKER_TIMEOUT_SECONDS 设置。"
+    async def failing_runtime(**kwargs):
+        raise SandboxError(message) from ReadTimeout("PRIVATE-DOCKER-REQUEST")
+
+    monkeypatch.setitem(
+        sys.modules,
+        "app.runtime",
+        types.SimpleNamespace(RuntimeConfig=lambda **kwargs: kwargs, run_agent=failing_runtime),
+    )
+    register(client)
+    sid = session(client)
+    app.state.settings.api_key = "test-only-not-a-provider-key"
+    rid = client.post(
+        f"/api/sessions/{sid}/runs", json={"content": "Start sandbox", "client_request_id": "request-0001"}
+    ).json()["id"]
+    status = wait_status(client, rid, {"failed"})
+    assert status["error"] == message
+    events = client.get(f"/api/runs/{rid}/events").text
+    assert message in events
+    assert "PRIVATE-DOCKER-REQUEST" not in events + json.dumps(status) + caplog.text
+
+
 def test_restart_marks_abandoned_run_failed(client, app, monkeypatch):
     register(client)
     sid = session(client)

@@ -1,8 +1,41 @@
 import asyncio
+import json
 
 import pytest
+from agents.tool_context import ToolContext
 from app import runtime
 from app.extensions import mcp_headers, validate_mcp_url
+
+
+@pytest.mark.parametrize("completed", [None, False, True])
+async def test_plan_tool_accepts_provider_omitting_completion_flag(completed):
+    events = []
+
+    async def emit(kind, data):
+        events.append((kind, data))
+
+    arguments = {"steps": ["检查", "生成"], "current_step": 0}
+    if completed is not None:
+        arguments["completed"] = completed
+    raw = json.dumps(arguments)
+    context = ToolContext(None, tool_name="update_plan", tool_call_id="plan-1", tool_arguments=raw)
+    result = json.loads(await runtime._plan_tool(emit).on_invoke_tool(context, raw))
+    assert result["completed"] is (completed or False)
+    assert events == [("plan.updated", result)]
+    assert result["call_id"] == "plan-1"
+
+
+@pytest.mark.parametrize("arguments", ["{", '{"steps":[],"current_step":0}',
+                                      '{"steps":["检查"],"current_step":2}'])
+async def test_invalid_plan_returns_actionable_safe_error_without_updating_ui(arguments):
+    async def forbidden(*args):
+        pytest.fail("invalid plan must not be persisted")
+
+    context = ToolContext(None, tool_name="update_plan", tool_call_id="bad-plan", tool_arguments=arguments)
+    result = json.loads(await runtime._plan_tool(forbidden).on_invoke_tool(context, arguments))
+    assert result["isError"] is True
+    assert "current_step" in result["error"]
+    assert "completed" in result["error"]
 
 
 @pytest.mark.parametrize(

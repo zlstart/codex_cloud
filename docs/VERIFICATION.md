@@ -1,6 +1,8 @@
 # 交付验证记录
 
-验证日期：2026-10-30。以下记录来自实际执行，模型供应商的真实凭据尚未配置。
+最新真实任务验收见 [图文测试报告](reports/production-acceptance-2026-11-03.html)（[Markdown](reports/production-acceptance-2026-11-03.md)、[截图与原件证据包](reports/production-acceptance-2026-11-03-evidence.zip)）。功能改造的阶段性验证见 [SQLite、工作空间展示与 OpenAI Traces](VERIFICATION-2026-11-03.md)。
+
+验证日期：2026-10-30。以下记录来自当时版本的实际执行，模型供应商的真实凭据尚未配置。表内 PostgreSQL 结果属于历史版本；当前版本统一使用 SQLite，复跑方式见下方。
 
 | 检查 | 结果与范围 |
 | --- | --- |
@@ -30,7 +32,7 @@ npm ci
 npm run build
 ```
 
-PostgreSQL 测试默认跳过。设置 `FAMSUN_TEST_DATABASE_URL` 可启用；数据库名须以 `_test` 或 `_qa` 结尾。该数据库必须专用于测试，测试会清空应用表。
+SQLite 测试默认运行，在临时目录创建独立数据库，覆盖账号与文件重启持久化、旧扩展表增量迁移、URL 校验和并发写入，无需额外数据库服务或环境变量。可单独运行 `uv run pytest -q backend/tests/test_db.py tests/test_sqlite.py`。
 
 真实 Docker 验证：
 
@@ -39,7 +41,7 @@ docker build -t famsun-sandbox:latest sandbox
 PYTHONPATH=backend uv run python tests/docker_smoke.py
 ```
 
-浏览器回归的启动和浏览器安装方式见 [前端验证说明](../frontend/README.md)。GitHub Actions 配置会自动运行后端、PostgreSQL、前端构建和浏览器回归。
+浏览器回归的启动和浏览器安装方式见 [前端验证说明](../frontend/README.md)。GitHub Actions 配置会自动运行后端（含 SQLite 持久化测试）、前端构建和浏览器回归。
 
 ## 需要在目标环境完成的验证
 
