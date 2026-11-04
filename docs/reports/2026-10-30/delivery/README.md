@@ -1,6 +1,6 @@
 # 交付验证记录
 
-最新真实任务验收见 [图文测试报告](reports/production-acceptance-2026-11-03.html)（[Markdown](reports/production-acceptance-2026-11-03.md)、[截图与原件证据包](reports/production-acceptance-2026-11-03-evidence.zip)）。功能改造的阶段性验证见 [SQLite、工作空间展示与 OpenAI Traces](VERIFICATION-2026-11-03.md)。
+后补的 2026-11-03 真实任务验收见 [图文测试报告](../../2026-11-03/production-acceptance/production-acceptance-2026-11-03.html)（[Markdown](../../2026-11-03/production-acceptance/production-acceptance-2026-11-03.md)、[截图与原件证据包](../../2026-11-03/production-acceptance/production-acceptance-2026-11-03-evidence.zip)）。当前报告入口见 [测试报告索引](../../README.md)。功能改造的阶段性验证见 [SQLite、工作空间展示与 OpenAI Traces](../../2026-11-03/sqlite-workspace-tracing/README.md)。
 
 验证日期：2026-10-30。以下记录来自当时版本的实际执行，模型供应商的真实凭据尚未配置。表内 PostgreSQL 结果属于历史版本；当前版本统一使用 SQLite，复跑方式见下方。
 
@@ -41,7 +41,7 @@ docker build -t famsun-sandbox:latest sandbox
 PYTHONPATH=backend uv run python tests/docker_smoke.py
 ```
 
-浏览器回归的启动和浏览器安装方式见 [前端验证说明](../frontend/README.md)。GitHub Actions 配置会自动运行后端（含 SQLite 持久化测试）、前端构建和浏览器回归。
+浏览器回归的启动和浏览器安装方式见 [前端验证说明](../../../../frontend/README.md)。GitHub Actions 配置会自动运行后端（含 SQLite 持久化测试）、前端构建和浏览器回归。
 
 ## 需要在目标环境完成的验证
 
@@ -49,4 +49,4 @@ PYTHONPATH=backend uv run python tests/docker_smoke.py
 - 企业真实 MCP 服务、令牌权限、网络策略和写操作幂等性。
 - 目标并发量下的负载、备份恢复、HTTPS/域名及运维告警。
 
-当前默认部署是单应用进程。企业 SSO、持久分布式任务队列、多实例运行器和微虚拟机隔离未在本版本实现；具体边界见 [架构说明](ARCHITECTURE.md)。
+当前默认部署是单应用进程。企业 SSO、持久分布式任务队列、多实例运行器和微虚拟机隔离未在本版本实现；具体边界见 [架构说明](../../../guides/ARCHITECTURE.md)。

@@ -104,14 +104,22 @@ class _Text:
 
 
 class RuntimeEvents:
-    def __init__(self, emit: Emit, artifacts: Callable[[], Awaitable[None]] | None = None):
+    def __init__(
+        self,
+        emit: Emit,
+        artifacts: Callable[[], Awaitable[None]] | None = None,
+        *,
+        compaction_threshold: int | None = None,
+    ):
         self.emit = emit
         self.artifacts = artifacts
+        self.compaction_threshold = compaction_threshold
         self.final_item_ids: list[str] = []
         self._texts: dict[str, _Text] = {}
         self._calls: dict[str, dict] = {}
         self._completed_calls: set[str] = set()
         self._compactions: set[str] = set()
+        self._context_responses: set[str] = set()
         self._raw_sequences: set[tuple[str, str, int]] = set()
         # Root and nested callbacks can arrive concurrently. One durable emit path
         # preserves observed order and keeps duplicate checks atomic across awaits.
@@ -226,6 +234,39 @@ class RuntimeEvents:
                 "context.compacted", self._metadata(identity, agent_id, agent_name, parent_call_id)
             )
 
+    async def _context_status(
+        self, response: Any, agent_id: str, agent_name: str, parent_call_id: str | None
+    ) -> None:
+        if self.compaction_threshold is None:
+            return
+        identity = str(_get(response, "id") or "")
+        key = self._scope(identity, parent_call_id)
+        if not identity or key in self._context_responses:
+            return
+        self._context_responses.add(key)
+        input_tokens = _get(_get(response, "usage"), "input_tokens")
+        if type(input_tokens) is not int or input_tokens < 0:
+            input_tokens = None
+        compaction_count = sum(
+            _get(item, "type") == "compaction" for item in (_get(response, "output", []) or [])
+        )
+        # Provider-reported usage is an observation, not its internal rendered
+        # context counter. Parameter acceptance or a threshold crossing cannot
+        # establish support; only an actual output item confirms compaction.
+        status = "not_observed"
+        if compaction_count:
+            status = "compacted"
+        elif input_tokens is not None and input_tokens > self.compaction_threshold:
+            status = "threshold_exceeded"
+        await self.emit("context.status", {
+            **self._metadata(identity, agent_id, agent_name, parent_call_id),
+            "response_id": identity,
+            "status": status,
+            "input_tokens": input_tokens,
+            "threshold": self.compaction_threshold,
+            "compaction_count": compaction_count,
+        })
+
     async def consume(
         self,
         event: Any,
@@ -288,6 +329,8 @@ class RuntimeEvents:
                 await self._start_tool(raw, agent_id, agent_name, parent_call_id)
             elif item_type == "compaction":
                 await self._compacted(raw, agent_id, agent_name, parent_call_id)
+        elif kind == "response.completed":
+            await self._context_status(_get(data, "response"), agent_id, agent_name, parent_call_id)
 
     async def finalize(self, result: Any) -> list[str]:
         """Mark only the root result's final answer, never a specialist's answer."""

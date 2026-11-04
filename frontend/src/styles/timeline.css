@@ -220,6 +220,37 @@
   color: #a8604e;
   line-height: 1.6;
 }
+.context-status {
+  border: 1px solid #dce4ed;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  color: #56677d;
+  font-size: 11px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.context-status-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+}
+.context-status-heading svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.context-status p {
+  margin: 4px 0 0;
+}
+.context-status[data-context-status="threshold_exceeded"] {
+  border-color: #ecd8b9;
+  background: #fffaf1;
+  color: #806137;
+}
+.context-status[data-context-status="compacted"] .context-status-heading {
+  color: #3d745c;
+}
 .final-answer {
   margin-top: 13px;
 }

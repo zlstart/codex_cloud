@@ -26,7 +26,7 @@ from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_RESULTS = ROOT / "test-results/production-acceptance-2026-11-03"
-DEFAULT_OUTPUT = ROOT / "docs/reports/production-acceptance-2026-11-03"
+DEFAULT_OUTPUT = ROOT / "docs/reports/2026-11-03/production-acceptance/production-acceptance-2026-11-03"
 FORMATS = ("html", "xlsx", "docx", "pdf", "pptx")
 LABELS = {
     "pass": "通过",

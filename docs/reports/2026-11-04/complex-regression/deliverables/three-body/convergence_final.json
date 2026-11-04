@@ -1,0 +1,281 @@
+{
+  "original_run_parameters": {
+    "model": "二维牛顿引力（无软化项）",
+    "G": 1.0,
+    "masses": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "method": "fixed-step RK4 (classical 4th-order Runge-Kutta, no softening)",
+    "dt": 0.001,
+    "t_start": 0.0,
+    "t_end": 12.65,
+    "steps": 12650,
+    "sample_stride_steps": 10,
+    "sample_count": 1266,
+    "initial_positions": [
+      [
+        -0.97000436,
+        0.24308753
+      ],
+      [
+        0.97000436,
+        -0.24308753
+      ],
+      [
+        0.0,
+        0.0
+      ]
+    ],
+    "initial_velocities": [
+      [
+        0.466203685,
+        0.43236573
+      ],
+      [
+        0.466203685,
+        0.43236573
+      ],
+      [
+        -0.93240737,
+        -0.86473146
+      ]
+    ],
+    "initial_energy": -1.2871419917663258,
+    "initial_angular_momentum": 0.0,
+    "max_relative_energy_error": 1.4542575966691299e-13,
+    "max_absolute_angular_momentum_error": 4.823919041996305e-14,
+    "max_center_of_mass_norm": 1.2781351787422654e-14,
+    "minimum_pair_distance": 0.6905266306918929
+  },
+  "source_files_sha256_before": {
+    "three_body.csv": "7a9f3803cf84c7d0b234e2405feedf8451952c7e7749596e49d4b7660ea106f3",
+    "metrics.json": "469d3485bbffe43e94853d1d92b044b470a40298e5261920c29cb5c10f2243a6",
+    "three_body.html": "3130f206b046c6d39cc8c1f672fba50dfbfbc5546fe2b213a248bd7108bb8cef",
+    "three_body.png": "723c8b1f5634079d0b388875a2a4a5e41177458839cc71c32c00ac9b346556bd",
+    "simulate_three_body.py": "40dec7d31fc0a2d5cf65f292dea800c39b85f54933c63337da6e757f629923d0"
+  },
+  "source_files_sha256_after": {
+    "three_body.csv": "7a9f3803cf84c7d0b234e2405feedf8451952c7e7749596e49d4b7660ea106f3",
+    "metrics.json": "469d3485bbffe43e94853d1d92b044b470a40298e5261920c29cb5c10f2243a6",
+    "three_body.html": "3130f206b046c6d39cc8c1f672fba50dfbfbc5546fe2b213a248bd7108bb8cef",
+    "three_body.png": "723c8b1f5634079d0b388875a2a4a5e41177458839cc71c32c00ac9b346556bd",
+    "simulate_three_body.py": "40dec7d31fc0a2d5cf65f292dea800c39b85f54933c63337da6e757f629923d0"
+  },
+  "original_files_unchanged": true,
+  "guarded_files": [
+    "three_body.csv",
+    "metrics.json",
+    "three_body.html",
+    "three_body.png",
+    "simulate_three_body.py"
+  ],
+  "reuse_method": "importlib 按路径加载 simulate_three_body.py，仅调用 integrate/diagnostics；未执行其 main()",
+  "runs": [
+    {
+      "dt": 0.001,
+      "steps": 12650,
+      "sample_stride_steps": 5,
+      "sample_interval": 0.005,
+      "sample_count": 2531,
+      "initial_energy": -1.28714199,
+      "final_energy": -1.28714199,
+      "max_relative_energy_error": 1.4543e-13,
+      "initial_angular_momentum": 0.0,
+      "max_absolute_angular_momentum_error": 4.8239e-14,
+      "max_center_of_mass_norm": 1.2781e-14,
+      "minimum_pair_distance": 0.690526631,
+      "minimum_pair_distance_time": 10.016
+    },
+    {
+      "dt": 0.0005,
+      "steps": 25300,
+      "sample_stride_steps": 10,
+      "sample_interval": 0.005,
+      "sample_count": 2531,
+      "initial_energy": -1.28714199,
+      "final_energy": -1.28714199,
+      "max_relative_energy_error": 2.2254e-14,
+      "initial_angular_momentum": 0.0,
+      "max_absolute_angular_momentum_error": 1.3101e-14,
+      "max_center_of_mass_norm": 1.5e-14,
+      "minimum_pair_distance": 0.690526631,
+      "minimum_pair_distance_time": 10.016
+    },
+    {
+      "dt": 0.00025,
+      "steps": 50600,
+      "sample_stride_steps": 20,
+      "sample_interval": 0.005,
+      "sample_count": 2531,
+      "initial_energy": -1.28714199,
+      "final_energy": -1.28714199,
+      "max_relative_energy_error": 2.7774e-14,
+      "initial_angular_momentum": 0.0,
+      "max_absolute_angular_momentum_error": 9.5479e-15,
+      "max_center_of_mass_norm": 5.2865e-14,
+      "minimum_pair_distance": 0.690526628,
+      "minimum_pair_distance_time": 5.7988
+    }
+  ],
+  "comparison_times": [
+    0.0,
+    3.16,
+    6.32,
+    9.48,
+    12.65
+  ],
+  "comparison_summary": {
+    "against_original_csv": [
+      {
+        "dt": 0.001,
+        "reference": "上轮 outputs/three_body.csv（dt=0.001, 每 10 步导出）",
+        "csv_rounding_floor": 5e-10,
+        "max_abs_position_diff": 4.9622e-10,
+        "max_abs_velocity_diff": 4.9082e-10,
+        "per_time": [
+          {
+            "t": 0.0,
+            "max_abs_position_diff": 0.0,
+            "max_abs_velocity_diff": 0.0
+          },
+          {
+            "t": 3.16,
+            "max_abs_position_diff": 3.8845e-10,
+            "max_abs_velocity_diff": 4.1587e-10
+          },
+          {
+            "t": 6.32,
+            "max_abs_position_diff": 4.9622e-10,
+            "max_abs_velocity_diff": 4.2396e-10
+          },
+          {
+            "t": 9.48,
+            "max_abs_position_diff": 4.548e-10,
+            "max_abs_velocity_diff": 3.529e-10
+          },
+          {
+            "t": 12.65,
+            "max_abs_position_diff": 4.813e-10,
+            "max_abs_velocity_diff": 4.9082e-10
+          }
+        ]
+      },
+      {
+        "dt": 0.0005,
+        "reference": "上轮 outputs/three_body.csv（dt=0.001, 每 10 步导出）",
+        "csv_rounding_floor": 5e-10,
+        "max_abs_position_diff": 4.9806e-10,
+        "max_abs_velocity_diff": 4.806e-10,
+        "per_time": [
+          {
+            "t": 0.0,
+            "max_abs_position_diff": 0.0,
+            "max_abs_velocity_diff": 0.0
+          },
+          {
+            "t": 3.16,
+            "max_abs_position_diff": 3.8725e-10,
+            "max_abs_velocity_diff": 4.1336e-10
+          },
+          {
+            "t": 6.32,
+            "max_abs_position_diff": 4.9806e-10,
+            "max_abs_velocity_diff": 4.2452e-10
+          },
+          {
+            "t": 9.48,
+            "max_abs_position_diff": 4.5461e-10,
+            "max_abs_velocity_diff": 3.5664e-10
+          },
+          {
+            "t": 12.65,
+            "max_abs_position_diff": 4.7282e-10,
+            "max_abs_velocity_diff": 4.806e-10
+          }
+        ]
+      },
+      {
+        "dt": 0.00025,
+        "reference": "上轮 outputs/three_body.csv（dt=0.001, 每 10 步导出）",
+        "csv_rounding_floor": 5e-10,
+        "max_abs_position_diff": 4.981e-10,
+        "max_abs_velocity_diff": 4.7989e-10,
+        "per_time": [
+          {
+            "t": 0.0,
+            "max_abs_position_diff": 0.0,
+            "max_abs_velocity_diff": 0.0
+          },
+          {
+            "t": 3.16,
+            "max_abs_position_diff": 3.8718e-10,
+            "max_abs_velocity_diff": 4.132e-10
+          },
+          {
+            "t": 6.32,
+            "max_abs_position_diff": 4.981e-10,
+            "max_abs_velocity_diff": 4.2457e-10
+          },
+          {
+            "t": 9.48,
+            "max_abs_position_diff": 4.5457e-10,
+            "max_abs_velocity_diff": 3.5689e-10
+          },
+          {
+            "t": 12.65,
+            "max_abs_position_diff": 4.723e-10,
+            "max_abs_velocity_diff": 4.7989e-10
+          }
+        ]
+      }
+    ],
+    "between_step_sizes": [
+      {
+        "dt_coarse": 0.001,
+        "dt_fine": 0.0005,
+        "max_abs_position_diff": 8.8081e-12,
+        "max_abs_velocity_diff": 1.1821e-11
+      },
+      {
+        "dt_coarse": 0.0005,
+        "dt_fine": 0.00025,
+        "max_abs_position_diff": 5.8616e-13,
+        "max_abs_velocity_diff": 7.3586e-13
+      }
+    ],
+    "error_ratio_h_vs_h2_over_h2_vs_h4": [
+      {
+        "metric": "max_abs_position_diff",
+        "ratio_h_to_h2_over_h2_to_h4": 15.027
+      },
+      {
+        "metric": "max_abs_velocity_diff",
+        "ratio_h_to_h2_over_h2_to_h4": 16.064
+      }
+    ],
+    "apparent_order": [
+      {
+        "metric": "max_abs_position_diff",
+        "apparent_order_p_in_diff_scales_like_h_p": 3.9095
+      },
+      {
+        "metric": "max_abs_velocity_diff",
+        "apparent_order_p_in_diff_scales_like_h_p": 4.0058
+      }
+    ]
+  },
+  "conclusion": {
+    "csv_matches_original_dt": "dt=0.001 的独立重跑与上轮 CSV 在全部比较时刻的偏差处于 CSV 9 位小数的写盘舍入量级，说明上轮成果确为该 dt 的真实 RK4 积分，而非参数化曲线。",
+    "energy_error_behaviour": "最大相对能量误差三档分别为 1.4543e-13 / 2.2254e-14 / 2.7774e-14，均已接近双精度下该轨道的舍入本底（~1e-13 量级），继续减半 dt 只会受浮点舍入支配，不会按 h^4 缩小 16 倍。",
+    "angular_momentum_behaviour": "最大 |ΔL| 三档为 4.8239e-14 / 1.3101e-14 / 9.5479e-15；质心偏离上界为 1.2781e-14 / 1.5e-14 / 5.2865e-14，同样落在机器精度本底附近，三档之间看不出 16 倍改善，也不应据此判定格式失效。",
+    "truncation_error_estimate": "相邻步长解之差才是截断误差的可靠指示：h=0.001 与 h/2 的最大位置差 8.8081e-12，h/2 与 h/4 的最大位置差 5.8616e-13，比值 15.03（表观阶 p=log2(比值)=3.91）；速度差比值 16.06（p=4.01）。两者接近但不严格等于 RK4 理论值 16，最细一档已接近双精度舍入本底，长时程（t=12.65）上轨道不稳定性放大也会压低比值。",
+    "apparent_order_position": 3.909464,
+    "apparent_order_velocity": 4.005777,
+    "diff_ratio_position": 15.02678,
+    "diff_ratio_velocity": 16.0642,
+    "practical_verdict": "更正表述：8.8081e-12 是 h=0.001 与 h/2=0.0005 两解在比较时刻的最大位置差，5.8616e-13 是 h/2=0.0005 与 h/4=0.00025 两解的最大位置差；原句把 5.8616e-13 误标为 h 与 h/4 之差，并含不正确的相对尺度描述，现一并去除。上轮 three_body.csv 仅写 9 位小数，约 5e-10 的写盘舍入本底大于上述步长间差异，因此 dt=0.001 对给定初值与 t 到 12.65 的时程已经足够。",
+    "no_overclaim": "未声称误差恰好缩小 16 倍：长时程上舍入本底与轨道不稳定性放大同时存在。"
+  }
+}

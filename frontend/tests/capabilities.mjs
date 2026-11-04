@@ -3,6 +3,9 @@ import assert from "node:assert/strict";
 import { existsSync, mkdirSync } from "node:fs";
 
 const baseUrl = process.env.FAMSUN_TEST_BASE_URL || "http://127.0.0.1:5173";
+const artifactDirectory =
+  process.env.FAMSUN_TEST_ARTIFACT_DIR || "../test-results/capabilities";
+mkdirSync(artifactDirectory, { recursive: true });
 const browser = await chromium.launch({
   executablePath:
     process.env.CHROMIUM_EXECUTABLE_PATH ||
@@ -207,9 +210,8 @@ try {
   await settingsDialog
     .getByRole("button", { name: "关闭", exact: true })
     .click();
-  mkdirSync("../docs/screenshots", { recursive: true });
   await page.screenshot({
-    path: "../docs/screenshots/capabilities-sdk.png",
+    path: `${artifactDirectory}/capabilities-sdk.png`,
     fullPage: true,
   });
 
@@ -275,7 +277,7 @@ try {
     "mobile must not overflow",
   );
   await page.screenshot({
-    path: "../docs/screenshots/capabilities-mobile-sdk.png",
+    path: `${artifactDirectory}/capabilities-mobile-sdk.png`,
     fullPage: true,
   });
   assert.deepEqual(failures, []);
@@ -284,7 +286,7 @@ try {
   );
 } catch (error) {
   await page.screenshot({
-    path: "/tmp/capabilities-test-failure.png",
+    path: `${artifactDirectory}/capabilities-test-failure.png`,
     fullPage: true,
   });
   console.error(await page.locator("body").innerText());

@@ -1,0 +1,15 @@
+{
+  "archived_at": "2026-11-04",
+  "timezone": "Asia/Shanghai",
+  "base_commit": "564a561becb9af061d94549617830c8b8ffad73f",
+  "original_report_generated_at": "2026-11-04T01:47:11.496952+00:00",
+  "original_report_files_sha256": {
+    "report.html": "a4d882ececf5b0b1878760e6ab5f72b1b19e4e6b62553ed85da1c5ad0ff0af8f",
+    "report.md": "888702f5ee5d1f3b772f1812f62f85bd9b59305938f5d2b87594dab6f8ab36c1",
+    "report.pdf": "65d06b3415b1a866dbff5cdb4c4a8bfbf3957e54a93daa3e3f5b7a69f6549d6e",
+    "results.json": "4d8cc28507f837359e5a51b63aa4d6be65cbd6f23feb0125954b9a817063f667",
+    "qa-report-and-evidence.zip": "b36b1528fb37d1a5852d721ab3f1e5a2671126ce479a1293d40bb3287e9bdc3f"
+  },
+  "screenshots": 34,
+  "immutable_report_files": true
+}

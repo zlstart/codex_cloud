@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import {
   Code2,
   Download,
@@ -44,6 +44,32 @@ function Loading() {
   );
 }
 
+function HtmlFrame({ html, name }: { html: string; name: string }) {
+  const frame = useRef<HTMLIFrameElement>(null);
+  useEffect(() => {
+    const node = frame.current;
+    if (!node) return;
+    // Loading srcdoc during DOM insertion can run app initialization before
+    // the iframe has a viewport. Wait for layout so responsive canvases measure
+    // their real size on the first execution, without rewriting app scripts.
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry.contentRect.width <= 0 || entry.contentRect.height <= 0) return;
+      observer.disconnect();
+      node.srcdoc = html;
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [html]);
+  return (
+    <iframe
+      ref={frame}
+      title={name}
+      sandbox="allow-scripts"
+      referrerPolicy="no-referrer"
+    />
+  );
+}
+
 export function FilePreview({
   file,
   onClose,
@@ -63,9 +89,14 @@ export function FilePreview({
   const [error, setError] = useState("");
   const [source, setSource] = useState(false);
   const [retry, setRetry] = useState(0);
+  const [loadedVersion, setLoadedVersion] = useState(0);
+  const requestLoad = useRef<(nextFile: Artifact) => void>(() => {});
   useEffect(() => {
     const controller = new AbortController();
     let objectUrl = "";
+    let pendingFile: Artifact | null = null;
+    let inFlight = false;
+    let hasPreview = false;
     setLoading(true);
     setError("");
     setContent("");
@@ -73,54 +104,80 @@ export function FilePreview({
     setBlobUrl("");
     setStructured(null);
     async function load() {
-      try {
-        if (kind === "unsupported") return;
-        const url = safeArtifactUrl(file.url);
-        if (!url) throw new Error("文件链接无效。");
-        if (file.size > (textual ? MAX_TEXT_BYTES : MAX_BINARY_BYTES))
-          throw new Error("文件较大，请下载后查看完整内容。");
-        if (parsed) {
-          const preview = await api<ParsedPreview>(
-            `/files/${encodeURIComponent(file.id)}/preview`,
-            { signal: controller.signal },
-          );
-          if (preview.kind !== kind)
-            throw new Error("服务器返回的预览格式不正确。");
-          if (!controller.signal.aborted) setStructured(preview);
-          return;
-        }
-        const response = await fetch(url, {
-          credentials: "include",
-          signal: controller.signal,
-        });
-        if (!response.ok)
-          throw new Error("无法读取此文件，可能已被删除或无权访问。");
-        const data = await boundedBlob(
-          response,
-          textual ? MAX_TEXT_BYTES : MAX_BINARY_BYTES,
-        );
-        if (controller.signal.aborted) return;
-        if (textual) {
-          const text = await decodePreviewText(data);
-          if (!controller.signal.aborted) setContent(text);
-        } else {
-          setBlob(data);
-          if (kind !== "pdf") {
-            objectUrl = URL.createObjectURL(data);
-            setBlobUrl(objectUrl);
+      if (inFlight) return;
+      inFlight = true;
+      while (pendingFile && !controller.signal.aborted) {
+        const nextFile = pendingFile;
+        pendingFile = null;
+        if (!hasPreview) setLoading(true);
+        setError("");
+        try {
+          if (kind === "unsupported") continue;
+          const url = safeArtifactUrl(nextFile.url);
+          if (!url) throw new Error("文件链接无效。");
+          if (nextFile.size > (textual ? MAX_TEXT_BYTES : MAX_BINARY_BYTES))
+            throw new Error("文件较大，请下载后查看完整内容。");
+          if (parsed) {
+            const preview = await api<ParsedPreview>(
+              `/files/${encodeURIComponent(nextFile.id)}/preview`,
+              { signal: controller.signal },
+            );
+            if (preview.kind !== kind)
+              throw new Error("服务器返回的预览格式不正确。");
+            if (!controller.signal.aborted) {
+              setStructured(preview);
+              setLoadedVersion((version) => version + 1);
+              hasPreview = true;
+            }
+            continue;
           }
+          const response = await fetch(url, {
+            credentials: "include",
+            signal: controller.signal,
+          });
+          if (!response.ok)
+            throw new Error("无法读取此文件，可能已被删除或无权访问。");
+          const data = await boundedBlob(
+            response,
+            textual ? MAX_TEXT_BYTES : MAX_BINARY_BYTES,
+          );
+          if (controller.signal.aborted) break;
+          if (textual) {
+            const text = await decodePreviewText(data);
+            if (!controller.signal.aborted) setContent(text);
+          } else {
+            setBlob(data);
+            if (kind !== "pdf") {
+              if (objectUrl) URL.revokeObjectURL(objectUrl);
+              objectUrl = URL.createObjectURL(data);
+              setBlobUrl(objectUrl);
+            }
+          }
+          if (!controller.signal.aborted)
+            setLoadedVersion((version) => version + 1);
+          hasPreview = true;
+        } catch (cause) {
+          if (!controller.signal.aborted) setError(errorMessage(cause));
+        } finally {
+          if (!controller.signal.aborted) setLoading(false);
         }
-      } catch (cause) {
-        if (!controller.signal.aborted) setError(errorMessage(cause));
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
       }
+      inFlight = false;
     }
-    void load();
+    // Let the current read finish even when the model keeps revising this file.
+    // Coalesce those revisions into one follow-up read, keeping the last preview.
+    requestLoad.current = (nextFile) => {
+      pendingFile = nextFile;
+      void load();
+    };
     return () => {
+      requestLoad.current = () => {};
       controller.abort();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
+  }, [file.id, file.url, kind, parsed, textual]);
+  useEffect(() => {
+    requestLoad.current(file);
   }, [
     file.id,
     file.url,
@@ -204,6 +261,11 @@ export function FilePreview({
           </div>
         )}
       </div>
+      {kind === "html" && !source && (
+        <div className="preview-notice">
+          如需使用网页内的导出功能，请先下载 HTML 文件，再用浏览器打开。
+        </div>
+      )}
       {content.length > MAX_RENDER_CHARS &&
         (source || (kind !== "csv" && kind !== "html")) && (
           <div className="preview-notice" role="status">
@@ -212,6 +274,7 @@ export function FilePreview({
           </div>
         )}
       <div
+        key={loadedVersion}
         className={`preview-body preview-kind-${kind}${kind === "image" ? " image-preview" : ""}`}
         aria-busy={loading}
       >
@@ -265,12 +328,7 @@ export function FilePreview({
             />
           </article>
         ) : kind === "html" ? (
-          <iframe
-            srcDoc={secureHtml}
-            title={file.name}
-            sandbox="allow-scripts"
-            referrerPolicy="no-referrer"
-          />
+          <HtmlFrame html={secureHtml} name={file.name} />
         ) : kind === "pdf" && blob ? (
           <Suspense fallback={<Loading />}>
             <PdfPreview blob={blob} name={file.name} />

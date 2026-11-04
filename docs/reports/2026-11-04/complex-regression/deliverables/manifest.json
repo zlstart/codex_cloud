@@ -1,0 +1,42 @@
+[
+  {
+    "file": "three-body/three_body_final.html",
+    "source": "three-body/visual-final/three_body_final.html",
+    "sha256": "6a8075509b55320a93eaa4a2f9333aeef499c044d13e8327e70ffdbb0ea2a4ed"
+  },
+  {
+    "file": "three-body/three_body_print.png",
+    "source": "three-body/print-final/three_body_print.png",
+    "sha256": "e20279d87790e564137f60112f88090acd8944fe5147e1016327d5dd1c32e575"
+  },
+  {
+    "file": "three-body/three_body.csv",
+    "source": "three-body/downloads/three_body.csv",
+    "sha256": "7a9f3803cf84c7d0b234e2405feedf8451952c7e7749596e49d4b7660ea106f3"
+  },
+  {
+    "file": "three-body/metrics.json",
+    "source": "three-body/downloads/metrics.json",
+    "sha256": "469d3485bbffe43e94853d1d92b044b470a40298e5261920c29cb5c10f2243a6"
+  },
+  {
+    "file": "three-body/convergence_final.json",
+    "source": "three-body/convergence-final/convergence_final.json",
+    "sha256": "ff569931318ee14a4a166fd6ab4f53fd7ce4ab5a316f544a37271b7d4434f9ec"
+  },
+  {
+    "file": "factory/factory_report.html",
+    "source": "factory/downloads/factory_report.html",
+    "sha256": "f7588165b8c259291b9f350b57e050d7112cbffb3ecd7d6e1f392c88e48ae11f"
+  },
+  {
+    "file": "factory/metrics.json",
+    "source": "factory/downloads/metrics.json",
+    "sha256": "798f2c6dfb16140f6545c2cb42af4713fd38c98ae86d4f20a9f6279202499998"
+  },
+  {
+    "file": "factory/cleaned_production.csv",
+    "source": "factory/downloads/cleaned_production.csv",
+    "sha256": "a9697a36f1ba79531ed1be036e8c4879ff72582bfc72d82d8eba9f4b3e0a92b8"
+  }
+]

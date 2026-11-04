@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.12, openai-agents 0.24.x, Docker, FastAPI/SQLAlchemy, React 19/TypeScript/Vite.
 
-**Spec:** `docs/superpowers/specs/2026-11-02-sdk-native-agent-design.md`
+**Spec:** `docs/guides/specs/2026-11-02-sdk-native-agent-design.md`
 
 ## Global constraints
 

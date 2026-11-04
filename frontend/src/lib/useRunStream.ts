@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Artifact, Run, RunEvent, TimelineState } from "../types";
-import { initialTimeline, reduceRunEvent } from "./runTimeline";
+import { contextNotice, initialTimeline, reduceRunEvent } from "./runTimeline";
 
 const eventTypes = [
   "run.started",
@@ -13,10 +13,12 @@ const eventTypes = [
   "tool.completed",
   "tool.failed",
   "artifact.created",
+  "artifact.removed",
   "approval.required",
   "approval.resolved",
   "context.trimmed",
   "context.compacted",
+  "context.status",
   "plan.updated",
   "run.completed",
   "run.failed",
@@ -29,6 +31,7 @@ export function useRunStream(
   onTerminal: (status: string, error: string, runId: string) => void,
   onArtifact: (file: Artifact) => void,
   onNotice?: (message: string) => void,
+  onArtifactRemoved?: (file: Artifact) => void,
 ) {
   const [snapshot, setSnapshot] = useState<{
     runId: string | null;
@@ -40,8 +43,13 @@ export function useRunStream(
   );
   const activeRun = useRef(run?.id);
   activeRun.current = run?.id;
-  const callbacks = useRef({ onTerminal, onArtifact, onNotice });
-  callbacks.current = { onTerminal, onArtifact, onNotice };
+  const callbacks = useRef({
+    onTerminal,
+    onArtifact,
+    onNotice,
+    onArtifactRemoved,
+  });
+  callbacks.current = { onTerminal, onArtifact, onNotice, onArtifactRemoved };
 
   useEffect(() => {
     if (!run) return;
@@ -87,13 +95,10 @@ export function useRunStream(
       setDisconnectedRun(null);
       if (message.type === "artifact.created" && data.artifact)
         callbacks.current.onArtifact(data.artifact as Artifact);
-      if (
-        message.type === "context.trimmed" ||
-        message.type === "context.compacted"
-      )
-        callbacks.current.onNotice?.(
-          "已整理较早的对话上下文，工作空间文件仍然保留。",
-        );
+      if (message.type === "artifact.removed" && data.artifact)
+        callbacks.current.onArtifactRemoved?.(data.artifact as Artifact);
+      const notice = contextNotice(message.type);
+      if (notice) callbacks.current.onNotice?.(notice);
       if (
         ["run.completed", "run.failed", "run.cancelled"].includes(message.type)
       ) {

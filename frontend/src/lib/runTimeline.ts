@@ -1,4 +1,5 @@
 import type {
+  ContextTimelineItem,
   RunEvent,
   TextTimelineItem,
   TimelineItem,
@@ -51,6 +52,13 @@ export function partitionTimeline(items: TimelineItem[]) {
     else process.push(item);
   }
   return { process, final };
+}
+
+export function contextNotice(eventType: string): string | undefined {
+  if (eventType === "context.trimmed")
+    return "已裁剪过长的工具输出，工作空间文件仍然保留。";
+  if (eventType === "context.compacted")
+    return "已收到原生上下文压缩结果，工作空间文件仍然保留。";
 }
 
 /** Every persisted event passes through this reducer, both SSE and JSON history. */
@@ -173,6 +181,38 @@ export function reduceRunEvent(
       },
       index,
     );
+  } else if (event.type === "context.status") {
+    if (
+      !["compacted", "threshold_exceeded", "not_observed"].includes(
+        String(data.status),
+      ) ||
+      typeof data.threshold !== "number" ||
+      !Number.isFinite(data.threshold)
+    )
+      return next;
+    const id = `context-status:${JSON.stringify([meta.agent_id ?? "main", meta.parent_call_id ?? null])}`;
+    const index = items.findIndex(
+      (item) => item.kind === "context" && item.id === id,
+    );
+    const existing = index >= 0 ? items[index] : undefined;
+    upsert(
+      {
+        ...mergedIdentity(existing),
+        id,
+        kind: "context",
+        response_id: value(data, "response_id"),
+        status: data.status as ContextTimelineItem["status"],
+        input_tokens:
+          typeof data.input_tokens === "number" &&
+          Number.isFinite(data.input_tokens)
+            ? data.input_tokens
+            : null,
+        threshold: data.threshold,
+        compaction_count:
+          typeof data.compaction_count === "number" ? data.compaction_count : 0,
+      },
+      index,
+    );
   } else if (
     event.type === "context.trimmed" ||
     event.type === "context.compacted"
@@ -181,7 +221,7 @@ export function reduceRunEvent(
       {
         ...meta,
         kind: "notice",
-        text: "已整理较早的对话上下文，工作空间文件仍然保留。",
+        text: contextNotice(event.type)!,
       },
       -1,
     );

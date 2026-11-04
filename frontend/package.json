@@ -12,10 +12,10 @@
     "test:deployment": "node tests/deployment.mjs",
     "test:deployment-restart": "node tests/deployment-restart.mjs",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" tests/*.mjs",
-    "test:timeline": "node --test tests/run-timeline.test.mjs && node tests/timeline.mjs && node tests/timeline-recovery.mjs",
+    "test:timeline": "node --test tests/run-timeline.test.mjs && node tests/timeline.mjs && node tests/timeline-recovery.mjs && node tests/context-observation.mjs",
     "test:capabilities": "node tests/capabilities.mjs",
-    "test:previews": "node --test tests/preview-data.test.mjs && node tests/file-previews.mjs && node tests/interactive-preview.mjs",
-    "test:rendering": "node --test tests/tool-presentation.test.mjs tests/artifact-links.test.mjs && node tests/rendering.mjs && node tests/artifact-updates.mjs"
+    "test:previews": "node --test tests/preview-data.test.mjs && node tests/file-previews.mjs && node tests/interactive-preview.mjs && node tests/preview-live-updates.mjs",
+    "test:rendering": "node --test tests/tool-presentation.test.mjs tests/artifact-links.test.mjs && node tests/rendering.mjs && node tests/artifact-updates.mjs && node tests/artifact-removal.mjs"
   },
   "dependencies": {
     "dompurify": "^3.4.17",

@@ -70,7 +70,7 @@ async def main():
                 skill.bind(session)
                 assert "Analyze files" in await skill.instructions(session.state.manifest)
                 script = '''
-import json, os, urllib.request
+import json, os, shutil, subprocess, urllib.request
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -86,6 +86,12 @@ for path in ("/usr/readonly-proof", "/workspace/uploads/production.csv"):
     else:
         raise AssertionError("protected path writable: " + path)
 assert not Path("/var/run/docker.sock").exists()
+assert shutil.which("file"), "Sandbox must support file type inspection"
+assert shutil.which("time"), "Sandbox must support command timing"
+assert "text/" in subprocess.check_output(
+    ["file", "--mime-type", "uploads/production.csv"], text=True
+)
+assert subprocess.run(["bash", "-o", "pipefail", "-c", "exit 7 | cat"]).returncode == 7
 data = pd.read_csv("uploads/production.csv")
 summary = data.groupby("line").sum()
 summary.to_excel("outputs/analysis.xlsx")

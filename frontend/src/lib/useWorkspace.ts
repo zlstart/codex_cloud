@@ -41,6 +41,9 @@ export function useWorkspace() {
   const [notice, setNotice] = useState("");
   const [runSyncError, setRunSyncError] = useState("");
   const [preview, setPreview] = useState<Artifact | null>(null);
+  const [removedArtifactIds, setRemovedArtifactIds] = useState<
+    ReadonlySet<string>
+  >(() => new Set());
   const [rename, setRename] = useState<Session | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [deleting, setDeleting] = useState<Session | null>(null);
@@ -174,6 +177,7 @@ export function useWorkspace() {
     setSessions([]);
     setSettings(null);
     setPreview(null);
+    setRemovedArtifactIds(new Set());
     setUser(next);
     setAuth(false);
     try {
@@ -273,6 +277,12 @@ export function useWorkspace() {
       void refreshSessions().catch(() => {});
     },
     (file) => {
+      setRemovedArtifactIds((current) => {
+        if (!current.has(file.id)) return current;
+        const next = new Set(current);
+        next.delete(file.id);
+        return next;
+      });
       setDetail((current) =>
         current && current.session.id === file.session_id
           ? {
@@ -289,6 +299,29 @@ export function useWorkspace() {
       setPreview((current) => (current?.id === file.id ? file : current));
     },
     setNotice,
+    (file) => {
+      if (activeId.current !== file.session_id) return;
+      const matches = (candidate: Artifact) =>
+        candidate.id === file.id && candidate.session_id === file.session_id;
+      setDetail((current) =>
+        current?.session.id === file.session_id
+          ? {
+              ...current,
+              files: current.files.filter((candidate) => !matches(candidate)),
+            }
+          : current,
+      );
+      setPending((current) =>
+        current.filter((candidate) => !matches(candidate)),
+      );
+      setPreview((current) => (current && matches(current) ? null : current));
+      setFileDeleting((current) =>
+        current && matches(current) ? null : current,
+      );
+      setRemovedArtifactIds((current) =>
+        current.has(file.id) ? current : new Set([...current, file.id]),
+      );
+    },
   );
   async function ensureSession(actor: number, page: number) {
     if (actor !== identity.current || page !== navigation.current) return null;
@@ -457,6 +490,7 @@ export function useWorkspace() {
       if (actor !== identity.current) return;
       setUser(null);
       setPreview(null);
+      setRemovedArtifactIds(new Set());
       setSettingOpen(false);
       setRename(null);
       setDeleting(null);
@@ -584,6 +618,7 @@ export function useWorkspace() {
     setNotice,
     preview,
     setPreview,
+    removedArtifactIds,
     rename,
     setRename,
     renameValue,

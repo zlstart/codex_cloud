@@ -1,0 +1,84 @@
+{
+  "G": 1.0,
+  "masses": [
+    1.0,
+    1.0,
+    1.0
+  ],
+  "method": "fixed-step RK4 (classical 4th-order Runge-Kutta, no softening)",
+  "dimension": 2,
+  "dt": 0.001,
+  "t_start": 0.0,
+  "t_end": 12.65,
+  "steps": 12650,
+  "sample_stride_steps": 10,
+  "sample_interval": 0.01,
+  "sample_count": 1266,
+  "initial_positions": [
+    [
+      -0.97000436,
+      0.24308753
+    ],
+    [
+      0.97000436,
+      -0.24308753
+    ],
+    [
+      0.0,
+      0.0
+    ]
+  ],
+  "initial_velocities": [
+    [
+      0.466203685,
+      0.43236573
+    ],
+    [
+      0.466203685,
+      0.43236573
+    ],
+    [
+      -0.93240737,
+      -0.86473146
+    ]
+  ],
+  "initial_energy": -1.2871419917663258,
+  "final_energy": -1.2871419917663975,
+  "max_relative_energy_error": 1.4542575966691299e-13,
+  "max_relative_energy_error_at_samples": 1.4490823027308056e-13,
+  "max_relative_energy_error_time": 0.523,
+  "initial_angular_momentum": 0.0,
+  "final_angular_momentum": 3.645955065634254e-15,
+  "max_absolute_angular_momentum_error": 4.823919041996305e-14,
+  "max_center_of_mass_norm": 1.2781351787422654e-14,
+  "minimum_pair_distance": 0.6905266306918929,
+  "minimum_pair_distance_time": 10.016,
+  "units": "无量纲（正则化）单位：G=1，m=1；长度与时间由初始条件给定",
+  "diagnostics_coverage": "守恒量误差按全部 12650 个积分步统计（非仅导出样本）",
+  "validation": {
+    "rk4_reference_dt": 0.0001,
+    "rk4_reference_steps": 126500,
+    "max_position_diff_vs_dt_over_10": 1.268077881500267e-11,
+    "max_velocity_diff_vs_dt_over_10": 1.8281947399005603e-11,
+    "ode_residual_max_abs_dvdt_minus_accel": 0.0006266506570065111,
+    "ode_residual_note": "中心差分步长为样本间隔 0.01，残差含截断误差",
+    "initial_total_momentum": [
+      0.0,
+      0.0
+    ],
+    "final_total_momentum": [
+      7.771561172376096e-15,
+      3.4416913763379853e-15
+    ],
+    "max_abs_momentum_drift": 7.771561172376096e-15,
+    "min_state_deviation_from_initial": 0.002324639731117577,
+    "min_state_deviation_time": 12.65,
+    "state_deviation_at_t_end": 0.002324639731117577,
+    "note": "该初值对应近似 8 字族周期轨道，偏离极小处即准回归时刻"
+  },
+  "csv": "three_body.csv",
+  "plot": "three_body.png",
+  "animation": "three_body.html",
+  "generator": "simulate_three_body.py",
+  "generated_at_utc": "2026-11-04T00:58:29+00:00"
+}
