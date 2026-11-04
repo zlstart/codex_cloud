@@ -235,3 +235,80 @@ test("failed tools retain error payload for readable execution history", () => {
   assert.equal(state.items[0].status, "failed");
   assert.equal(state.items[0].output, "Permission denied");
 });
+
+test("context observations update one scoped agent status in live and replay", () => {
+  const observation = (response_id, overrides = {}) => ({
+    item_id: response_id,
+    response_id,
+    agent_id: "main",
+    agent_name: "主助手",
+    parent_call_id: null,
+    status: "threshold_exceeded",
+    input_tokens: 41296,
+    threshold: 32000,
+    compaction_count: 0,
+    ...overrides,
+  });
+  const events = [
+    event(1, "context.status", observation("response-a")),
+    event(
+      2,
+      "context.status",
+      observation("response-b", {
+        status: "compacted",
+        input_tokens: 45000,
+        compaction_count: 1,
+      }),
+    ),
+    event(
+      3,
+      "context.status",
+      observation("child-a", {
+        agent_id: "analyst",
+        parent_call_id: "delegate-a",
+      }),
+    ),
+    event(
+      4,
+      "context.status",
+      observation("child-b", {
+        agent_id: "analyst",
+        parent_call_id: "delegate-b",
+        status: "not_observed",
+        input_tokens: null,
+      }),
+    ),
+  ];
+  const live = events.reduce(reduceRunEvent, initialTimeline());
+  const statuses = live.items.filter((item) => item.kind === "context");
+  assert.equal(
+    statuses.length,
+    3,
+    "Each agent invocation gets one updating status",
+  );
+  assert.equal(statuses[0].response_id, "response-b");
+  assert.equal(statuses[0].status, "compacted");
+  assert.equal(statuses[0].compaction_count, 1);
+  assert.equal(statuses[0].sequence, 1, "Updates preserve timeline position");
+  assert.equal(statuses[1].status, "threshold_exceeded");
+  assert.equal(statuses[1].input_tokens, 41296);
+  assert.equal(
+    statuses[2].input_tokens,
+    null,
+    "Unknown usage must not imply zero tokens",
+  );
+  assert.deepEqual(replayEvents([...events].reverse()), live);
+  assert.equal(events.reduce(reduceRunEvent, live), live);
+});
+
+test("output trimming and observed native compaction remain distinct history facts", () => {
+  const state = replayEvents([
+    event(1, "context.trimmed", { item_id: "output-trim" }),
+    event(2, "context.compacted", { item_id: "native-compaction" }),
+  ]);
+  assert.match(state.items[0].text, /输出/);
+  assert.match(state.items[0].text, /裁剪/);
+  assert.doesNotMatch(state.items[0].text, /已.*上下文压缩/);
+  assert.match(state.items[1].text, /原生.*压缩/);
+  assert.notEqual(state.items[0].text, state.items[1].text);
+});

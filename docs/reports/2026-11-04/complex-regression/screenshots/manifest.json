@@ -1,0 +1,240 @@
+[
+  {
+    "path": "screenshots/01-preview-failure.png",
+    "original_source": "preview/before/preview-failure.png",
+    "caption": "修复前：更新中的预览无法完成加载",
+    "kind": "浏览器 fixture",
+    "sha256": "c65de791748aa92658df4096fc0a52db5e578f0a4814c4ba88faafe2fa0a93b2"
+  },
+  {
+    "path": "screenshots/02-preview-during-updates.png",
+    "original_source": "preview/after/preview-during-updates.png",
+    "caption": "修复后：持续更新期间预览可读",
+    "kind": "浏览器 fixture",
+    "sha256": "9445a7e422f124849bbcdaaa79b9014e7355e8a04601054912a045bef6a6589d"
+  },
+  {
+    "path": "screenshots/03-preview-shrinking-workbook.png",
+    "original_source": "preview/after/preview-shrinking-workbook.png",
+    "caption": "修复后：工作表缩小时分页复位",
+    "kind": "浏览器 fixture",
+    "sha256": "f0034d1e2fa856d448730443dd1ed9ff3cacdd6003facac6cac229a5cf15f983"
+  },
+  {
+    "path": "screenshots/04-real-compaction-status.png",
+    "original_source": "final/diagnostic-live/real-compaction-status.png",
+    "caption": "真实模型：超过阈值但未返回原生压缩条目",
+    "kind": "真实 provider / API / UI",
+    "sha256": "85f559339873ea075ec32e60ed48961793ec936d65806a88fbdefe7145673c4c"
+  },
+  {
+    "path": "screenshots/05-real-patch-failure-fixed.png",
+    "original_source": "final/diagnostic-live/real-patch-failure-fixed.png",
+    "caption": "真实模型：补丁失败被正确标记并恢复",
+    "kind": "真实 provider / API / UI",
+    "sha256": "a33b86379f722a2a71d1ed0a19c2342581d16bbd7bfe6a3fdcb9e12108e44798"
+  },
+  {
+    "path": "screenshots/06-03-final-answer.png",
+    "original_source": "three-body/screenshots/03-final-answer.png",
+    "caption": "三体首轮：终态失败，不能以文件存在替代成功",
+    "kind": "真实 provider / UI",
+    "sha256": "39b80056a94badf17335f7920ef108e8804e61aa51eeea98c56c51e2ca1107eb"
+  },
+  {
+    "path": "screenshots/07-05-app-html-desktop-failure.png",
+    "original_source": "three-body/screenshots/05-app-html-desktop-failure.png",
+    "caption": "修复前：应用内三体动画未初始化",
+    "kind": "真实模型产物 / 应用预览",
+    "sha256": "f6f3cb440dfd7711f0d223d1948c6715d2279d18b4a74e8b3c850639d7e5d220"
+  },
+  {
+    "path": "screenshots/08-06-offline-desktop-interaction.png",
+    "original_source": "three-body/screenshots/06-offline-desktop-interaction.png",
+    "caption": "三体原件：离线暂停、继续、滑块与重置",
+    "kind": "真实模型原件 / 离线 Chromium",
+    "sha256": "ec51e019ee83c7fbad1072583e6dcf614ab07e86bdd0390de6b616ed3574f976"
+  },
+  {
+    "path": "screenshots/09-06-offline-mobile-interaction.png",
+    "original_source": "three-body/screenshots/06-offline-mobile-interaction.png",
+    "caption": "三体原件：390px 浏览器视口交互",
+    "kind": "浏览器模拟手机视口",
+    "sha256": "2ff2739ef61321ac1478861e9e1e92f368120b7f661c737ed917a9bda64681b1"
+  },
+  {
+    "path": "screenshots/10-app-preview-initialization-failure.png",
+    "original_source": "factory/screenshots/app-preview-initialization-failure.png",
+    "caption": "修复前：应用内工厂 KPI 未初始化",
+    "kind": "真实模型产物 / 应用预览",
+    "sha256": "0fe0b68983aea73fde0c7d04ce8aa79e2cbae2c4fb0762e7c327b52d899fca1c"
+  },
+  {
+    "path": "screenshots/11-baseline-desktop-full.png",
+    "original_source": "factory/screenshots/baseline-desktop-full.png",
+    "caption": "工厂原件：独立核对后的离线报表",
+    "kind": "真实模型原件 / 离线 Chromium",
+    "sha256": "6415ea50a99c66213df8bf5dd4a44930e91c043b308169a15d1f610321286755"
+  },
+  {
+    "path": "screenshots/12-baseline-desktop-filtered.png",
+    "original_source": "factory/screenshots/baseline-desktop-filtered.png",
+    "caption": "工厂原件：产线、班次筛选改变 KPI",
+    "kind": "真实模型原件 / 离线 Chromium",
+    "sha256": "288fe6648a0f01690a7d5e5cd6be0d23a14fd31ecfb855948d42722864bdd1fd"
+  },
+  {
+    "path": "screenshots/13-baseline-empty-filter.png",
+    "original_source": "factory/screenshots/baseline-empty-filter.png",
+    "caption": "工厂原件：空筛选不会产生 NaN / Infinity",
+    "kind": "真实模型原件 / 离线 Chromium",
+    "sha256": "f6f5eb2220c9367df7ec1a745f07bacfad66e6e62f880f8d1357fee789de760c"
+  },
+  {
+    "path": "screenshots/14-baseline-mobile-filtered.png",
+    "original_source": "factory/screenshots/baseline-mobile-filtered.png",
+    "caption": "工厂原件：手机视口筛选与布局",
+    "kind": "浏览器模拟手机视口",
+    "sha256": "c4a0ba7e8369df74cc39b9da451dd489010e24965065eb319bec051a29711745"
+  },
+  {
+    "path": "screenshots/15-failure.png",
+    "original_source": "artifact-removal/frontend/before/failure.png",
+    "caption": "修复前：删除产物清单与预览未同步",
+    "kind": "浏览器 fixture",
+    "sha256": "e2bf8b61da12db538c3d1f0daa79020cfbe0a2778de8b45c7cec2c04a936625f"
+  },
+  {
+    "path": "screenshots/16-removed-global-live.png",
+    "original_source": "artifact-removal/frontend/after/removed-global-live.png",
+    "caption": "后续复测截图 · removed-global-live",
+    "kind": "以对应 JSON 记录的测试范围为准",
+    "sha256": "d78503d9ef7fdfca37b58ca3545ad6205e1c91321b1080b459b573820a0925ac"
+  },
+  {
+    "path": "screenshots/17-removed-history-and-files.png",
+    "original_source": "artifact-removal/frontend/after/removed-history-and-files.png",
+    "caption": "后续复测截图 · removed-history-and-files",
+    "kind": "以对应 JSON 记录的测试范围为准",
+    "sha256": "57755fc3f9b08eb42bc304e598728b40e85de123e13ad8597391e39abb23aa4a"
+  },
+  {
+    "path": "screenshots/18-removed-live.png",
+    "original_source": "artifact-removal/frontend/after/removed-live.png",
+    "caption": "后续复测截图 · removed-live",
+    "kind": "以对应 JSON 记录的测试范围为准",
+    "sha256": "ecf1e51dbb35d420e4610cfdb7397346a54980bfeb4c99bf6f08257e2b258a9e"
+  },
+  {
+    "path": "screenshots/19-production-final-app-preview-desktop.png",
+    "original_source": "factory/screenshots/production-final-app-preview-desktop.png",
+    "caption": "工厂最终应用预览：真实生产构建中 KPI 和脚本初始化正常",
+    "kind": "真实模型产物 / 真实应用生产构建",
+    "sha256": "e31cd443cf54355826b4e812831a2d9f5632d7dcd38007c8c685e65cc31bd87d"
+  },
+  {
+    "path": "screenshots/20-production-final-app-preview-filtered.png",
+    "original_source": "factory/screenshots/production-final-app-preview-filtered.png",
+    "caption": "工厂最终应用预览：筛选改变真实 KPI",
+    "kind": "真实模型产物 / 真实应用生产构建",
+    "sha256": "a4426eb67d14069635adab85785a659a64c74ff253c93161a6dea35ccf2b49b4"
+  },
+  {
+    "path": "screenshots/21-production-final-app-preview-mobile-filtered.png",
+    "original_source": "factory/screenshots/production-final-app-preview-mobile-filtered.png",
+    "caption": "工厂最终应用预览：360px 浏览器视口筛选与布局通过",
+    "kind": "真实应用 / 浏览器模拟手机视口",
+    "sha256": "c47a0d240ec1013109e6b1a3ca75c1fbf95f12909fcce0892aa328233be5cfd1"
+  },
+  {
+    "path": "screenshots/22-three_body_final.png",
+    "original_source": "three-body/visual-final/three_body_final.png",
+    "caption": "前一版静态PNG：根代理发现页脚重叠、右栏越框和缺字，保留为修订前证据",
+    "kind": "真实模型产物 / 静态排版缺陷证据",
+    "sha256": "ea20cb112882e6146023eabb4cccd004d6dd8f51503faca507bd19136d18bfcf"
+  },
+  {
+    "path": "screenshots/23-final-06-offline-mobile-reset.png",
+    "original_source": "three-body/screenshots/final-06-offline-mobile-reset.png",
+    "caption": "三体最终原件：离线手机视口重置与布局（不代表应用canvas已通过）",
+    "kind": "真实模型原件 / 离线 Chromium 模拟手机视口",
+    "sha256": "c8adc52f07cac66506491f8f08e13928141764f036fa69685a2a5d040131b277"
+  },
+  {
+    "path": "screenshots/24-09-final-links.png",
+    "original_source": "three-body/screenshots/09-final-links.png",
+    "caption": "三体第4轮完成后的最终成果链接",
+    "kind": "真实 provider 同会话续作 / 应用截图",
+    "sha256": "219d7e89cceb5e8aa39913a5af2a2e796cd6c16afa3f032db3c476138ee85868"
+  },
+  {
+    "path": "screenshots/25-production-final-05-app-html-desktop-first-view.png",
+    "original_source": "three-body/screenshots/production-final-05-app-html-desktop-first-view.png",
+    "caption": "最终真实应用：无需人工resize，首屏即显示三色轨迹与有效画布",
+    "kind": "真实模型原件 / 生产应用 / Chromium桌面",
+    "sha256": "1abc769928b563ba2c57ee6fd4130fa753ee812c4f572c71b9a165555f1b8ec6"
+  },
+  {
+    "path": "screenshots/26-production-final-mobile-05-app-html-mobile-first-view.png",
+    "original_source": "three-body/screenshots/production-final-mobile-05-app-html-mobile-first-view.png",
+    "caption": "最终真实应用：390px新context中首屏轨迹与画布正常",
+    "kind": "真实模型原件 / 生产应用 / Chromium模拟手机视口",
+    "sha256": "3e3a23a4224281dc4b7c74760b73ee90e20fc5a04264250bf58f6caa918b5645"
+  },
+  {
+    "path": "screenshots/27-production-final-06-offline-mobile-reset.png",
+    "original_source": "three-body/screenshots/production-final-06-offline-mobile-reset.png",
+    "caption": "最终三体原件离线手机视口：重置后状态正确",
+    "kind": "真实模型原件 / 离线Chromium模拟手机视口",
+    "sha256": "c8adc52f07cac66506491f8f08e13928141764f036fa69685a2a5d040131b277"
+  },
+  {
+    "path": "screenshots/28-three-body-final-overview-desktop.png",
+    "original_source": "html-preview/three-body-final-overview-desktop.png",
+    "caption": "最终修订版真实应用：新context首屏完整轨迹、三颗星均可见",
+    "kind": "真实模型产物 / 生产应用 / 未手动resize",
+    "sha256": "06e23b2878e50f314a1969d7587247b3074776570a04861446de43f6b81cf3e7"
+  },
+  {
+    "path": "screenshots/29-three-body-final-overview-mobile.png",
+    "original_source": "html-preview/three-body-final-overview-mobile.png",
+    "caption": "最终修订版真实应用手机首屏：轨迹和初始画面完整可见",
+    "kind": "真实模型产物 / 生产应用 / 模拟手机视口",
+    "sha256": "60add47d50a8d0ddcc8595ab440cb15481988a38f5bf8ef0d382b8f7697d3fe1"
+  },
+  {
+    "path": "screenshots/30-01-three_body.csv.png",
+    "original_source": "final/live-preview-final/01-three_body.csv.png",
+    "caption": "最终真实生产：任务仍运行时CSV已加载，前后API均running",
+    "kind": "真实任务进行中 / fresh Chromium / 无新模型请求",
+    "sha256": "1b9ee6dbc0bd5f46d9c9abed4d1d7920e35098a71ef279a1ce13a5e98ec27edb"
+  },
+  {
+    "path": "screenshots/31-02-three_body_final.html.png",
+    "original_source": "final/live-preview-final/02-three_body_final.html.png",
+    "caption": "最终真实生产：任务仍运行时HTML预览加载，画布670×670",
+    "kind": "真实任务进行中 / 真实生产UI / 非fixture",
+    "sha256": "21a9387228e60b0df3148003118c8c062a5b043dbb98cfeaa2e473e0b8ff7e3b"
+  },
+  {
+    "path": "screenshots/32-three_body_print.png",
+    "original_source": "three-body/print-final/three_body_print.png",
+    "caption": "最终print静态图：footer与横轴分离、右栏不越框、E0/L0完整",
+    "kind": "第5轮真实模型产物 / 独立像素边界与哈希检查通过",
+    "sha256": "e20279d87790e564137f60112f88090acd8944fe5147e1016327d5dd1c32e575"
+  },
+  {
+    "path": "screenshots/33-print-12-png-preview.png",
+    "original_source": "three-body/screenshots/print-12-png-preview.png",
+    "caption": "最终真实应用：print PNG预览加载，尺寸2010×1320",
+    "kind": "真实生产UI / 原图预览与下载一致",
+    "sha256": "70561915a3f0b978674ce5be29a9cddcbe694abe8e6a08f7bac1b69539a64076"
+  },
+  {
+    "path": "screenshots/34-print-10-production-final-links.png",
+    "original_source": "three-body/screenshots/print-10-production-final-links.png",
+    "caption": "第5轮真实运行完成后的最终5个成果链接",
+    "kind": "真实provider与生产UI / 5个下载独立核对通过",
+    "sha256": "10a9245423c0e7b384ea8fab6065fc6c65f01ea9e5ca557d4f60a989ae237184"
+  }
+]

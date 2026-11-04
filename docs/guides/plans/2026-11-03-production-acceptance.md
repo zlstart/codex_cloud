@@ -16,4 +16,4 @@ Use the configured third-party Responses model and real per-conversation Docker 
 
 Report must distinguish application bugs, model-output defects, environment/setup issues and supported preview limitations. A completed agent run is not proof that an artifact is valid; an HTTP 200 is not proof that a browser downloaded or rendered it.
 
-Final evidence: `docs/reports/production-acceptance-2026-11-03.html` with portable evidence ZIP. Regression:200 Python tests and23 frontend unit tests; actual output/download/permission/fullscreen evidence is kept separately from deterministic fixtures. OpenAI trace export remains unverified without a separate tracing credential.
+Final evidence: `docs/reports/2026-11-03/production-acceptance/production-acceptance-2026-11-03.html` with portable evidence ZIP. Regression:200 Python tests and23 frontend unit tests; actual output/download/permission/fullscreen evidence is kept separately from deterministic fixtures. OpenAI trace export remains unverified without a separate tracing credential.

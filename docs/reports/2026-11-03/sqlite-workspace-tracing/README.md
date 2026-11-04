@@ -31,7 +31,7 @@
 
 ## 验证边界
 
-当前环境没有 `OPENAI_TRACING_API_KEY` 或 `OPENAI_API_KEY`，未执行真实 OpenAI Traces 上报。启用需设置 `AGENT_TRACING_ENABLED=true` 和独立 OpenAI 项目密钥后重启，详见 [追踪指南](TRACING.md)。第三方模型继续使用既有 `AGENT_*` 配置。
+当前环境没有 `OPENAI_TRACING_API_KEY` 或 `OPENAI_API_KEY`，未执行真实 OpenAI Traces 上报。启用需设置 `AGENT_TRACING_ENABLED=true` 和独立 OpenAI 项目密钥后重启，详见 [追踪指南](../../../guides/TRACING.md)。第三方模型继续使用既有 `AGENT_*` 配置。
 
 SDK 0.24 原生 Responses 追踪导出关联 ID/用量，OpenAI 无法读取第三方服务保存的完整模型响应；本次未增加自定义内容导出。SDK 后台批量发送与进程退出时刷新负责交付，界面“已启用”不等同于服务端已接收。
 

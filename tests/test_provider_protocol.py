@@ -16,7 +16,7 @@ from agents.sandbox.sandboxes.unix_local import UnixLocalSandboxClient
 from openai import AsyncOpenAI
 
 
-def response_sse(items, response_id="resp_fixture"):
+def response_sse(items, response_id="resp_fixture", *, input_tokens=10):
     response = {
         "id": response_id,
         "object": "response",
@@ -38,9 +38,9 @@ def response_sse(items, response_id="resp_fixture"):
         "top_p": 1,
         "truncation": "disabled",
         "usage": {
-            "input_tokens": 10,
+            "input_tokens": input_tokens,
             "output_tokens": 5,
-            "total_tokens": 15,
+            "total_tokens": input_tokens + 5,
             "input_tokens_details": {"cached_tokens": 0},
             "output_tokens_details": {"reasoning_tokens": 0},
         },
@@ -253,6 +253,88 @@ async def test_native_compaction_persists_and_trims_next_model_input(harness):
     await execute(followup, messages=[{"role": "user", "content": "next"}])
     assert any(name == "context.compacted" for name, _ in events)
     assert "opaque-fixture" not in str(events)
+
+
+async def test_threshold_exceeded_without_compaction_is_visible_and_preserves_history(harness):
+    execute, _, events, _ = harness
+    await execute(lambda *_: response_sse([message("继续。")], input_tokens=8001))
+    observations = [data for kind, data in events if kind == "context.status"]
+    assert observations[-1]["status"] == "threshold_exceeded"
+    assert observations[-1]["input_tokens"] == 8001
+    assert observations[-1]["threshold"] == 8000
+    assert observations[-1]["compaction_count"] == 0
+    assert not any(kind == "context.compacted" for kind, _ in events)
+
+    def followup(body, _):
+        assert any(item.get("content") == "make a plan" for item in body["input"])
+        return response_sse([message("保留原始历史。", "next")], "next-response", input_tokens=8100)
+
+    assert await execute(followup, messages=[{"role": "user", "content": "continue"}]) == "保留原始历史。"
+
+
+async def test_compaction_keeps_new_tool_pairs_and_uses_latest_persisted_window(harness):
+    execute, _, events, _ = harness
+    compact = {"id": "cmp_tool", "type": "compaction", "encrypted_content": "opaque-tool-window"}
+
+    def provider(body, sequence):
+        if sequence == 1:
+            return response_sse([call("update_plan", {"steps": ["已完成"], "current_step": 0}, "old")])
+        if sequence == 2:
+            assert any(item.get("call_id") == "old" and item.get("type") == "function_call_output"
+                       for item in body["input"])
+            return response_sse([
+                compact,
+                call("update_plan", {"steps": ["继续"], "current_step": 0}, "new"),
+                call("update_plan", {"steps": ["核验"], "current_step": 0}, "parallel"),
+            ], "response-compacted")
+        assert not any(item.get("call_id") == "old" for item in body["input"])
+        assert {item.get("call_id") for item in body["input"] if item.get("type") == "function_call"} == {
+            "new", "parallel"
+        }
+        assert {item.get("call_id") for item in body["input"]
+                if item.get("type") == "function_call_output"} == {"new", "parallel"}
+        return response_sse([message("工具继续成功。")], "response-tools-done")
+
+    assert await execute(provider) == "工具继续成功。"
+    second = {"id": "cmp_second", "type": "compaction", "encrypted_content": "opaque-second-window"}
+    await execute(lambda *_: response_sse([second, message("再次压缩。")], "second-compaction"),
+                  messages=[{"role": "user", "content": "continue"}])
+
+    def resumed(body, _):
+        assert [item["id"] for item in body["input"] if item.get("type") == "compaction"] == ["cmp_second"]
+        assert not any(item.get("type") in {"function_call", "function_call_output"} for item in body["input"])
+        return response_sse([message("重新加载后继续。")], "resumed")
+
+    await execute(resumed, messages=[{"role": "user", "content": "resume"}])
+    assert sum(kind == "context.compacted" for kind, _ in events) == 2
+    assert "opaque-" not in str(events)
+
+
+async def test_provider_failure_after_compaction_preserves_recoverable_session(harness):
+    from openai import BadRequestError
+
+    execute, _, _, _ = harness
+    compact = {"id": "cmp_recover", "type": "compaction", "encrypted_content": "opaque-recovery"}
+
+    def failing(body, sequence):
+        if sequence == 1:
+            return response_sse([
+                compact, call("update_plan", {"steps": ["保留进度"], "current_step": 0}, "recover")
+            ], "before-failure")
+        return httpx.Response(400, json={"error": {"message": "Invalid request", "type": "invalid_request"}})
+
+    with pytest.raises(BadRequestError):
+        await execute(failing)
+
+    def recovered(body, _):
+        assert any(item.get("id") == "cmp_recover" for item in body["input"])
+        assert any(item.get("type") == "function_call" and item.get("call_id") == "recover"
+                   for item in body["input"])
+        assert any(item.get("type") == "function_call_output" and item.get("call_id") == "recover"
+                   for item in body["input"])
+        return response_sse([message("恢复成功。")], "recovered")
+
+    assert await execute(recovered, messages=[{"role": "user", "content": "retry"}]) == "恢复成功。"
 
 
 async def test_subagent_native_as_tool_independent_history_and_attribution(harness):

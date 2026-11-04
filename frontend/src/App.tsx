@@ -91,6 +91,7 @@ function App() {
     setNotice,
     preview,
     setPreview,
+    removedArtifactIds,
     rename,
     setRename,
     renameValue,
@@ -349,6 +350,7 @@ function App() {
               <FilesView
                 key={`files-${user?.id}`}
                 user={user}
+                removedArtifactIds={removedArtifactIds}
                 onAuth={() => setAuth(true)}
                 onPreview={setPreview}
                 onOpenSession={(id) => void selectSession(id)}

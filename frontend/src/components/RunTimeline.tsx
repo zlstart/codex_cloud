@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import type {
   Artifact,
+  ContextTimelineItem,
   TimelineItem,
   TimelineState,
   ToolTimelineItem,
@@ -142,6 +143,46 @@ function ToolStep({ item }: { item: ToolTimelineItem }) {
   );
 }
 
+function ContextStatus({ item }: { item: ContextTimelineItem }) {
+  const exceeded = item.status === "threshold_exceeded";
+  const compacted = item.status === "compacted";
+  const number = new Intl.NumberFormat("en-US");
+  return (
+    <div className="context-status" data-context-status={item.status}>
+      <div className="context-status-heading">
+        {exceeded ? (
+          <CircleAlert size={14} aria-hidden="true" />
+        ) : compacted ? (
+          <Check size={14} aria-hidden="true" />
+        ) : (
+          <Workflow size={14} aria-hidden="true" />
+        )}
+        <strong>
+          {compacted
+            ? "已观测到原生压缩"
+            : exceeded
+              ? "输入超过阈值，未观测到压缩"
+              : "尚未观测到原生压缩"}
+        </strong>
+      </div>
+      <p>
+        本轮输入：
+        {item.input_tokens === null
+          ? "提供方未提供"
+          : `${number.format(item.input_tokens)} tokens`}
+        {" · "}压缩阈值：{number.format(item.threshold)} tokens
+      </p>
+      {(compacted || exceeded) && (
+        <p>
+          {compacted
+            ? `本轮收到 ${number.format(item.compaction_count)} 个原生压缩结果。`
+            : "提供方报告的输入量已超过配置阈值，本轮未返回原生压缩结果。"}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function ProcessItem({
   item,
   files,
@@ -173,6 +214,8 @@ function ProcessItem({
         <ToolStep item={item} />
       ) : item.kind === "notice" ? (
         <p className="timeline-notice">{item.text}</p>
+      ) : item.kind === "context" ? (
+        <ContextStatus item={item} />
       ) : (
         <div className="task-plan">
           <strong>任务计划</strong>

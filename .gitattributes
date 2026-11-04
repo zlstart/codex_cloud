@@ -1,4 +1,8 @@
-# Preserve acceptance report bytes and SHA-256 evidence across checkouts.
+# Archived evidence and deliverables retain their original bytes on checkout.
 docs/reports/** -text
-# Review downloaded originals as binary evidence and retain their line endings.
-docs/reports/*.assets/downloads/** binary
+# Preserve the existing binary treatment of downloaded historical originals.
+docs/reports/**/*.assets/downloads/** binary
+
+# This generated report embeds verbatim tool output, including CSV CRLF and
+# trailing spaces. Keep those bytes; application/source whitespace checks apply.
+docs/reports/2026-11-04/complex-regression/report.html -whitespace

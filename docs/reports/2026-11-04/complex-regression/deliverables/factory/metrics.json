@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "synthetic": true,
+  "period": {
+    "start": "2026-10-19",
+    "end": "2026-10-30"
+  },
+  "data_quality": {
+    "source_rows": 99,
+    "unique_rows": 96,
+    "duplicate_rows": 3,
+    "duplicate_ids": [
+      "SC0005",
+      "SC0028",
+      "SC0087"
+    ],
+    "missing_downtime": 2,
+    "missing_energy": 3,
+    "zero_output_ids": [
+      "SC0062"
+    ]
+  },
+  "totals": {
+    "planned_tonnes": 8664,
+    "actual_tonnes": 8584,
+    "good_tonnes": 8414,
+    "defective_tonnes": 170,
+    "weighted_quality_pct": 98.02,
+    "attainment_pct": 99.08,
+    "energy_eligible_rows": 92,
+    "energy_eligible_actual_tonnes": 8289,
+    "energy_eligible_kwh": 330557,
+    "specific_energy_kwh_per_tonne": 39.88,
+    "known_downtime_minutes": 3663,
+    "known_energy_kwh": 331197
+  },
+  "shipments": {
+    "records": 48,
+    "quantity_tonnes": 7972,
+    "revenue_yuan": 23023425
+  },
+  "per_line": [
+    {
+      "line": "混合D线",
+      "records": 24,
+      "planned_tonnes": 2640,
+      "actual_tonnes": 2637,
+      "good_tonnes": 2601,
+      "defective_tonnes": 36,
+      "weighted_quality_pct": 98.63,
+      "attainment_pct": 99.89,
+      "specific_energy_kwh_per_tonne": 26.43
+    },
+    {
+      "line": "制粒B线",
+      "records": 24,
+      "planned_tonnes": 2328,
+      "actual_tonnes": 2325,
+      "good_tonnes": 2262,
+      "defective_tonnes": 63,
+      "weighted_quality_pct": 97.29,
+      "attainment_pct": 99.87,
+      "specific_energy_kwh_per_tonne": 42.59
+    },
+    {
+      "line": "制粒A线",
+      "records": 24,
+      "planned_tonnes": 1992,
+      "actual_tonnes": 1989,
+      "good_tonnes": 1953,
+      "defective_tonnes": 36,
+      "weighted_quality_pct": 98.19,
+      "attainment_pct": 99.85,
+      "specific_energy_kwh_per_tonne": 40.78
+    },
+    {
+      "line": "膨化C线",
+      "records": 24,
+      "planned_tonnes": 1704,
+      "actual_tonnes": 1633,
+      "good_tonnes": 1598,
+      "defective_tonnes": 35,
+      "weighted_quality_pct": 97.86,
+      "attainment_pct": 95.83,
+      "specific_energy_kwh_per_tonne": 55.92
+    }
+  ],
+  "daily": [
+    {
+      "date": "2026-10-19",
+      "records": 8,
+      "planned_tonnes": 698,
+      "actual_tonnes": 684,
+      "good_tonnes": 670,
+      "defective_tonnes": 14
+    },
+    {
+      "date": "2026-10-20",
+      "records": 8,
+      "planned_tonnes": 722,
+      "actual_tonnes": 719,
+      "good_tonnes": 705,
+      "defective_tonnes": 14
+    },
+    {
+      "date": "2026-10-21",
+      "records": 8,
+      "planned_tonnes": 746,
+      "actual_tonnes": 754,
+      "good_tonnes": 740,
+      "defective_tonnes": 14
+    },
+    {
+      "date": "2026-10-22",
+      "records": 8,
+      "planned_tonnes": 698,
+      "actual_tonnes": 702,
+      "good_tonnes": 688,
+      "defective_tonnes": 14
+    },
+    {
+      "date": "2026-10-23",
+      "records": 8,
+      "planned_tonnes": 722,
+      "actual_tonnes": 722,
+      "good_tonnes": 708,
+      "defective_tonnes": 14
+    },
+    {
+      "date": "2026-10-24",
+      "records": 8,
+      "planned_tonnes": 746,
+      "actual_tonnes": 742,
+      "good_tonnes": 727,
+      "defective_tonnes": 15
+    },
+    {
+      "date": "2026-10-25",
+      "records": 8,
+      "planned_tonnes": 698,
+      "actual_tonnes": 690,
+      "good_tonnes": 676,
+      "defective_tonnes": 14
+    },
+    {
+      "date": "2026-10-26",
+      "records": 8,
+      "planned_tonnes": 722,
+      "actual_tonnes": 657,
+      "good_tonnes": 643,
+      "defective_tonnes": 14
+    },
+    {
+      "date": "2026-10-27",
+      "records": 8,
+      "planned_tonnes": 746,
+      "actual_tonnes": 760,
+      "good_tonnes": 746,
+      "defective_tonnes": 14
+    },
+    {
+      "date": "2026-10-28",
+      "records": 8,
+      "planned_tonnes": 698,
+      "actual_tonnes": 693,
+      "good_tonnes": 679,
+      "defective_tonnes": 14
+    },
+    {
+      "date": "2026-10-29",
+      "records": 8,
+      "planned_tonnes": 722,
+      "actual_tonnes": 728,
+      "good_tonnes": 714,
+      "defective_tonnes": 14
+    },
+    {
+      "date": "2026-10-30",
+      "records": 8,
+      "planned_tonnes": 746,
+      "actual_tonnes": 733,
+      "good_tonnes": 718,
+      "defective_tonnes": 15
+    }
+  ]
+}

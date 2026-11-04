@@ -150,6 +150,54 @@ async def test_compaction_has_no_encrypted_content_and_reasoning_is_not_rendered
     assert "SECRET" not in str(events) and "PRIVATE" not in str(events)
 
 
+@pytest.mark.parametrize(
+    ("input_tokens", "expected_status"),
+    [(1023, "not_observed"), (1024, "not_observed"), (1025, "threshold_exceeded"),
+     (None, "not_observed")],
+)
+async def test_context_status_reports_observed_usage_without_claiming_compaction(input_tokens, expected_status):
+    events = []
+
+    async def emit(kind, data):
+        events.append((kind, data))
+
+    adapter = runtime_events.RuntimeEvents(emit, compaction_threshold=1024)
+    completed = raw("response.completed", response={
+        "id": "response1", "output": [message("m", "done")],
+        "usage": {"input_tokens": input_tokens} if input_tokens is not None else None,
+    })
+    await adapter.consume(completed)
+    await adapter.consume(completed)
+    assert events == [("context.status", {
+        "item_id": "response1", "agent_id": "main", "agent_name": "Assistant", "parent_call_id": None,
+        "response_id": "response1", "status": expected_status,
+        "input_tokens": input_tokens, "threshold": 1024, "compaction_count": 0,
+    })]
+
+
+async def test_context_status_counts_real_compaction_and_keeps_nested_responses_separate():
+    events = []
+
+    async def emit(kind, data):
+        events.append((kind, data))
+
+    adapter = runtime_events.RuntimeEvents(emit, compaction_threshold=1024)
+    payload = {"type": "compaction", "id": "cmp", "encrypted_content": "PRIVATE-OPAQUE"}
+    completed = raw("response.completed", response={
+        "id": "same-response", "output": [payload], "usage": {"input_tokens": 500},
+    })
+    for parent in ("child1", "child2"):
+        await adapter.consume(raw("response.output_item.done", item=payload),
+                              agent_id="analyst", parent_call_id=parent)
+        await adapter.consume(completed, agent_id="analyst", parent_call_id=parent)
+        await adapter.consume(completed, agent_id="analyst", parent_call_id=parent)
+    statuses = [data for kind, data in events if kind == "context.status"]
+    assert [data["item_id"] for data in statuses] == ["child1::same-response", "child2::same-response"]
+    assert all(data["status"] == "compacted" and data["compaction_count"] == 1 for data in statuses)
+    assert sum(kind == "context.compacted" for kind, _ in events) == 2
+    assert "PRIVATE" not in str(events)
+
+
 async def test_artifacts_discovered_once_after_completed_tool():
     observed = []
 

@@ -139,8 +139,20 @@ export interface NoticeTimelineItem extends TimelineIdentity {
   kind: "notice";
   text: string;
 }
+export interface ContextTimelineItem extends TimelineIdentity {
+  kind: "context";
+  response_id?: string;
+  status: "compacted" | "threshold_exceeded" | "not_observed";
+  input_tokens: number | null;
+  threshold: number;
+  compaction_count: number;
+}
 export type TimelineItem =
-  TextTimelineItem | ToolTimelineItem | PlanTimelineItem | NoticeTimelineItem;
+  | TextTimelineItem
+  | ToolTimelineItem
+  | PlanTimelineItem
+  | NoticeTimelineItem
+  | ContextTimelineItem;
 export interface TimelineState {
   items: TimelineItem[];
   seen: ReadonlySet<number>;

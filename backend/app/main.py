@@ -305,7 +305,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return session_json(session)
 
     @app.get("/api/sessions/{session_id}")
-    def get_session(session_id: str, user: User = Depends(current_user)):
+    async def get_session(session_id: str, user: User = Depends(current_user)):
+        await service.reconcile_idle_outputs(user.id, session_id)
         with database.session() as db:
             session = owned_session(db, session_id, user.id)
             files = list(
@@ -371,7 +372,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {"ok": True}
 
     @app.get("/api/files")
-    def list_files(user: User = Depends(current_user)):
+    async def list_files(user: User = Depends(current_user)):
+        await service.reconcile_idle_outputs(user.id)
         with database.session() as db:
             return [
                 artifact_json(f)

@@ -18,7 +18,7 @@ const repository = path.resolve(
 );
 const defaultReport = path.join(
   repository,
-  "docs/reports/production-acceptance-2026-11-03.html",
+  "docs/reports/2026-11-03/production-acceptance/production-acceptance-2026-11-03.html",
 );
 const options = {
   report: defaultReport,

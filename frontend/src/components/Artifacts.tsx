@@ -256,11 +256,13 @@ export function Workspace({
 }
 export function FilesView({
   user,
+  removedArtifactIds,
   onAuth,
   onPreview,
   onOpenSession,
 }: {
   user: User | null;
+  removedArtifactIds?: ReadonlySet<string>;
   onAuth: () => void;
   onPreview: (f: Artifact) => void;
   onOpenSession: (id: string) => void;
@@ -296,6 +298,7 @@ export function FilesView({
   }, [user]);
   const shown = files.filter(
     (f) =>
+      !removedArtifactIds?.has(f.id) &&
       (filter === "all" || f.kind === filter) &&
       f.name.toLowerCase().includes(query.toLowerCase()),
   );

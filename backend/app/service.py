@@ -293,6 +293,60 @@ class RunService:
             data = artifact_json(artifact)
         await self.emit(run_id, "artifact.created", {"artifact": data})
 
+    def reconcile_outputs(self, db, session: ChatSession, run: AgentRun,
+                          previous_missing: set[str] | None = None) -> set[str]:
+        """Remove only confirmed missing output metadata, preserving run audit events.
+
+        During execution, require absence at two consecutive tool boundaries.
+        Final/idle reconciliation runs after sandbox cleanup and needs one check.
+        A bounded directory listing is never evidence that a file was deleted.
+        """
+        try:
+            workspace = self.workspace(session.user_id, session.id)
+        except (OSError, ValueError, SandboxError):
+            # A replaced output directory is unsafe, not proof of deletion.
+            # Inventory reconciliation must not block history or run completion.
+            return set()
+        missing: set[str] = set()
+        for artifact in db.scalars(select(Artifact).where(
+            Artifact.session_id == session.id, Artifact.kind == "output",
+        )):
+            try:
+                descriptor = open_safe_file(workspace, artifact.path, output_only=True)
+            except SandboxError as exc:
+                # open_safe_file preserves the original OS error as its cause.
+                # Permission errors, links and unsafe paths must not delete metadata.
+                if not isinstance(exc.__cause__, FileNotFoundError):
+                    continue
+            except (OSError, ValueError):
+                continue
+            else:
+                os.close(descriptor)
+                continue
+            missing.add(artifact.id)
+            if previous_missing is not None and artifact.id not in previous_missing:
+                continue
+            db.add(RunEvent(run_id=run.id, event="artifact.removed", data={"artifact": artifact_json(artifact)}))
+            db.delete(artifact)
+        return missing
+
+    async def reconcile_idle_outputs(self, user_id: str, session_id: str | None = None):
+        # Serialize with run creation so an idle read cannot race a new writer.
+        async with self.mutation_lock:
+            with self.db.session() as db:
+                sessions = ([owned_session(db, session_id, user_id)] if session_id else
+                            list(db.scalars(select(ChatSession).where(ChatSession.user_id == user_id))))
+                for session in sessions:
+                    if db.scalar(select(AgentRun.id).where(
+                        AgentRun.session_id == session.id, AgentRun.status.in_(ACTIVE),
+                    )):
+                        continue
+                    run = db.scalar(select(AgentRun).where(AgentRun.session_id == session.id)
+                                    .order_by(AgentRun.created_at.desc()).limit(1))
+                    if run:
+                        self.reconcile_outputs(db, session, run)
+                db.commit()
+
     async def approval(self, run_id: str, tool: str, arguments: dict) -> bool:
         approval_id = uid()
         future = asyncio.get_running_loop().create_future()
@@ -343,6 +397,7 @@ class RunService:
                 db.flush()
                 payload.update(message_id=message.id, final_item_ids=final_item_ids or [])
             session = db.get(ChatSession, run.session_id)
+            self.reconcile_outputs(db, session, run)
             session.updated_at = now()
             db.add(RunEvent(run_id=run_id, event=f"run.{status}", data=payload))
             db.commit()
@@ -373,12 +428,23 @@ class RunService:
                 workspace = self.workspace(user_id, session.id)
             await self.emit(run_id, "run.started", {})
             final_item_ids = []
+            missing_outputs: set[str] = set()
 
             async def emit(event: str, data: dict):
+                nonlocal missing_outputs
                 if cancel_event.is_set():
                     raise asyncio.CancelledError
                 if event == "artifact.discovered":
                     await self.register_output(run_id, workspace, data["path"])
+                elif event == "artifacts.scanned":
+                    with self.db.session() as db:
+                        current_run = db.get(AgentRun, run_id)
+                        if current_run and current_run.status in ACTIVE:
+                            current_session = db.get(ChatSession, current_run.session_id)
+                            missing_outputs = self.reconcile_outputs(
+                                db, current_session, current_run, missing_outputs,
+                            )
+                            db.commit()
                 else:
                     if event == "text.phase" and data.get("phase") == "final" and data.get("item_id"):
                         final_item_ids.append(data["item_id"])
