@@ -1,0 +1,116 @@
+{
+  "G": 1.0,
+  "masses": [
+    1.0,
+    1.0,
+    1.0
+  ],
+  "method": "explicit fixed-step 4th-order Runge-Kutta (RK4)，二维牛顿引力三体，无软化项",
+  "dt": 0.001,
+  "t_start": 0.0,
+  "t_end": 12.65,
+  "n_steps": 12650,
+  "sample_every_steps": 10,
+  "sample_interval": 0.01,
+  "sample_count": 1266,
+  "initial_positions": [
+    [
+      -0.97000436,
+      0.24308753
+    ],
+    [
+      0.97000436,
+      -0.24308753
+    ],
+    [
+      0.0,
+      0.0
+    ]
+  ],
+  "initial_velocities": [
+    [
+      0.466203685,
+      0.43236573
+    ],
+    [
+      0.466203685,
+      0.43236573
+    ],
+    [
+      -0.93240737,
+      -0.86473146
+    ]
+  ],
+  "initial_energy": -1.2871419917663258,
+  "max_relative_energy_error": 1.4542575966691299e-13,
+  "initial_angular_momentum": 0.0,
+  "max_absolute_angular_momentum_error": 4.729550084903167e-14,
+  "max_center_of_mass_norm": 2.072521595751318e-14,
+  "minimum_pair_distance": 0.6905266306918849,
+  "final_state": {
+    "t": 12.65,
+    "positions": [
+      [
+        -0.9708545656760599,
+        0.24229664985249358
+      ],
+      [
+        0.969150101007121,
+        -0.24387739337115374
+      ],
+      [
+        0.0017044646689013238,
+        0.0015807435187096828
+      ]
+    ],
+    "velocities": [
+      [
+        0.463989925236942,
+        0.432917765944851
+      ],
+      [
+        0.46842289850914576,
+        0.4318068224341411
+      ],
+      [
+        -0.932412823746095,
+        -0.8647245883789818
+      ]
+    ],
+    "energy": -1.2871419917664004,
+    "angular_momentum": 5.2562121322097255e-16
+  },
+  "center_of_mass_initial": [
+    0.0,
+    0.0
+  ],
+  "linear_momentum_initial": [
+    0.0,
+    0.0
+  ],
+  "cross_check_dt_half": {
+    "dt": 0.0005,
+    "n_steps": 25300,
+    "max_endpoint_position_difference": 8.775451285775171e-12,
+    "max_endpoint_velocity_difference": 1.1640743924345998e-11
+  },
+  "conservation_extent": {
+    "max_absolute_energy_error": 1.871836019518014e-13,
+    "min_pair_distance_at_step": 10016
+  },
+  "units": "无量纲数值单位：G=1、m=1；长度与时间由初值给定，速度=长度/时间，能量=质量·长度^2/时间^2",
+  "definitions": {
+    "initial_energy": "E = sum 1/2 m_i |v_i|^2 - sum_{i<j} G m_i m_j / |r_i-r_j| 在 t=0 的值",
+    "max_relative_energy_error": "max_t |E(t)-E(0)|/|E(0)|，在全部 12651 个积分步上统计",
+    "angular_momentum": "二维轨道角动量 z 分量 Lz = sum m_i (x_i vy_i - y_i vx_i)",
+    "max_absolute_angular_momentum_error": "max_t |Lz(t)-Lz(0)|",
+    "max_center_of_mass_norm": "max_t |COM(t)-COM(0)|；本初值总动量为 0，等于质心位置的模",
+    "minimum_pair_distance": "min_t min_{i<j} |r_i-r_j|，逐步统计",
+    "sample_count": "CSV 数据行数（不含表头），等间隔且含初值与终值"
+  },
+  "run_environment": {
+    "python": "3.12.16",
+    "numpy": "2.5.4",
+    "generated_utc": "2026-11-04T15:04:36+00:00"
+  }
+}

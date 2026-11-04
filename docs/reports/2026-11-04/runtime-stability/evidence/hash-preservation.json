@@ -1,0 +1,57 @@
+{
+  "overall_pass": true,
+  "files": [
+    {
+      "name": "three_body.csv",
+      "baseline_bytes": 313571,
+      "final_bytes": 313571,
+      "baseline_sha256": "07976028c6b7222649c2368e6a8b08d9582eec3f411cac6055a691d916edb472",
+      "final_sha256": "07976028c6b7222649c2368e6a8b08d9582eec3f411cac6055a691d916edb472",
+      "identical": true,
+      "expected": "unchanged"
+    },
+    {
+      "name": "metrics.json",
+      "baseline_bytes": 2909,
+      "final_bytes": 2909,
+      "baseline_sha256": "4d7525b5e71ec4221bdfcf190958a361049a87a4677290d3d842289991d958f2",
+      "final_sha256": "4d7525b5e71ec4221bdfcf190958a361049a87a4677290d3d842289991d958f2",
+      "identical": true,
+      "expected": "unchanged"
+    },
+    {
+      "name": "three_body.png",
+      "baseline_bytes": 395514,
+      "final_bytes": 395514,
+      "baseline_sha256": "0fcc48ffeb84eac3deb918533c970e67b9977d83e3a86e0f4c299a0f80e63d1f",
+      "final_sha256": "0fcc48ffeb84eac3deb918533c970e67b9977d83e3a86e0f4c299a0f80e63d1f",
+      "identical": true,
+      "expected": "unchanged"
+    },
+    {
+      "name": "three_body.html",
+      "baseline_bytes": 259788,
+      "final_bytes": 260897,
+      "baseline_sha256": "8eb292308e5ba5dad58be69b21dc852d25a6a245431fa91459a305b3aa379ef8",
+      "final_sha256": "53fd0f61288da24bce222508ee80dd9f4997714a6c01ad39c75cf61cabc2ad0e",
+      "identical": false,
+      "expected": "changed"
+    },
+    {
+      "name": "simulate_three_body.py",
+      "baseline_bytes": 36316,
+      "final_bytes": 37425,
+      "baseline_sha256": "f82509559b4b51b55da3506455317f0834b9bb86f9a7ebd2d56d73db5978d4fa",
+      "final_sha256": "b1d7e071d4586c9f977f1749af311740a05df89eecb68c08f20027affa23886d",
+      "identical": false,
+      "expected": "changed"
+    }
+  ],
+  "embedded_sim_data": {
+    "identical": true,
+    "baseline_sha256": "47e8a419eb437c3139602ff0f6462decd56f580c273a372c65ad2208f880df6e",
+    "final_sha256": "47e8a419eb437c3139602ff0f6462decd56f580c273a372c65ad2208f880df6e",
+    "sample_count": 1266
+  },
+  "note": "Byte comparisons use independently downloaded baseline and final delivery artifacts; no model-generated code was executed."
+}

@@ -4,7 +4,7 @@
 
 - [说明文档](guides/README.md)：部署、架构、API、扩展、追踪、SDK 审计及设计计划。
 - [测试报告归档](reports/README.md)：按测试日期和批次查看报告、截图及原始证据。
-- [最新报告：2026-11-04 复杂任务回归](reports/2026-11-04/complex-regression/README.md)：三体轨迹、工厂报表、运行中预览、工具执行及上下文压缩。
+- [最新报告：2026-11-04 运行稳定性与下载](reports/2026-11-04/runtime-stability/README.md)：热加载、执行预算、HTML 下载、逐轮日志与真实三体数值/浏览器验收。
 
 ```text
 docs/
@@ -19,7 +19,7 @@ docs/
     ├── 2026-10-30/delivery/
     ├── 2026-11-02/{deployment,live-model,sdk-native}/
     ├── 2026-11-03/{sqlite-workspace-tracing,production-acceptance}/
-    └── 2026-11-04/complex-regression/
+    └── 2026-11-04/{complex-regression,runtime-stability}/
 ```
 
 新增说明放入 `guides/`。新增测试报告使用 `reports/YYYY-MM-DD/<batch>/`，日期按北京时间；同一天多轮测试使用不同批次目录（必要时加 `HHmm-` 前缀），不覆盖已归档批次。每个批次提供 `README.md`，说明范围、结论、限制和附件入口，并更新报告总索引。

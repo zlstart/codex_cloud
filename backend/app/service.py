@@ -195,8 +195,18 @@ class RunService:
                     existing.content = item["content"]
                     existing.config = {**(existing.config or {}), "bundle_version": 2}
             for item in BUILTIN_SUBAGENTS:
-                if not db.get(Extension, item["id"]):
+                existing = db.get(Extension, item["id"])
+                if not existing:
                     db.add(Extension(**item, type="subagent", builtin=True))
+                elif (
+                    existing.builtin
+                    and existing.config == {**item["config"], "max_turns": 12}
+                    and existing.name == item["name"]
+                    and existing.description == item["description"]
+                ):
+                    # Upgrade only the untouched legacy bundle; administrator
+                    # budgets and customized specialist instructions stay intact.
+                    existing.config = dict(item["config"])
             db.commit()
 
     async def shutdown(self):
@@ -456,6 +466,13 @@ class RunService:
                 sandbox_backend=self.settings.sandbox_backend,
                 max_turns=self.settings.max_turns,
                 max_runtime_seconds=self.settings.max_runtime_seconds,
+                max_session_mb=self.settings.max_session_mb,
+                max_workspace_entries=self.settings.max_workspace_entries,
+                model_timeout_seconds=self.settings.model_timeout_seconds,
+                mcp_timeout_seconds=self.settings.mcp_timeout_seconds,
+                mcp_session_timeout_seconds=self.settings.mcp_session_timeout_seconds,
+                mcp_max_list_pages=self.settings.mcp_max_list_pages,
+                max_plan_steps=self.settings.max_plan_steps,
                 extensions=[e for e in self.extensions(user_id, include_content=True) if e["enabled"]],
                 allowed_mcp_hosts=self.settings.allowed_mcp_hosts,
                 state_dir=self.settings.data_dir / "history",

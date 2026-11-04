@@ -8,6 +8,7 @@ gets a fresh container; the authenticated chat's host directory keeps its files.
 from __future__ import annotations
 
 import asyncio
+import math
 import os
 import shutil
 import stat
@@ -32,12 +33,28 @@ from .sandbox import SandboxError, deployment_label, safe_path, workspace_usage
 SKILLS_DIRECTORY = ".famsun-skills"
 
 
+def _positive_integer(name: str, value: str | int, *, maximum: int = 2**31 - 1) -> int:
+    try:
+        parsed = int(value)
+        if isinstance(value, bool) or parsed != float(value) or not 1 <= parsed <= maximum:
+            raise ValueError
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError(f"{name} must be an integer between 1 and {maximum}") from None
+    return parsed
+
+
 @dataclass(frozen=True)
 class SandboxPolicy:
     workspace: Path
     uid: int
     gid: int
     ca_bundle: Path | None = None
+    memory_mb: int = 2048
+    cpus: float = 2
+    pids_limit: int = 256
+    nofile: int = 4096
+    file_mb: int = 100
+    tmp_mb: int = 512
 
     @classmethod
     def from_environment(cls, workspace: Path) -> SandboxPolicy:
@@ -49,7 +66,24 @@ class SandboxPolicy:
         ca_bundle = Path(bundle).resolve(strict=True) if bundle else None
         if ca_bundle is not None and not ca_bundle.is_file():
             raise ValueError("Sandbox CA bundle must be an ordinary certificate file")
-        return cls(workspace=safe_path(workspace, "."), uid=uid, gid=gid, ca_bundle=ca_bundle)
+        try:
+            cpus = float(os.getenv("FAMSUN_SANDBOX_CPUS", "2"))
+            if not math.isfinite(cpus) or not 0.001 <= cpus <= 1024:
+                raise ValueError
+        except ValueError:
+            raise ValueError("FAMSUN_SANDBOX_CPUS must be between 0.001 and 1024") from None
+        resources = {
+            name: _positive_integer(env, os.getenv(env, str(default)))
+            for name, env, default in (
+                ("memory_mb", "FAMSUN_SANDBOX_MEMORY_MB", 2048),
+                ("pids_limit", "FAMSUN_SANDBOX_PIDS_LIMIT", 256),
+                ("nofile", "FAMSUN_SANDBOX_NOFILE", 4096),
+                ("file_mb", "FAMSUN_SANDBOX_FILE_MB", 100),
+                ("tmp_mb", "FAMSUN_SANDBOX_TMP_MB", 512),
+            )
+        }
+        return cls(workspace=safe_path(workspace, "."), uid=uid, gid=gid,
+                   ca_bundle=ca_bundle, cpus=cpus, **resources)
 
 
 class PolicyContainers:
@@ -92,11 +126,13 @@ class PolicyContainers:
             labels={**(kwargs.get("labels") or {}), "famsun.attempt": self._attempt},
             user=f"{policy.uid}:{policy.gid}", working_dir="/workspace",
             read_only=True, cap_drop=["ALL"], security_opt=["no-new-privileges:true"],
-            mem_limit="512m", memswap_limit="512m", nano_cpus=1_000_000_000, pids_limit=64,
-            ulimits=[Ulimit(name="nofile", soft=256, hard=256),
-                     Ulimit(name="fsize", soft=50 * 1024 * 1024, hard=50 * 1024 * 1024)],
+            mem_limit=f"{policy.memory_mb}m", memswap_limit=f"{policy.memory_mb}m",
+            nano_cpus=round(policy.cpus * 1_000_000_000), pids_limit=policy.pids_limit,
+            ulimits=[Ulimit(name="nofile", soft=policy.nofile, hard=policy.nofile),
+                     Ulimit(name="fsize", soft=policy.file_mb * 1024 * 1024,
+                            hard=policy.file_mb * 1024 * 1024)],
             # Native SDK path-validation helpers execute from /tmp/openai-agents/bin.
-            tmpfs={"/tmp": "rw,exec,nosuid,nodev,size=128m,mode=1777"},
+            tmpfs={"/tmp": f"rw,exec,nosuid,nodev,size={policy.tmp_mb}m,mode=1777"},
             mounts=mounts, environment=environment,
             # docker-py applies the administrator's Docker proxy defaults, if present.
             use_config_proxy=True,
@@ -182,7 +218,10 @@ def build_skills(extensions: list[dict], *, skills_path: str = SKILLS_DIRECTORY)
 
 
 @asynccontextmanager
-async def open_chat_sandbox(workspace: Path, *, chat_id: str, user_id: str) -> AsyncIterator[SandboxSession]:
+async def open_chat_sandbox(
+    workspace: Path, *, chat_id: str, user_id: str,
+    max_session_mb: int | None = None, max_workspace_entries: int | None = None,
+) -> AsyncIterator[SandboxSession]:
     """Yield a native session; always stop/delete it, keeping the chat's files.
 
     The caller must authorize the workspace and serialize runs for this chat.
@@ -190,22 +229,31 @@ async def open_chat_sandbox(workspace: Path, *, chat_id: str, user_id: str) -> A
     """
     prepare_workspace(workspace)
     policy = SandboxPolicy.from_environment(workspace)
-    max_bytes = int(os.getenv("MAX_SESSION_MB", "250")) * 1024 * 1024
-    if max_bytes <= 0:
-        raise SandboxError("会话工作空间容量限制必须大于零。")
+    try:
+        max_bytes = _positive_integer(
+            "MAX_SESSION_MB", os.getenv("MAX_SESSION_MB", "2048")
+            if max_session_mb is None else max_session_mb,
+        ) * 1024 * 1024
+        max_entries = _positive_integer(
+            "MAX_WORKSPACE_ENTRIES", os.getenv("MAX_WORKSPACE_ENTRIES", "10000")
+            if max_workspace_entries is None else max_workspace_entries,
+        )
+    except ValueError as exc:
+        raise SandboxError(str(exc)) from None
 
     def check_quota() -> None:
-        count, size = workspace_usage(workspace, max_entries=1000)
-        if count > 1000 or size > max_bytes:
+        count, size = workspace_usage(workspace, max_entries=max_entries)
+        if count > max_entries or size > max_bytes:
             raise SandboxError("会话工作空间达到文件数量或容量限制，任务已停止。")
 
     await asyncio.to_thread(check_quota)
     try:
-        docker_timeout = int(os.getenv("FAMSUN_DOCKER_TIMEOUT_SECONDS", "60"))
-        if not 1 <= docker_timeout <= 300:
-            raise ValueError
+        docker_timeout = _positive_integer(
+            "FAMSUN_DOCKER_TIMEOUT_SECONDS", os.getenv("FAMSUN_DOCKER_TIMEOUT_SECONDS", "180"),
+            maximum=3600,
+        )
     except ValueError:
-        raise SandboxError("FAMSUN_DOCKER_TIMEOUT_SECONDS 必须为 1 至 300 秒。") from None
+        raise SandboxError("FAMSUN_DOCKER_TIMEOUT_SECONDS 必须为 1 至 3600 秒。") from None
     try:
         raw_client = docker.from_env(timeout=docker_timeout)
     except RequestException as exc:

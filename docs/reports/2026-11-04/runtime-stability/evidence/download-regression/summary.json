@@ -1,0 +1,68 @@
+{
+  "recorded_at": "2026-11-04T14:53:35.745791+00:00",
+  "status": "passed",
+  "source_files": [
+    "frontend/src/components/ArtifactDownloadLink.tsx",
+    "frontend/src/components/Artifacts.tsx",
+    "frontend/src/components/previews/FilePreview.tsx",
+    "frontend/tests/artifact-downloads.mjs",
+    "frontend/package.json"
+  ],
+  "backend_file_route_changed": false,
+  "model_calls": false,
+  "browser_regression_uses_api_mocks": false,
+  "checks": [
+    {
+      "command": "node frontend/tests/artifact-downloads.mjs",
+      "status": "passed",
+      "log": "browser.log",
+      "coverage": [
+        "file list and preview modal",
+        "Chinese filename",
+        "exact original HTML bytes",
+        "authentication errors do not become JSON downloads",
+        "retry after login",
+        "deleted file errors",
+        "download survives closing modal or filtering list",
+        "owner/anonymous/other-user authorization",
+        "unchanged preview sandbox and file CSP"
+      ]
+    },
+    {
+      "command": "npm run test:previews",
+      "status": "passed",
+      "log": "previews.log",
+      "kind": "authored/mocked frontend fixtures, not live model evidence"
+    },
+    {
+      "command": "npm run test:rendering",
+      "status": "passed",
+      "log": "rendering.log",
+      "kind": "authored/mocked frontend fixtures, not live model evidence"
+    },
+    {
+      "command": "npm run test:ui",
+      "status": "passed",
+      "log": "ui.log",
+      "kind": "authored/mocked frontend fixtures, not live model evidence"
+    },
+    {
+      "command": "node --test tests/*.test.mjs",
+      "status": "passed",
+      "log": "unit.log",
+      "passed_tests": 25
+    },
+    {
+      "command": "npm run build (via npm run test:downloads)",
+      "status": "passed",
+      "warning": "Existing PDF bundle exceeds 500 kB Vite advisory; no type errors"
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "independent_review": "Initial lifecycle finding fixed and real browser regression added; final review found no remaining actionable issues.",
+  "baseline": "baseline-characterization.json",
+  "limitation": "Original user download failure under valid authentication was not reproduced. Confirmed and fixed unchecked download HTTP error behavior."
+}

@@ -1,0 +1,14 @@
+{
+  "server_pids": [
+    "4636",
+    "9165"
+  ],
+  "expected_source_reload_pid": "9165",
+  "no_restarts_after_source_probe": true,
+  "backend_health": {
+    "status": "ok",
+    "version": "1.0.0"
+  },
+  "remaining_agent_containers": [],
+  "backend_error_lines": []
+}

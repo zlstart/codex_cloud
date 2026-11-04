@@ -1,0 +1,7 @@
+{
+  "output": "/workspace/codex_cloud/test-results/runtime-stability/three-body/html-verification-2026-11-04T15-15-44-021Z",
+  "functional_passed": true,
+  "all_layouts_passed": true,
+  "passed": true,
+  "issues": []
+}

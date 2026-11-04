@@ -16,7 +16,7 @@ from agents import RunContextWrapper
 from agents.sandbox.capabilities import Filesystem, Shell
 from agents.sandbox.capabilities.tools import ExecCommandArgs, ViewImageArgs, WriteStdinArgs
 from app.sandbox import SandboxError
-from app.sdk_sandbox import build_skills, open_chat_sandbox
+from app.sdk_sandbox import SandboxPolicy, build_skills, open_chat_sandbox
 
 
 def assert_removed(client, *chat_ids):
@@ -50,12 +50,29 @@ async def main():
                 file_tools = {tool.name: tool for tool in files.tools()}
                 container = client.containers.get(session.state.container_id)
                 host = container.attrs["HostConfig"]
-                assert host["Memory"] == 512 * 1024 * 1024
-                assert host["NanoCpus"] == 1_000_000_000 and host["PidsLimit"] == 64
+                policy = SandboxPolicy.from_environment(first)
+                assert host["Memory"] == host["MemorySwap"] == policy.memory_mb * 1024 * 1024
+                assert host["NanoCpus"] == round(policy.cpus * 1_000_000_000)
+                assert host["PidsLimit"] == policy.pids_limit
+                limits = {limit["Name"]: limit for limit in host["Ulimits"]}
+                assert limits["nofile"]["Soft"] == limits["nofile"]["Hard"] == policy.nofile
+                assert limits["fsize"]["Soft"] == limits["fsize"]["Hard"] == policy.file_mb * 1024 * 1024
+                assert f"size={policy.tmp_mb}m" in host["Tmpfs"]["/tmp"]
                 assert host["ReadonlyRootfs"] and host["NetworkMode"] != "none"
                 assert "no-new-privileges:true" in host["SecurityOpt"]
                 assert "ALL" in host["CapDrop"]
                 assert container.attrs["Config"]["User"] != "0"
+                # Exercise the kernel file limit through a real sandbox process:
+                # the old 50 MiB fsize cap rejected this otherwise ordinary output.
+                large_output = await session.exec(
+                    "python", "-c",
+                    "from pathlib import Path; p = Path('outputs/large-artifact.bin'); "
+                    "s = 60 * 1024 * 1024; "
+                    "f = p.open('wb'); f.write(b'x' * s); f.close(); "
+                    "assert p.stat().st_size == s; p.unlink()",
+                    shell=False,
+                )
+                assert large_output.exit_code == 0, "60 MiB output exceeded the configured file resource limit"
                 await session.write(Path("outputs/native.txt"), io.BytesIO(b"native SDK file IO"))
                 with await session.read(Path("outputs/native.txt")) as stream:
                     assert stream.read() == b"native SDK file IO"

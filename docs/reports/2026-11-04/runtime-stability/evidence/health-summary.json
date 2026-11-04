@@ -1,0 +1,197 @@
+{
+  "started_at": "2026-11-04T14:49:05.617322+00:00",
+  "ended_at": "2026-11-04T15:17:15.741150+00:00",
+  "overall": {
+    "samples": 3360,
+    "successes": 3360,
+    "failures": 0,
+    "min_ms": 0.937,
+    "median_ms": 1.887,
+    "p95_ms": 2.626,
+    "p99_ms": 4.151,
+    "max_ms": 139.08,
+    "over_100_ms": 1,
+    "over_500_ms": 0
+  },
+  "by_observed_run_state": {
+    "completed": {
+      "samples": 287,
+      "successes": 287,
+      "failures": 0,
+      "min_ms": 1.521,
+      "median_ms": 2.02,
+      "p95_ms": 2.703,
+      "p99_ms": 4.16,
+      "max_ms": 4.688,
+      "over_100_ms": 0,
+      "over_500_ms": 0
+    },
+    "running": {
+      "samples": 3073,
+      "successes": 3073,
+      "failures": 0,
+      "min_ms": 0.937,
+      "median_ms": 1.856,
+      "p95_ms": 2.618,
+      "p99_ms": 4.151,
+      "max_ms": 139.08,
+      "over_100_ms": 1,
+      "over_500_ms": 0
+    }
+  },
+  "by_run_id": {
+    "4793b4db26e54e8cb4d91b2c625f1981": {
+      "samples": 1032,
+      "successes": 1032,
+      "failures": 0,
+      "min_ms": 0.991,
+      "median_ms": 1.924,
+      "p95_ms": 2.611,
+      "p99_ms": 3.702,
+      "max_ms": 10.817,
+      "over_100_ms": 0,
+      "over_500_ms": 0
+    },
+    "c1933a6866ae451189ccb4f809ebef24": {
+      "samples": 2328,
+      "successes": 2328,
+      "failures": 0,
+      "min_ms": 0.937,
+      "median_ms": 1.863,
+      "p95_ms": 2.649,
+      "p99_ms": 4.254,
+      "max_ms": 139.08,
+      "over_100_ms": 1,
+      "over_500_ms": 0
+    }
+  },
+  "failed_samples": [],
+  "sampling_gaps_over_two_seconds": [
+    {
+      "from_at": "2026-11-04T15:04:52.765445+00:00",
+      "to_at": "2026-11-04T15:05:02.325748+00:00",
+      "seconds": 9.560303
+    }
+  ],
+  "slowest_samples": [
+    {
+      "at": "2026-11-04T14:59:34.547855+00:00",
+      "run_state": "running",
+      "run_id": "c1933a6866ae451189ccb4f809ebef24",
+      "observed_event_count": 185,
+      "http_status": 200,
+      "ok": true,
+      "latency_ms": 139.08
+    },
+    {
+      "at": "2026-11-04T15:05:35.351088+00:00",
+      "run_state": "running",
+      "run_id": "c1933a6866ae451189ccb4f809ebef24",
+      "observed_event_count": 275,
+      "report_source": "/workspace/codex_cloud/test-results/runtime-stability/three-body",
+      "http_status": 200,
+      "ok": true,
+      "latency_ms": 44.99
+    },
+    {
+      "at": "2026-11-04T15:07:21.427639+00:00",
+      "run_state": "running",
+      "run_id": "c1933a6866ae451189ccb4f809ebef24",
+      "observed_event_count": 311,
+      "report_source": "/workspace/codex_cloud/test-results/runtime-stability/three-body",
+      "http_status": 200,
+      "ok": true,
+      "latency_ms": 22.095
+    },
+    {
+      "at": "2026-11-04T15:10:19.116941+00:00",
+      "run_state": "running",
+      "run_id": "4793b4db26e54e8cb4d91b2c625f1981",
+      "observed_event_count": 5,
+      "report_source": "test-results/runtime-stability/three-body/repair",
+      "http_status": 200,
+      "ok": true,
+      "latency_ms": 10.817
+    },
+    {
+      "at": "2026-11-04T14:49:05.617322+00:00",
+      "run_state": "running",
+      "run_id": "c1933a6866ae451189ccb4f809ebef24",
+      "observed_event_count": 22,
+      "http_status": 200,
+      "ok": true,
+      "latency_ms": 7.236
+    },
+    {
+      "at": "2026-11-04T15:05:02.325748+00:00",
+      "run_state": "running",
+      "run_id": "c1933a6866ae451189ccb4f809ebef24",
+      "observed_event_count": 275,
+      "report_source": "/workspace/codex_cloud/test-results/runtime-stability/three-body",
+      "http_status": 200,
+      "ok": true,
+      "latency_ms": 7.163
+    },
+    {
+      "at": "2026-11-04T14:51:23.203858+00:00",
+      "run_state": "running",
+      "run_id": "c1933a6866ae451189ccb4f809ebef24",
+      "observed_event_count": 49,
+      "http_status": 200,
+      "ok": true,
+      "latency_ms": 7.043
+    },
+    {
+      "at": "2026-11-04T14:52:06.731159+00:00",
+      "run_state": "running",
+      "run_id": "c1933a6866ae451189ccb4f809ebef24",
+      "observed_event_count": 49,
+      "http_status": 200,
+      "ok": true,
+      "latency_ms": 6.937
+    },
+    {
+      "at": "2026-11-04T14:59:06.027666+00:00",
+      "run_state": "running",
+      "run_id": "c1933a6866ae451189ccb4f809ebef24",
+      "observed_event_count": 161,
+      "http_status": 200,
+      "ok": true,
+      "latency_ms": 6.29
+    },
+    {
+      "at": "2026-11-04T15:08:17.467825+00:00",
+      "run_state": "running",
+      "run_id": "c1933a6866ae451189ccb4f809ebef24",
+      "observed_event_count": 395,
+      "report_source": "/workspace/codex_cloud/test-results/runtime-stability/three-body",
+      "http_status": 200,
+      "ok": true,
+      "latency_ms": 6.217
+    },
+    {
+      "at": "2026-11-04T14:59:05.526615+00:00",
+      "run_state": "running",
+      "run_id": "c1933a6866ae451189ccb4f809ebef24",
+      "observed_event_count": 161,
+      "http_status": 200,
+      "ok": true,
+      "latency_ms": 5.63
+    },
+    {
+      "at": "2026-11-04T15:14:54.468554+00:00",
+      "run_state": "running",
+      "run_id": "4793b4db26e54e8cb4d91b2c625f1981",
+      "observed_event_count": 384,
+      "report_source": "test-results/runtime-stability/three-body/repair",
+      "http_status": 200,
+      "ok": true,
+      "latency_ms": 5.448
+    }
+  ],
+  "limitations": [
+    "Independent local unauthenticated /health requests; includes database read.",
+    "Run state is observed from the browser harness report and may lag by its polling interval.",
+    "Latency includes local client overhead and does not measure remote users or a deployment reverse proxy."
+  ]
+}

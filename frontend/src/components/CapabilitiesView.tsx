@@ -377,7 +377,7 @@ export function CapabilitiesView({ user, onAuth }: Props) {
                     <span>
                       {item.enabled ? "已启用" : "未启用"}
                       {item.type === "subagent" &&
-                        ` · ${item.config?.model || "跟随主模型"} · 最多 ${item.config?.max_turns ?? 10} 轮`}
+                        ` · ${item.config?.model || "跟随主模型"} · ${item.config?.max_turns == null ? "轮数跟随主助手" : `最多 ${item.config.max_turns} 轮`}`}
                     </span>
                   </button>
                   <div className="capability-actions">

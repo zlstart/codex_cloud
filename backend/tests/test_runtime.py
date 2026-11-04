@@ -71,6 +71,8 @@ def test_mcp_exact_host_and_token_boundary(monkeypatch):
         ({"sandbox_backend": "disabled"}, "需要 Docker"),
         ({"state_dir": None}, "历史存储"),
         ({"compaction_threshold": 0}, "阈值"),
+        ({"max_turns": 0}, "执行限制"),
+        ({"model_timeout_seconds": -1}, "执行限制"),
     ],
 )
 async def test_invalid_runtime_policy_fails_before_any_provider_or_sandbox(
@@ -104,3 +106,53 @@ async def test_invalid_runtime_policy_fails_before_any_provider_or_sandbox(
             cancel_event=asyncio.Event(),
             request_approval=noop,
         )
+
+
+async def test_plan_limit_is_enforced_by_actual_tool():
+    events = []
+
+    async def emit(kind, data):
+        events.append((kind, data))
+
+    tool = runtime._plan_tool(emit, max_steps=16)
+    for size, accepted in [(16, True), (17, False)]:
+        raw = json.dumps({"steps": [f"Step {index}" for index in range(size)], "current_step": 0})
+        context = ToolContext(None, tool_name="update_plan", tool_call_id=str(size), tool_arguments=raw)
+        result = json.loads(await tool.on_invoke_tool(context, raw))
+        assert ("steps" in result) is accepted
+        if not accepted:
+            assert "16" in result["error"]
+    assert len(events) == 1
+
+
+def test_invalid_resource_settings_fail_at_startup(tmp_path):
+    from app.config import Settings
+
+    for name in ("max_turns", "max_runtime_seconds", "max_session_mb", "max_workspace_entries",
+                 "model_timeout_seconds", "mcp_timeout_seconds", "mcp_session_timeout_seconds",
+                 "mcp_max_list_pages", "max_plan_steps"):
+        with pytest.raises(ValueError, match=name):
+            Settings(data_dir=tmp_path, **{name: 0})
+
+
+def test_environment_runtime_limits_are_loaded(tmp_path, monkeypatch):
+    from app.config import Settings
+
+    overrides = {
+        "MAX_UPLOAD_MB": ("max_upload_mb", 128),
+        "MAX_SESSION_MB": ("max_session_mb", 3072),
+        "MAX_WORKSPACE_ENTRIES": ("max_workspace_entries", 12000),
+        "AGENT_MAX_TURNS": ("max_turns", 333),
+        "AGENT_TIMEOUT_SECONDS": ("max_runtime_seconds", 9000),
+        "AGENT_MODEL_TIMEOUT_SECONDS": ("model_timeout_seconds", 450),
+        "MCP_TIMEOUT_SECONDS": ("mcp_timeout_seconds", 150),
+        "MCP_SESSION_TIMEOUT_SECONDS": ("mcp_session_timeout_seconds", 470),
+        "MCP_MAX_LIST_PAGES": ("mcp_max_list_pages", 111),
+        "AGENT_MAX_PLAN_STEPS": ("max_plan_steps", 60),
+    }
+    for name, (_, value) in overrides.items():
+        monkeypatch.setenv(name, str(value))
+    settings = Settings(data_dir=tmp_path)
+    assert {field: getattr(settings, field) for field, _ in overrides.values()} == {
+        field: value for field, value in overrides.values()
+    }

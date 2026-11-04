@@ -55,7 +55,7 @@ Session ID 是查找标识，不是授权凭据。FastAPI 对会话、任务、�
 
 每次任务创建一个原生 Docker sandbox session；主代理、子代理和连续工具调用共享它。任务结束后容器删除，只保留绑定的聊天文件。普通命令是独立进程，不提供持久 Python notebook 内核；持续运行的命令由 SDK `write_stdin` 等接口跟进。
 
-创建策略配置非 root UID / GID、只读根文件系统、只读 `uploads/`、`no-new-privileges`、移除 Linux capabilities、512 MiB 内存、1 CPU、64 个进程和文件句柄 / 文件大小限制。`/tmp` 为 128 MiB 私有 tmpfs；SDK 原生辅助程序需要执行权限，因此此目录允许 exec，并保留 nosuid / nodev。
+创建策略配置非 root UID / GID、只读根文件系统、只读 `uploads/`、`no-new-privileges`、移除 Linux capabilities、默认 2048 MiB 内存、2 CPU、256 个进程和文件句柄 / 文件大小限制。`/tmp` 为 512 MiB 私有 tmpfs；SDK 原生辅助程序需要执行权限，因此此目录允许 exec，并保留 nosuid / nodev。
 
 网络启用，模型可执行任务需要的网络请求。MCP 主机允许列表只限制 MCP 连接配置，不是整个沙箱的网络防火墙。运行环境只注入受控变量；管理员可显式挂载只读 CA 证书包，Docker 客户端可采用管理员的代理默认值。模型 API 密钥、聊天历史、其他用户目录及 Docker socket 不进入执行容器。
 
@@ -85,7 +85,7 @@ SSE 和 `/api/runs/{id}/timeline` 返回同一批事件。前端使用同一 red
 
 Office 预览在独立的受限解析进程中处理已授权文件描述符，返回表格值、DOCX 有序正文/表格/内嵌图片，以及 PPTX 幻灯片的文字、简单形状、表格、图片和坐标。解析器不运行公式、宏或外部链接；它有文件、解压体积、行列、文本、图片字节/像素/数量、时间和内存上限。此进程是解析资源隔离，不是模型执行的 Docker 沙箱。预览不复刻全部 Office 排版，遗漏或简化的内容有相应提示，原文件仍可下载。
 
-HTML 在 2 MiB 读取上限内使用完整内容，源码视图单独截断。DOMPurify 保留内联脚本和事件后，内容只进入 `sandbox="allow-scripts"` 的 srcdoc iframe；不启用 `allow-same-origin`，因此无法读取应用 DOM、Cookie 或存储。子文档 CSP 限制脚本、图片、样式、连接和嵌套框架；父应用的 HTTP CSP 与入口 HTML meta 同时设置 `frame-src 'none'`，阻止 iframe 自行导航到外部页面。只设置子文档 CSP 不足以保证这个导航边界。文件读取接口直接打开时继续使用禁止脚本的 CSP；下载返回原始字节。PDF 在浏览器分页呈现，音视频取决于浏览器支持的格式。
+HTML 在 2 MiB 读取上限内使用完整内容，源码视图单独截断。DOMPurify 保留内联脚本和事件后，内容只进入 `sandbox="allow-scripts"` 的 srcdoc iframe；不启用 `allow-same-origin`，因此无法读取应用 DOM、Cookie 或存储。子文档 CSP 限制脚本、图片、样式、连接和嵌套框架；父应用的 HTTP CSP 与入口 HTML meta 同时设置 `frame-src 'none'`，阻止 iframe 自行导航到外部页面。只设置子文档 CSP 不足以保证这个导航边界。文件读取接口直接打开时继续使用禁止脚本的 CSP；下载返回原始字节。前端通过带登录态的请求检查 HTTP 状态后保存原始 Blob，失败时显示错误，关闭预览不会取消已经请求的下载。PDF 在浏览器分页呈现，音视频取决于浏览器支持的格式。
 
 ## 运行拓扑
 

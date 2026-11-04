@@ -77,7 +77,9 @@ export function CapabilityEditor({
     item?.config?.instructions ?? "",
   );
   const [model, setModel] = useState(item?.config?.model ?? "");
-  const [maxTurns, setMaxTurns] = useState(item?.config?.max_turns ?? 10);
+  const [maxTurns, setMaxTurns] = useState<number | "">(
+    item?.config?.max_turns ?? "",
+  );
   const [skillIds, setSkillIds] = useState(item?.config?.skill_ids ?? []);
   const [mcpIds, setMcpIds] = useState(item?.config?.mcp_server_ids ?? []);
   const [saving, setSaving] = useState(false);
@@ -106,7 +108,7 @@ export function CapabilityEditor({
               ...common,
               instructions,
               model: model.trim() || null,
-              max_turns: maxTurns,
+              max_turns: maxTurns === "" ? null : maxTurns,
               skill_ids: skillIds,
               mcp_server_ids: mcpIds,
             };
@@ -334,11 +336,13 @@ export function CapabilityEditor({
                   className="input"
                   type="number"
                   min={1}
-                  max={100}
+                  max={10000}
                   step={1}
                   value={maxTurns}
-                  required
-                  onChange={(e) => setMaxTurns(Number(e.target.value))}
+                  placeholder="留空以跟随主助手"
+                  onChange={(e) =>
+                    setMaxTurns(e.target.value === "" ? "" : Number(e.target.value))
+                  }
                   readOnly={viewOnly}
                   disabled={saving}
                 />
