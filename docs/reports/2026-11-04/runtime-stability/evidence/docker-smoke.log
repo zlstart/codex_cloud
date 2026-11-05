@@ -1,0 +1,12 @@
+Captured tool output from the successful Docker smoke execution.
+Command: PYTHONPATH=backend .venv/bin/python -u tests/docker_smoke.py
+Working directory: /workspace/codex_cloud
+Executor permissions: with_additional_permissions; network.enabled=true
+Execution session: 6262
+Exit code: 0
+
+Stdout (actual output returned by the execution tool):
+PASS: native exec/patch/file/image/Skills, limits, isolated chats, outbound HTTPS
+PASS: persistent files, refreshed skill staging, removed containers
+PASS: cancellation terminates native PTY and removes container
+PASS: aggregate quota stops native execution and removes container

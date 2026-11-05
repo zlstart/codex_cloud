@@ -1,0 +1,354 @@
+{
+  "runs": [
+    {
+      "name": "original",
+      "run_id": "c1933a6866ae451189ccb4f809ebef24",
+      "status": "completed",
+      "duration_seconds": 1210.071,
+      "event_count": 577,
+      "round_count": 32,
+      "tool_count": 35,
+      "ordered_unique_sequences": true,
+      "timing": {
+        "event_span_seconds": 1208.982554,
+        "sum_completed_tool_event_durations_seconds": 68.263946,
+        "union_completed_tool_intervals_seconds": 66.863516,
+        "note": "Tool intervals can overlap; their union avoids double counting. Remaining event span includes model processing, streaming, and uninstrumented overhead; it is not a direct provider-latency measurement."
+      },
+      "observed_usage": {
+        "sum_response_input_tokens": 1813231,
+        "max_response_input_tokens": 82663,
+        "threshold_exceeded_response_count": 26,
+        "compaction_items_count": 0,
+        "output_tokens_available": false
+      },
+      "failed_tool_count": 5,
+      "unpaired_starts": 0,
+      "orphan_completions": 0,
+      "duplicate_starts": 0,
+      "duplicate_completions": 0
+    },
+    {
+      "name": "repair",
+      "run_id": "4793b4db26e54e8cb4d91b2c625f1981",
+      "status": "completed",
+      "duration_seconds": 377.268,
+      "event_count": 385,
+      "round_count": 5,
+      "tool_count": 4,
+      "ordered_unique_sequences": true,
+      "timing": {
+        "event_span_seconds": 375.384139,
+        "sum_completed_tool_event_durations_seconds": 1.566822,
+        "union_completed_tool_intervals_seconds": 1.566822,
+        "note": "Tool intervals can overlap; their union avoids double counting. Remaining event span includes model processing, streaming, and uninstrumented overhead; it is not a direct provider-latency measurement."
+      },
+      "observed_usage": {
+        "sum_response_input_tokens": 471370,
+        "max_response_input_tokens": 101697,
+        "threshold_exceeded_response_count": 5,
+        "compaction_items_count": 0,
+        "output_tokens_available": false
+      },
+      "failed_tool_count": 0,
+      "unpaired_starts": 0,
+      "orphan_completions": 0,
+      "duplicate_starts": 0,
+      "duplicate_completions": 0
+    }
+  ],
+  "health": {
+    "started_at": "2026-11-04T14:49:05.617322+00:00",
+    "ended_at": "2026-11-04T15:17:15.741150+00:00",
+    "overall": {
+      "samples": 3360,
+      "successes": 3360,
+      "failures": 0,
+      "min_ms": 0.937,
+      "median_ms": 1.887,
+      "p95_ms": 2.626,
+      "p99_ms": 4.151,
+      "max_ms": 139.08,
+      "over_100_ms": 1,
+      "over_500_ms": 0
+    },
+    "by_observed_run_state": {
+      "completed": {
+        "samples": 287,
+        "successes": 287,
+        "failures": 0,
+        "min_ms": 1.521,
+        "median_ms": 2.02,
+        "p95_ms": 2.703,
+        "p99_ms": 4.16,
+        "max_ms": 4.688,
+        "over_100_ms": 0,
+        "over_500_ms": 0
+      },
+      "running": {
+        "samples": 3073,
+        "successes": 3073,
+        "failures": 0,
+        "min_ms": 0.937,
+        "median_ms": 1.856,
+        "p95_ms": 2.618,
+        "p99_ms": 4.151,
+        "max_ms": 139.08,
+        "over_100_ms": 1,
+        "over_500_ms": 0
+      }
+    },
+    "by_run_id": {
+      "4793b4db26e54e8cb4d91b2c625f1981": {
+        "samples": 1032,
+        "successes": 1032,
+        "failures": 0,
+        "min_ms": 0.991,
+        "median_ms": 1.924,
+        "p95_ms": 2.611,
+        "p99_ms": 3.702,
+        "max_ms": 10.817,
+        "over_100_ms": 0,
+        "over_500_ms": 0
+      },
+      "c1933a6866ae451189ccb4f809ebef24": {
+        "samples": 2328,
+        "successes": 2328,
+        "failures": 0,
+        "min_ms": 0.937,
+        "median_ms": 1.863,
+        "p95_ms": 2.649,
+        "p99_ms": 4.254,
+        "max_ms": 139.08,
+        "over_100_ms": 1,
+        "over_500_ms": 0
+      }
+    },
+    "failed_samples": [],
+    "sampling_gaps_over_two_seconds": [
+      {
+        "from_at": "2026-11-04T15:04:52.765445+00:00",
+        "to_at": "2026-11-04T15:05:02.325748+00:00",
+        "seconds": 9.560303
+      }
+    ],
+    "slowest_samples": [
+      {
+        "at": "2026-11-04T14:59:34.547855+00:00",
+        "run_state": "running",
+        "run_id": "c1933a6866ae451189ccb4f809ebef24",
+        "observed_event_count": 185,
+        "http_status": 200,
+        "ok": true,
+        "latency_ms": 139.08
+      },
+      {
+        "at": "2026-11-04T15:05:35.351088+00:00",
+        "run_state": "running",
+        "run_id": "c1933a6866ae451189ccb4f809ebef24",
+        "observed_event_count": 275,
+        "report_source": "/workspace/codex_cloud/test-results/runtime-stability/three-body",
+        "http_status": 200,
+        "ok": true,
+        "latency_ms": 44.99
+      },
+      {
+        "at": "2026-11-04T15:07:21.427639+00:00",
+        "run_state": "running",
+        "run_id": "c1933a6866ae451189ccb4f809ebef24",
+        "observed_event_count": 311,
+        "report_source": "/workspace/codex_cloud/test-results/runtime-stability/three-body",
+        "http_status": 200,
+        "ok": true,
+        "latency_ms": 22.095
+      },
+      {
+        "at": "2026-11-04T15:10:19.116941+00:00",
+        "run_state": "running",
+        "run_id": "4793b4db26e54e8cb4d91b2c625f1981",
+        "observed_event_count": 5,
+        "report_source": "test-results/runtime-stability/three-body/repair",
+        "http_status": 200,
+        "ok": true,
+        "latency_ms": 10.817
+      },
+      {
+        "at": "2026-11-04T14:49:05.617322+00:00",
+        "run_state": "running",
+        "run_id": "c1933a6866ae451189ccb4f809ebef24",
+        "observed_event_count": 22,
+        "http_status": 200,
+        "ok": true,
+        "latency_ms": 7.236
+      },
+      {
+        "at": "2026-11-04T15:05:02.325748+00:00",
+        "run_state": "running",
+        "run_id": "c1933a6866ae451189ccb4f809ebef24",
+        "observed_event_count": 275,
+        "report_source": "/workspace/codex_cloud/test-results/runtime-stability/three-body",
+        "http_status": 200,
+        "ok": true,
+        "latency_ms": 7.163
+      },
+      {
+        "at": "2026-11-04T14:51:23.203858+00:00",
+        "run_state": "running",
+        "run_id": "c1933a6866ae451189ccb4f809ebef24",
+        "observed_event_count": 49,
+        "http_status": 200,
+        "ok": true,
+        "latency_ms": 7.043
+      },
+      {
+        "at": "2026-11-04T14:52:06.731159+00:00",
+        "run_state": "running",
+        "run_id": "c1933a6866ae451189ccb4f809ebef24",
+        "observed_event_count": 49,
+        "http_status": 200,
+        "ok": true,
+        "latency_ms": 6.937
+      },
+      {
+        "at": "2026-11-04T14:59:06.027666+00:00",
+        "run_state": "running",
+        "run_id": "c1933a6866ae451189ccb4f809ebef24",
+        "observed_event_count": 161,
+        "http_status": 200,
+        "ok": true,
+        "latency_ms": 6.29
+      },
+      {
+        "at": "2026-11-04T15:08:17.467825+00:00",
+        "run_state": "running",
+        "run_id": "c1933a6866ae451189ccb4f809ebef24",
+        "observed_event_count": 395,
+        "report_source": "/workspace/codex_cloud/test-results/runtime-stability/three-body",
+        "http_status": 200,
+        "ok": true,
+        "latency_ms": 6.217
+      },
+      {
+        "at": "2026-11-04T14:59:05.526615+00:00",
+        "run_state": "running",
+        "run_id": "c1933a6866ae451189ccb4f809ebef24",
+        "observed_event_count": 161,
+        "http_status": 200,
+        "ok": true,
+        "latency_ms": 5.63
+      },
+      {
+        "at": "2026-11-04T15:14:54.468554+00:00",
+        "run_state": "running",
+        "run_id": "4793b4db26e54e8cb4d91b2c625f1981",
+        "observed_event_count": 384,
+        "report_source": "test-results/runtime-stability/three-body/repair",
+        "http_status": 200,
+        "ok": true,
+        "latency_ms": 5.448
+      }
+    ],
+    "limitations": [
+      "Independent local unauthenticated /health requests; includes database read.",
+      "Run state is observed from the browser harness report and may lag by its polling interval.",
+      "Latency includes local client overhead and does not measure remote users or a deployment reverse proxy."
+    ]
+  },
+  "final_physics": {
+    "overall_pass": true,
+    "checks": 51,
+    "failures": [],
+    "recomputed_from_csv": {
+      "sample_count": 1266,
+      "initial_energy": -1.2871419917663254,
+      "initial_angular_momentum": 0.0,
+      "max_relative_energy_error": 1.445632106771923e-13,
+      "max_absolute_angular_momentum_error": 4.7128967395337895e-14,
+      "max_center_of_mass_norm": 2.072426513960739e-14,
+      "minimum_pair_distance": 0.6905266463315569
+    },
+    "reference_agreement": {
+      "max_position_error": 8.324868572273658e-12,
+      "max_velocity_error": 1.5521833818255004e-11,
+      "sample_count": 51
+    }
+  },
+  "hash_preservation": {
+    "overall_pass": true,
+    "files": [
+      {
+        "name": "three_body.csv",
+        "baseline_bytes": 313571,
+        "final_bytes": 313571,
+        "baseline_sha256": "07976028c6b7222649c2368e6a8b08d9582eec3f411cac6055a691d916edb472",
+        "final_sha256": "07976028c6b7222649c2368e6a8b08d9582eec3f411cac6055a691d916edb472",
+        "identical": true,
+        "expected": "unchanged"
+      },
+      {
+        "name": "metrics.json",
+        "baseline_bytes": 2909,
+        "final_bytes": 2909,
+        "baseline_sha256": "4d7525b5e71ec4221bdfcf190958a361049a87a4677290d3d842289991d958f2",
+        "final_sha256": "4d7525b5e71ec4221bdfcf190958a361049a87a4677290d3d842289991d958f2",
+        "identical": true,
+        "expected": "unchanged"
+      },
+      {
+        "name": "three_body.png",
+        "baseline_bytes": 395514,
+        "final_bytes": 395514,
+        "baseline_sha256": "0fcc48ffeb84eac3deb918533c970e67b9977d83e3a86e0f4c299a0f80e63d1f",
+        "final_sha256": "0fcc48ffeb84eac3deb918533c970e67b9977d83e3a86e0f4c299a0f80e63d1f",
+        "identical": true,
+        "expected": "unchanged"
+      },
+      {
+        "name": "three_body.html",
+        "baseline_bytes": 259788,
+        "final_bytes": 260897,
+        "baseline_sha256": "8eb292308e5ba5dad58be69b21dc852d25a6a245431fa91459a305b3aa379ef8",
+        "final_sha256": "53fd0f61288da24bce222508ee80dd9f4997714a6c01ad39c75cf61cabc2ad0e",
+        "identical": false,
+        "expected": "changed"
+      },
+      {
+        "name": "simulate_three_body.py",
+        "baseline_bytes": 36316,
+        "final_bytes": 37425,
+        "baseline_sha256": "f82509559b4b51b55da3506455317f0834b9bb86f9a7ebd2d56d73db5978d4fa",
+        "final_sha256": "b1d7e071d4586c9f977f1749af311740a05df89eecb68c08f20027affa23886d",
+        "identical": false,
+        "expected": "changed"
+      }
+    ],
+    "embedded_sim_data": {
+      "identical": true,
+      "baseline_sha256": "47e8a419eb437c3139602ff0f6462decd56f580c273a372c65ad2208f880df6e",
+      "final_sha256": "47e8a419eb437c3139602ff0f6462decd56f580c273a372c65ad2208f880df6e",
+      "sample_count": 1266
+    },
+    "note": "Byte comparisons use independently downloaded baseline and final delivery artifacts; no model-generated code was executed."
+  },
+  "remaining_narrative_caveat": {
+    "location": "repair final chat answer; not delivered HTML/data",
+    "issue": "It calls t=6.33 the minimum state distance for t>0, then quotes a smaller distance at t=12.65 (0.0043 versus 0.0096).",
+    "accurate_wording": "First recurrence region near t=6.33, not the global minimum over all t>0 samples."
+  },
+  "sampling_limits": [
+    "First valid health probe was 41.079322 seconds after original submission; initial sandbox-denied probes excluded.",
+    "One 9.560303 second observer restart gap while enabling multi-run following; not an app outage.",
+    "Local /health includes a database read; measurements do not model remote-user/network/reverse-proxy latency."
+  ],
+  "evidence_files": [
+    "agent-loop-analysis.json",
+    "agent-loop-report.md",
+    "repair-analysis/agent-loop-analysis.json",
+    "repair-analysis/agent-loop-report.md",
+    "baseline-physics/physics-verification.json",
+    "physics-verification.json",
+    "hash-preservation.json",
+    "health-samples.jsonl",
+    "health-summary.json"
+  ]
+}

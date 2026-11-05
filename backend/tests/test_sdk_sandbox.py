@@ -33,12 +33,56 @@ def test_container_policy_scopes_mounts_and_never_inherits_credentials(tmp_path,
     assert result["read_only"] is True
     assert result["cap_drop"] == ["ALL"]
     assert result["security_opt"] == ["no-new-privileges:true"]
-    assert result["mem_limit"] == result["memswap_limit"] == "512m"
-    assert result["nano_cpus"] == 1_000_000_000 and result["pids_limit"] == 64
+    assert result["mem_limit"] == result["memswap_limit"] == "2048m"
+    assert result["nano_cpus"] == 2_000_000_000 and result["pids_limit"] == 256
     assert result.get("network_mode") != "none"
     assert "noexec" not in result["tmpfs"]["/tmp"]
     assert "must-not-enter-container" not in str(result)
     assert "OPENAI_API_KEY" not in result["environment"]
+
+
+def test_resource_environment_overrides_reach_docker_creation(tmp_path, monkeypatch):
+    for name, value in {
+        "FAMSUN_SANDBOX_MEMORY_MB": "3072",
+        "FAMSUN_SANDBOX_CPUS": "1.5",
+        "FAMSUN_SANDBOX_PIDS_LIMIT": "384",
+        "FAMSUN_SANDBOX_NOFILE": "8192",
+        "FAMSUN_SANDBOX_FILE_MB": "160",
+        "FAMSUN_SANDBOX_TMP_MB": "768",
+    }.items():
+        monkeypatch.setenv(name, value)
+    (tmp_path / "uploads").mkdir()
+
+    class Containers:
+        def create(self, **kwargs):
+            return kwargs
+
+    policy = sdk().SandboxPolicy.from_environment(tmp_path)
+    result = sdk().PolicyContainers(Containers(), policy).create(image="test")
+    assert result["mem_limit"] == result["memswap_limit"] == "3072m"
+    assert result["nano_cpus"] == 1_500_000_000
+    assert result["pids_limit"] == 384
+    limits = {limit["Name"]: limit for limit in result["ulimits"]}
+    assert limits["nofile"]["Soft"] == limits["nofile"]["Hard"] == 8192
+    assert limits["fsize"]["Soft"] == limits["fsize"]["Hard"] == 160 * 1024 * 1024
+    assert result["tmpfs"]["/tmp"] == "rw,exec,nosuid,nodev,size=768m,mode=1777"
+
+
+@pytest.mark.parametrize("name,value", [
+    ("FAMSUN_SANDBOX_MEMORY_MB", "0"),
+    ("FAMSUN_SANDBOX_PIDS_LIMIT", "-1"),
+    ("FAMSUN_SANDBOX_NOFILE", "many"),
+    ("FAMSUN_SANDBOX_FILE_MB", "1.5"),
+    ("FAMSUN_SANDBOX_TMP_MB", "2147483648"),
+    ("FAMSUN_SANDBOX_CPUS", "nan"),
+    ("FAMSUN_SANDBOX_CPUS", "inf"),
+    ("FAMSUN_SANDBOX_CPUS", "0"),
+    ("FAMSUN_SANDBOX_CPUS", "1025"),
+])
+def test_resource_environment_requires_positive_finite_limits(tmp_path, monkeypatch, name, value):
+    monkeypatch.setenv(name, value)
+    with pytest.raises(ValueError, match=name):
+        sdk().SandboxPolicy.from_environment(tmp_path)
 
 
 def test_policy_rejects_root_and_unexpected_extra_mounts(tmp_path, monkeypatch):
@@ -195,7 +239,115 @@ async def test_daemon_timeout_allows_observed_slow_native_container_creation(tmp
     monkeypatch.setattr(module, "DockerSandboxClient", Client)
     async with module.open_chat_sandbox(tmp_path, chat_id="slow", user_id="u"):
         pass
-    assert 23 <= observed["timeout"] <= 300
+    assert 23 <= observed["timeout"] <= 3600
+
+
+@pytest.fixture
+def fake_native_client(monkeypatch):
+    module = sdk()
+    calls = []
+
+    class Docker:
+        containers = object()
+        def close(self):
+            calls.append("close")
+
+    class Session:
+        async def start(self):
+            calls.append("start")
+        async def aclose(self):
+            calls.append("aclose")
+
+    class Client:
+        def __init__(self, docker):
+            pass
+        async def create(self, **kwargs):
+            calls.append("create")
+            return Session()
+        async def delete(self, session):
+            calls.append("delete")
+
+    def factory(**kwargs):
+        calls.append(kwargs)
+        return Docker()
+
+    monkeypatch.setattr(module.docker, "from_env", factory)
+    monkeypatch.setattr(module, "DockerSandboxClient", Client)
+    return calls
+
+
+async def test_configured_daemon_timeout_reaches_docker_client(tmp_path, monkeypatch, fake_native_client):
+    monkeypatch.setenv("FAMSUN_DOCKER_TIMEOUT_SECONDS", "600")
+    async with sdk().open_chat_sandbox(tmp_path, chat_id="chat", user_id="user"):
+        pass
+    assert fake_native_client[0] == {"timeout": 600}
+
+
+@pytest.mark.parametrize("name,value", [
+    ("MAX_SESSION_MB", "0"),
+    ("MAX_WORKSPACE_ENTRIES", "-1"),
+    ("FAMSUN_DOCKER_TIMEOUT_SECONDS", "3601"),
+    ("FAMSUN_DOCKER_TIMEOUT_SECONDS", "0"),
+])
+async def test_invalid_session_limits_fail_before_docker(
+    tmp_path, monkeypatch, fake_native_client, name, value,
+):
+    from app.sandbox import SandboxError
+
+    monkeypatch.setenv(name, value)
+    with pytest.raises(SandboxError, match=name):
+        async with sdk().open_chat_sandbox(tmp_path, chat_id="chat", user_id="user"):
+            pytest.fail("invalid limits must fail before opening the sandbox")
+    assert fake_native_client == []
+
+
+async def test_explicit_entry_quota_overrides_environment_before_creation(
+    tmp_path, monkeypatch, fake_native_client,
+):
+    from app.sandbox import SandboxError
+
+    monkeypatch.setenv("MAX_WORKSPACE_ENTRIES", "10000")
+    (tmp_path / "input.txt").write_text("input")
+    with pytest.raises(SandboxError, match="文件数量"):
+        async with sdk().open_chat_sandbox(
+            tmp_path, chat_id="chat", user_id="user", max_workspace_entries=3,
+        ):
+            pytest.fail("existing workspace entries must count against the configured quota")
+    assert fake_native_client == []
+
+
+async def test_explicit_byte_quota_overrides_environment_at_final_check(
+    tmp_path, monkeypatch, fake_native_client,
+):
+    from app.sandbox import SandboxError
+
+    monkeypatch.setenv("MAX_SESSION_MB", "2048")
+    with pytest.raises(SandboxError, match="容量"):
+        async with sdk().open_chat_sandbox(
+            tmp_path, chat_id="chat", user_id="user", max_session_mb=1,
+        ):
+            with (tmp_path / "outputs/large.bin").open("wb") as stream:
+                stream.truncate(2 * 1024 * 1024)
+    assert fake_native_client[-3:] == ["aclose", "delete", "close"]
+
+
+async def test_explicit_entry_quota_interrupts_live_work_and_deletes_session(
+    tmp_path, monkeypatch, fake_native_client,
+):
+    import asyncio
+
+    from app.sandbox import SandboxError
+
+    monkeypatch.setenv("MAX_WORKSPACE_ENTRIES", "10000")
+    with pytest.raises(SandboxError, match="容量"):
+        async with asyncio.timeout(2):
+            async with sdk().open_chat_sandbox(
+                tmp_path, chat_id="chat", user_id="user", max_workspace_entries=4,
+            ):
+                (tmp_path / "outputs/one.txt").write_text("one")
+                (tmp_path / "outputs/two.txt").write_text("two")
+                await asyncio.Event().wait()
+    assert fake_native_client[-3:] == ["aclose", "delete", "close"]
 
 
 async def test_ambiguous_create_timeout_cleans_only_its_delayed_attempt(tmp_path, monkeypatch):

@@ -43,10 +43,22 @@ class Settings:
     registration_enabled: bool = field(default_factory=lambda: flag("ALLOW_REGISTRATION"))
     cookie_secure: bool = field(default_factory=lambda: flag("COOKIE_SECURE"))
     session_days: int = 7
-    max_upload_mb: int = field(default_factory=lambda: int(os.getenv("MAX_UPLOAD_MB", "25")))
-    max_session_mb: int = field(default_factory=lambda: int(os.getenv("MAX_SESSION_MB", "250")))
-    max_turns: int = field(default_factory=lambda: int(os.getenv("AGENT_MAX_TURNS", "40")))
-    max_runtime_seconds: int = field(default_factory=lambda: int(os.getenv("AGENT_TIMEOUT_SECONDS", "900")))
+    max_upload_mb: int = field(default_factory=lambda: int(os.getenv("MAX_UPLOAD_MB", "100")))
+    max_session_mb: int = field(default_factory=lambda: int(os.getenv("MAX_SESSION_MB", "2048")))
+    max_workspace_entries: int = field(
+        default_factory=lambda: int(os.getenv("MAX_WORKSPACE_ENTRIES", "10000"))
+    )
+    max_turns: int = field(default_factory=lambda: int(os.getenv("AGENT_MAX_TURNS", "200")))
+    max_runtime_seconds: int = field(default_factory=lambda: int(os.getenv("AGENT_TIMEOUT_SECONDS", "7200")))
+    model_timeout_seconds: int = field(
+        default_factory=lambda: int(os.getenv("AGENT_MODEL_TIMEOUT_SECONDS", "300"))
+    )
+    mcp_timeout_seconds: int = field(default_factory=lambda: int(os.getenv("MCP_TIMEOUT_SECONDS", "120")))
+    mcp_session_timeout_seconds: int = field(
+        default_factory=lambda: int(os.getenv("MCP_SESSION_TIMEOUT_SECONDS", "300"))
+    )
+    mcp_max_list_pages: int = field(default_factory=lambda: int(os.getenv("MCP_MAX_LIST_PAGES", "100")))
+    max_plan_steps: int = field(default_factory=lambda: int(os.getenv("AGENT_MAX_PLAN_STEPS", "50")))
     allowed_origins: list[str] = field(
         default_factory=lambda: [
             x.strip().rstrip("/")
@@ -67,6 +79,14 @@ class Settings:
     )
 
     def __post_init__(self):
+        for name in (
+            "max_upload_mb", "max_session_mb", "max_workspace_entries", "max_turns",
+            "max_runtime_seconds", "model_timeout_seconds", "mcp_timeout_seconds",
+            "mcp_session_timeout_seconds", "mcp_max_list_pages", "max_plan_steps",
+        ):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+                raise ValueError(f"{name} must be a positive integer")
         self.api_mode = "responses"
         # Accept legacy environment URLs that named the full Responses endpoint.
         self.base_url = self.base_url.rstrip("/").removesuffix("/responses")

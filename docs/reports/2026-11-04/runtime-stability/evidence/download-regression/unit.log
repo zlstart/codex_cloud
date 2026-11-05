@@ -1,0 +1,33 @@
+✔ workspace links distinguish uploads and outputs, including encoded filenames (0.744251ms)
+✔ ambiguous, external, malformed and traversal-like links never select an arbitrary file (0.448049ms)
+✔ routes MIME-only structured text and common source filenames (1.555852ms)
+✔ decodes UTF-8 and UTF-16 BOM text without replacement characters (0.641928ms)
+✔ rejects binary and invalid UTF-8 masquerading as text (0.545254ms)
+✔ preserves quoted empty CSV records and quotes within unquoted values (0.649389ms)
+✔ bounds CSV rows, columns and cell lengths with a visible truncation flag (4.72376ms)
+✔ bounded download cancels a response that exceeds the preview limit (19.339323ms)
+✔ preserves text/tool chronology and pairs concurrent identical tools by call ID (1.3804ms)
+✔ duplicate replay is idempotent and complete text replaces streamed chunks (0.136875ms)
+✔ root final answer is separate and child final output remains process activity (0.210194ms)
+✔ failure preserves partial text and marks unresolved tool execution interrupted (0.099007ms)
+✔ legacy events remain ordered without inventing stable provider IDs (0.135292ms)
+✔ a phase received before text and approval replay survive hydration (0.769308ms)
+✔ later identity metadata keeps child output out of the main final answer (0.085478ms)
+✔ cancelling during the final answer preserves its partial text in the process (0.133139ms)
+✔ trace metadata survives replay and terminal events without accepting arbitrary URLs (0.165086ms)
+✔ tracing config states and invalid trace IDs remain safe during hydration (0.186778ms)
+✔ failed tools retain error payload for readable execution history (0.144656ms)
+✔ context observations update one scoped agent status in live and replay (4.503731ms)
+✔ output trimming and observed native compaction remain distinct history facts (0.273829ms)
+✔ SDK shell headers expose outcome without reading exit-like program output (1.012962ms)
+✔ background process and malformed output retain a truthful fallback (0.208571ms)
+✔ structured shell results preserve stderr, additional fields and the full tail (0.635619ms)
+✔ shell and raw patch inputs separate useful content without losing arguments (0.40175ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 128.068615

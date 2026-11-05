@@ -1,0 +1,403 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.28kB done
+#1 DONE 0.0s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#2 DONE 4.7s
+
+#3 docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+#3 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e done
+#3 sha256:528c92d70d7e39dbb3dd1c6681f6750c565c7e45b70527cda47c1a61495c1b6a 1.41kB / 1.41kB done
+#3 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 0B / 14.28MB 0.1s
+#3 sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e 9.08kB / 9.08kB done
+#3 sha256:7b32114e84ca21aeb2d6f871a0b62b3a0762193f75d9afd048ee4cbe889f3148 1.13kB / 1.13kB done
+#3 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 1.05MB / 14.28MB 2.7s
+#3 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 2.10MB / 14.28MB 3.1s
+#3 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 3.15MB / 14.28MB 3.5s
+#3 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 4.19MB / 14.28MB 4.0s
+#3 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 5.24MB / 14.28MB 4.4s
+#3 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 6.29MB / 14.28MB 4.8s
+#3 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 7.34MB / 14.28MB 5.2s
+#3 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 8.39MB / 14.28MB 5.6s
+#3 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 9.44MB / 14.28MB 6.1s
+#3 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 10.49MB / 14.28MB 6.4s
+#3 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 11.53MB / 14.28MB 6.9s
+#3 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 12.58MB / 14.28MB 7.4s
+#3 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 13.63MB / 14.28MB 7.8s
+#3 extracting sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62
+#3 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 14.28MB / 14.28MB 8.0s done
+#3 extracting sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 0.1s done
+#3 DONE 8.1s
+
+#4 [internal] load metadata for docker.io/library/python:3.12-slim-bookworm
+#4 DONE 5.5s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 2B done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 84.89kB done
+#6 DONE 0.0s
+
+#7 [stage-0 1/5] FROM docker.io/library/python:3.12-slim-bookworm@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337
+#7 resolve docker.io/library/python:3.12-slim-bookworm@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337 done
+#7 sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 0B / 13.68MB 0.1s
+#7 sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337 6.55kB / 6.55kB done
+#7 sha256:623674a14ef93d052bb9b0de4dbf5f28eb578a35263838941cc8aa43213c1487 1.75kB / 1.75kB done
+#7 sha256:37ccb536022bb36c4570856b55ebfa85bf07827e3c2fa3eba37f0dac62eebc05 5.68kB / 5.68kB done
+#7 sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 0B / 28.25MB 0.1s
+#7 sha256:a4516a4e263798f91046a65329f83ee86d1bd6aba295a387dcf47c290bd695ba 0B / 3.34MB 0.1s
+#7 sha256:a4516a4e263798f91046a65329f83ee86d1bd6aba295a387dcf47c290bd695ba 1.05MB / 3.34MB 1.9s
+#7 sha256:a4516a4e263798f91046a65329f83ee86d1bd6aba295a387dcf47c290bd695ba 2.10MB / 3.34MB 2.3s
+#7 sha256:a4516a4e263798f91046a65329f83ee86d1bd6aba295a387dcf47c290bd695ba 3.34MB / 3.34MB 2.9s done
+#7 sha256:560ad164c1fd1ea529655e9f0a0eebc06ba4ad9de73701013445883f16041990 0B / 250B 2.9s
+#7 sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 2.10MB / 28.25MB 3.1s
+#7 sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 1.05MB / 13.68MB 3.5s
+#7 sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 4.19MB / 28.25MB 3.9s
+#7 sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 2.10MB / 13.68MB 4.1s
+#7 sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 3.15MB / 13.68MB 4.7s
+#7 sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 6.29MB / 28.25MB 4.7s
+#7 sha256:560ad164c1fd1ea529655e9f0a0eebc06ba4ad9de73701013445883f16041990 250B / 250B 4.8s done
+#7 sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 4.19MB / 13.68MB 5.4s
+#7 sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 8.39MB / 28.25MB 5.7s
+#7 sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 5.24MB / 13.68MB 6.2s
+#7 sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 10.49MB / 28.25MB 6.5s
+#7 sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 6.29MB / 13.68MB 6.8s
+#7 sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 12.58MB / 28.25MB 7.4s
+#7 sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 7.34MB / 13.68MB 7.6s
+#7 sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 14.68MB / 28.25MB 8.1s
+#7 sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 8.39MB / 13.68MB 8.3s
+#7 sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 9.44MB / 13.68MB 8.9s
+#7 sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 16.78MB / 28.25MB 9.0s
+#7 sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 10.49MB / 13.68MB 9.6s
+#7 sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 18.87MB / 28.25MB 9.8s
+#7 sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 11.53MB / 13.68MB 10.5s
+#7 sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 20.97MB / 28.25MB 10.7s
+#7 sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 12.58MB / 13.68MB 11.1s
+#7 sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 23.07MB / 28.25MB 11.5s
+#7 sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 13.68MB / 13.68MB 11.7s done
+#7 sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 25.17MB / 28.25MB 12.4s
+#7 sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 27.26MB / 28.25MB 13.7s
+#7 sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 28.25MB / 28.25MB 14.0s done
+#7 extracting sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc
+#7 extracting sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc 0.6s done
+#7 extracting sha256:a4516a4e263798f91046a65329f83ee86d1bd6aba295a387dcf47c290bd695ba 0.1s
+#7 extracting sha256:a4516a4e263798f91046a65329f83ee86d1bd6aba295a387dcf47c290bd695ba 0.2s done
+#7 extracting sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 0.1s
+#7 extracting sha256:5b676d7ddb724969a481e77bf8fa799dd439efe94776431a478e7e4bb55a3e59 0.4s done
+#7 extracting sha256:560ad164c1fd1ea529655e9f0a0eebc06ba4ad9de73701013445883f16041990 done
+#7 DONE 15.3s
+
+#8 [stage-0 2/5] COPY requirements.txt /tmp/requirements.txt
+#8 DONE 0.2s
+
+#9 [stage-0 3/5] RUN --mount=type=secret,id=proxy_ca     if [ -f /run/secrets/proxy_ca ]; then export PIP_CERT=/run/secrets/proxy_ca; fi;     pip install --no-cache-dir --require-hashes -r /tmp/requirements.txt
+#9 2.199 Collecting charset-normalizer==3.5.2 (from -r /tmp/requirements.txt (line 3))
+#9 2.839   Downloading charset_normalizer-3.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (257 kB)
+#9 3.839 Collecting contourpy==1.4.0 (from -r /tmp/requirements.txt (line 177))
+#9 4.362   Downloading contourpy-1.4.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (383 kB)
+#9 5.033 Collecting cycler==0.12.1 (from -r /tmp/requirements.txt (line 249))
+#9 5.548   Downloading cycler-0.12.1-py3-none-any.whl (8.3 kB)
+#9 5.693 Collecting et-xmlfile==2.0.0 (from -r /tmp/requirements.txt (line 253))
+#9 5.835   Downloading et_xmlfile-2.0.0-py3-none-any.whl (18 kB)
+#9 6.284 Collecting fonttools==4.68.0 (from -r /tmp/requirements.txt (line 257))
+#9 6.483   Downloading fonttools-4.68.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.4 MB)
+#9 7.979      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.4/5.4 MB 3.9 MB/s eta 0:00:00
+#9 8.221 Collecting kiwisolver==1.5.1 (from -r /tmp/requirements.txt (line 324))
+#9 8.355   Downloading kiwisolver-1.5.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.5 MB)
+#9 8.906      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.5/1.5 MB 5.0 MB/s eta 0:00:00
+#9 9.379 Collecting lxml==6.1.3 (from -r /tmp/requirements.txt (line 467))
+#9 9.513   Downloading lxml-6.1.3-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.2 MB)
+#9 10.56      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.2/5.2 MB 4.9 MB/s eta 0:00:00
+#9 11.00 Collecting matplotlib==3.11.2 (from -r /tmp/requirements.txt (line 647))
+#9 11.15   Downloading matplotlib-3.11.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (9.9 MB)
+#9 13.42      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.9/9.9 MB 4.3 MB/s eta 0:00:00
+#9 14.85 Collecting numpy==2.5.4 (from -r /tmp/requirements.txt (line 704))
+#9 15.62   Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.7 MB)
+#9 19.56      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 4.6 MB/s eta 0:00:00
+#9 19.73 Collecting openpyxl==3.1.5 (from -r /tmp/requirements.txt (line 778))
+#9 19.94   Downloading openpyxl-3.1.5-py2.py3-none-any.whl (250 kB)
+#9 20.16 Collecting packaging==26.3 (from -r /tmp/requirements.txt (line 782))
+#9 20.30   Downloading packaging-26.3-py3-none-any.whl (129 kB)
+#9 20.58 Collecting pandas==2.3.3 (from -r /tmp/requirements.txt (line 786))
+#9 20.72   Downloading pandas-2.3.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (12.4 MB)
+#9 23.78      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.4/12.4 MB 4.0 MB/s eta 0:00:00
+#9 24.44 Collecting pillow==12.3.0 (from -r /tmp/requirements.txt (line 845))
+#9 24.57   Downloading pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.9 MB)
+#9 26.11      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.9/6.9 MB 4.4 MB/s eta 0:00:00
+#9 26.29 Collecting pyparsing==3.3.3 (from -r /tmp/requirements.txt (line 938))
+#9 26.48   Downloading pyparsing-3.3.3-py3-none-any.whl (126 kB)
+#9 26.64 Collecting pypdf==6.21.4 (from -r /tmp/requirements.txt (line 942))
+#9 26.82   Downloading pypdf-6.21.4-py3-none-any.whl (410 kB)
+#9 27.06 Collecting python-dateutil==3.0.0 (from -r /tmp/requirements.txt (line 946))
+#9 27.25   Downloading python_dateutil-3.0.0-py2.py3-none-any.whl (94 kB)
+#9 27.41 Collecting python-docx==1.2.0 (from -r /tmp/requirements.txt (line 952))
+#9 27.61   Downloading python_docx-1.2.0-py3-none-any.whl (252 kB)
+#9 27.77 Collecting python-pptx==1.0.2 (from -r /tmp/requirements.txt (line 956))
+#9 27.90   Downloading python_pptx-1.0.2-py3-none-any.whl (472 kB)
+#9 28.08 Collecting pytz==2026.6 (from -r /tmp/requirements.txt (line 960))
+#9 28.21   Downloading pytz-2026.6-py2.py3-none-any.whl (506 kB)
+#9 28.44 Collecting reportlab==4.5.1 (from -r /tmp/requirements.txt (line 964))
+#9 28.63   Downloading reportlab-4.5.1-py3-none-any.whl (2.0 MB)
+#9 29.30      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.0/2.0 MB 2.6 MB/s eta 0:00:00
+#9 29.62 Collecting scipy==1.18.1 (from -r /tmp/requirements.txt (line 968))
+#9 29.81   Downloading scipy-1.18.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (35.3 MB)
+#9 37.50      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 35.3/35.3 MB 4.6 MB/s eta 0:00:00
+#9 37.67 Collecting seaborn==0.13.2 (from -r /tmp/requirements.txt (line 1031))
+#9 37.81   Downloading seaborn-0.13.2-py3-none-any.whl (294 kB)
+#9 38.02 Collecting six==1.17.0 (from -r /tmp/requirements.txt (line 1035))
+#9 38.17   Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+#9 38.31 Collecting typing-extensions==4.16.0 (from -r /tmp/requirements.txt (line 1039))
+#9 38.50   Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+#9 38.70 Collecting tzdata==2026.6 (from -r /tmp/requirements.txt (line 1045))
+#9 38.83   Downloading tzdata-2026.6-py2.py3-none-any.whl (348 kB)
+#9 39.02 Collecting xlsxwriter==3.3.1 (from -r /tmp/requirements.txt (line 1051))
+#9 39.16   Downloading xlsxwriter-3.3.1-py3-none-any.whl (180 kB)
+#9 39.33 Installing collected packages: pytz, xlsxwriter, tzdata, typing-extensions, six, pypdf, pyparsing, pillow, packaging, numpy, lxml, kiwisolver, fonttools, et-xmlfile, cycler, charset-normalizer, scipy, reportlab, python-pptx, python-docx, python-dateutil, openpyxl, contourpy, pandas, matplotlib, seaborn
+#9 48.03 Successfully installed charset-normalizer-3.5.2 contourpy-1.4.0 cycler-0.12.1 et-xmlfile-2.0.0 fonttools-4.68.0 kiwisolver-1.5.1 lxml-6.1.3 matplotlib-3.11.2 numpy-2.5.4 openpyxl-3.1.5 packaging-26.3 pandas-2.3.3 pillow-12.3.0 pyparsing-3.3.3 pypdf-6.21.4 python-dateutil-3.0.0 python-docx-1.2.0 python-pptx-1.0.2 pytz-2026.6 reportlab-4.5.1 scipy-1.18.1 seaborn-0.13.2 six-1.17.0 typing-extensions-4.16.0 tzdata-2026.6 xlsxwriter-3.3.1
+#9 48.03 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#9 49.76 
+#9 49.76 [notice] A new release of pip is available: 25.0.1 -> 26.3
+#9 49.76 [notice] To update, run: pip install --upgrade pip
+#9 DONE 49.9s
+
+#10 [stage-0 4/5] RUN apt-get update && apt-get install -y --no-install-recommends         fonts-noto-cjk fonts-wqy-zenhei nodejs ripgrep procps curl file time ca-certificates     && rm -rf /var/lib/apt/lists/* /tmp/requirements.txt     && groupadd --gid 1000 sandbox     && useradd --uid 1000 --gid 1000 --no-create-home sandbox     && mkdir /workspace && chown sandbox:sandbox /workspace
+#10 1.183 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#10 1.706 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+#10 1.997 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+#10 2.281 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8790 kB]
+#10 3.288 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+#10 3.537 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [361 kB]
+#10 3.565 Fetched 9399 kB in 3s (3225 kB/s)
+#10 3.565 Reading package lists...
+#10 3.837 Reading package lists...
+#10 4.094 Building dependency tree...
+#10 4.162 Reading state information...
+#10 4.232 ca-certificates is already the newest version (20250419~deb12u2).
+#10 4.232 The following additional packages will be installed:
+#10 4.232   fontconfig fontconfig-config fonts-dejavu-core libbrotli1 libc-ares2
+#10 4.232   libcurl4 libexpat1 libfontconfig1 libfreetype6 libicu72 libldap-2.5-0
+#10 4.232   libmagic-mgc libmagic1 libnghttp2-14 libnode108 libpng16-16 libproc2-0
+#10 4.232   libpsl5 librtmp1 libsasl2-2 libsasl2-modules-db libssh2-1 libuv1 node-acorn
+#10 4.232   node-busboy node-cjs-module-lexer node-undici node-xtend
+#10 4.232 Suggested packages:
+#10 4.232   fonts-noto-cjk-extra npm
+#10 4.232 Recommended packages:
+#10 4.232   libldap-common publicsuffix libsasl2-modules nodejs-doc psmisc
+#10 4.312 The following NEW packages will be installed:
+#10 4.312   curl file fontconfig fontconfig-config fonts-dejavu-core fonts-noto-cjk
+#10 4.312   fonts-wqy-zenhei libbrotli1 libc-ares2 libcurl4 libexpat1 libfontconfig1
+#10 4.312   libfreetype6 libicu72 libldap-2.5-0 libmagic-mgc libmagic1 libnghttp2-14
+#10 4.312   libnode108 libpng16-16 libproc2-0 libpsl5 librtmp1 libsasl2-2
+#10 4.312   libsasl2-modules-db libssh2-1 libuv1 node-acorn node-busboy
+#10 4.312   node-cjs-module-lexer node-undici node-xtend nodejs procps ripgrep time
+#10 4.822 0 upgraded, 36 newly installed, 0 to remove and 3 not upgraded.
+#10 4.822 Need to get 92.2 MB of archives.
+#10 4.822 After this operation, 228 MB of additional disk space will be used.
+#10 4.822 Get:1 http://deb.debian.org/debian bookworm/main amd64 libproc2-0 amd64 2:4.0.2-3 [62.8 kB]
+#10 5.235 Get:2 http://deb.debian.org/debian bookworm/main amd64 procps amd64 2:4.0.2-3 [709 kB]
+#10 6.318 Get:3 http://deb.debian.org/debian bookworm/main amd64 libmagic-mgc amd64 1:5.44-3 [305 kB]
+#10 7.108 Get:4 http://deb.debian.org/debian bookworm/main amd64 libmagic1 amd64 1:5.44-3 [104 kB]
+#10 7.353 Get:5 http://deb.debian.org/debian bookworm/main amd64 file amd64 1:5.44-3 [42.5 kB]
+#10 7.591 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 libbrotli1 amd64 1.0.9-2+deb12u1 [275 kB]
+#10 7.852 Get:7 http://deb.debian.org/debian-security bookworm-security/main amd64 libsasl2-modules-db amd64 2.1.28+dfsg-10+deb12u1 [20.5 kB]
+#10 8.091 Get:8 http://deb.debian.org/debian-security bookworm-security/main amd64 libsasl2-2 amd64 2.1.28+dfsg-10+deb12u1 [59.9 kB]
+#10 8.330 Get:9 http://deb.debian.org/debian bookworm/main amd64 libldap-2.5-0 amd64 2.5.13+dfsg-5 [183 kB]
+#10 8.587 Get:10 http://deb.debian.org/debian bookworm/main amd64 libnghttp2-14 amd64 1.52.0-1+deb12u3 [72.4 kB]
+#10 8.831 Get:11 http://deb.debian.org/debian bookworm/main amd64 libpsl5 amd64 0.21.2-1 [58.7 kB]
+#10 9.077 Get:12 http://deb.debian.org/debian bookworm/main amd64 librtmp1 amd64 2.4+20151223.gitfa8646d.1-2+b2 [60.8 kB]
+#10 9.325 Get:13 http://deb.debian.org/debian-security bookworm-security/main amd64 libssh2-1 amd64 1.10.0-3+deb12u1 [176 kB]
+#10 9.596 Get:14 http://deb.debian.org/debian bookworm/main amd64 libcurl4 amd64 7.88.1-10+deb12u15 [392 kB]
+#10 9.980 Get:15 http://deb.debian.org/debian bookworm/main amd64 curl amd64 7.88.1-10+deb12u15 [316 kB]
+#10 10.32 Get:16 http://deb.debian.org/debian-security bookworm-security/main amd64 libexpat1 amd64 2.5.0-1+deb12u5 [108 kB]
+#10 10.59 Get:17 http://deb.debian.org/debian-security bookworm-security/main amd64 libpng16-16 amd64 1.6.39-2+deb12u6 [277 kB]
+#10 10.85 Get:18 http://deb.debian.org/debian bookworm/main amd64 libfreetype6 amd64 2.12.1+dfsg-5+deb12u4 [398 kB]
+#10 11.14 Get:19 http://deb.debian.org/debian bookworm/main amd64 fonts-dejavu-core all 2.37-6 [1068 kB]
+#10 11.51 Get:20 http://deb.debian.org/debian bookworm/main amd64 fontconfig-config amd64 2.14.1-4 [315 kB]
+#10 11.76 Get:21 http://deb.debian.org/debian bookworm/main amd64 libfontconfig1 amd64 2.14.1-4 [386 kB]
+#10 12.15 Get:22 http://deb.debian.org/debian bookworm/main amd64 fontconfig amd64 2.14.1-4 [449 kB]
+#10 12.53 Get:23 http://deb.debian.org/debian bookworm/main amd64 fonts-noto-cjk all 1:20220127+repack1-1 [56.5 MB]
+#10 13.64 Get:24 http://deb.debian.org/debian bookworm/main amd64 fonts-wqy-zenhei all 0.9.45-8 [7479 kB]
+#10 13.94 Get:25 http://deb.debian.org/debian bookworm/main amd64 libc-ares2 amd64 1.18.1-3 [102 kB]
+#10 14.18 Get:26 http://deb.debian.org/debian bookworm/main amd64 libicu72 amd64 72.1-3+deb12u1 [9376 kB]
+#10 14.51 Get:27 http://deb.debian.org/debian bookworm/main amd64 libuv1 amd64 1.44.2-1+deb12u1 [136 kB]
+#10 14.76 Get:28 http://deb.debian.org/debian bookworm/main amd64 node-xtend all 4.0.2-3 [3932 B]
+#10 15.13 Get:29 http://deb.debian.org/debian-security bookworm-security/main amd64 nodejs amd64 18.20.4+dfsg-1~deb12u3 [322 kB]
+#10 15.44 Get:30 http://deb.debian.org/debian bookworm/main amd64 node-acorn all 8.8.1+ds+~cs25.17.7-2 [128 kB]
+#10 15.67 Get:31 http://deb.debian.org/debian bookworm/main amd64 node-cjs-module-lexer all 1.2.2+dfsg-5 [30.1 kB]
+#10 16.02 Get:32 http://deb.debian.org/debian bookworm/main amd64 node-busboy all 1.6.0+~cs2.6.0-2 [16.9 kB]
+#10 16.26 Get:33 http://deb.debian.org/debian bookworm/main amd64 node-undici all 5.15.0+dfsg1+~cs20.10.9.3-1+deb12u4 [285 kB]
+#10 16.53 Get:34 http://deb.debian.org/debian-security bookworm-security/main amd64 libnode108 amd64 18.20.4+dfsg-1~deb12u3 [10.6 MB]
+#10 16.90 Get:35 http://deb.debian.org/debian bookworm/main amd64 ripgrep amd64 13.0.0-4+b2 [1253 kB]
+#10 17.14 Get:36 http://deb.debian.org/debian bookworm/main amd64 time amd64 1.9-0.2 [50.8 kB]
+#10 17.20 debconf: delaying package configuration, since apt-utils is not installed
+#10 17.21 Fetched 92.2 MB in 13s (7189 kB/s)
+#10 17.22 Selecting previously unselected package libproc2-0:amd64.
+#10 17.22 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6701 files and directories currently installed.)
+#10 17.22 Preparing to unpack .../00-libproc2-0_2%3a4.0.2-3_amd64.deb ...
+#10 17.22 Unpacking libproc2-0:amd64 (2:4.0.2-3) ...
+#10 17.24 Selecting previously unselected package procps.
+#10 17.24 Preparing to unpack .../01-procps_2%3a4.0.2-3_amd64.deb ...
+#10 17.25 Unpacking procps (2:4.0.2-3) ...
+#10 17.30 Selecting previously unselected package libmagic-mgc.
+#10 17.30 Preparing to unpack .../02-libmagic-mgc_1%3a5.44-3_amd64.deb ...
+#10 17.30 Unpacking libmagic-mgc (1:5.44-3) ...
+#10 17.33 Selecting previously unselected package libmagic1:amd64.
+#10 17.33 Preparing to unpack .../03-libmagic1_1%3a5.44-3_amd64.deb ...
+#10 17.33 Unpacking libmagic1:amd64 (1:5.44-3) ...
+#10 17.34 Selecting previously unselected package file.
+#10 17.34 Preparing to unpack .../04-file_1%3a5.44-3_amd64.deb ...
+#10 17.35 Unpacking file (1:5.44-3) ...
+#10 17.36 Selecting previously unselected package libbrotli1:amd64.
+#10 17.36 Preparing to unpack .../05-libbrotli1_1.0.9-2+deb12u1_amd64.deb ...
+#10 17.36 Unpacking libbrotli1:amd64 (1.0.9-2+deb12u1) ...
+#10 17.38 Selecting previously unselected package libsasl2-modules-db:amd64.
+#10 17.38 Preparing to unpack .../06-libsasl2-modules-db_2.1.28+dfsg-10+deb12u1_amd64.deb ...
+#10 17.38 Unpacking libsasl2-modules-db:amd64 (2.1.28+dfsg-10+deb12u1) ...
+#10 17.39 Selecting previously unselected package libsasl2-2:amd64.
+#10 17.39 Preparing to unpack .../07-libsasl2-2_2.1.28+dfsg-10+deb12u1_amd64.deb ...
+#10 17.39 Unpacking libsasl2-2:amd64 (2.1.28+dfsg-10+deb12u1) ...
+#10 17.40 Selecting previously unselected package libldap-2.5-0:amd64.
+#10 17.40 Preparing to unpack .../08-libldap-2.5-0_2.5.13+dfsg-5_amd64.deb ...
+#10 17.40 Unpacking libldap-2.5-0:amd64 (2.5.13+dfsg-5) ...
+#10 17.42 Selecting previously unselected package libnghttp2-14:amd64.
+#10 17.42 Preparing to unpack .../09-libnghttp2-14_1.52.0-1+deb12u3_amd64.deb ...
+#10 17.42 Unpacking libnghttp2-14:amd64 (1.52.0-1+deb12u3) ...
+#10 17.43 Selecting previously unselected package libpsl5:amd64.
+#10 17.43 Preparing to unpack .../10-libpsl5_0.21.2-1_amd64.deb ...
+#10 17.43 Unpacking libpsl5:amd64 (0.21.2-1) ...
+#10 17.44 Selecting previously unselected package librtmp1:amd64.
+#10 17.44 Preparing to unpack .../11-librtmp1_2.4+20151223.gitfa8646d.1-2+b2_amd64.deb ...
+#10 17.44 Unpacking librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b2) ...
+#10 17.46 Selecting previously unselected package libssh2-1:amd64.
+#10 17.46 Preparing to unpack .../12-libssh2-1_1.10.0-3+deb12u1_amd64.deb ...
+#10 17.46 Unpacking libssh2-1:amd64 (1.10.0-3+deb12u1) ...
+#10 17.47 Selecting previously unselected package libcurl4:amd64.
+#10 17.47 Preparing to unpack .../13-libcurl4_7.88.1-10+deb12u15_amd64.deb ...
+#10 17.47 Unpacking libcurl4:amd64 (7.88.1-10+deb12u15) ...
+#10 17.50 Selecting previously unselected package curl.
+#10 17.50 Preparing to unpack .../14-curl_7.88.1-10+deb12u15_amd64.deb ...
+#10 17.50 Unpacking curl (7.88.1-10+deb12u15) ...
+#10 17.52 Selecting previously unselected package libexpat1:amd64.
+#10 17.52 Preparing to unpack .../15-libexpat1_2.5.0-1+deb12u5_amd64.deb ...
+#10 17.52 Unpacking libexpat1:amd64 (2.5.0-1+deb12u5) ...
+#10 17.53 Selecting previously unselected package libpng16-16:amd64.
+#10 17.53 Preparing to unpack .../16-libpng16-16_1.6.39-2+deb12u6_amd64.deb ...
+#10 17.53 Unpacking libpng16-16:amd64 (1.6.39-2+deb12u6) ...
+#10 17.55 Selecting previously unselected package libfreetype6:amd64.
+#10 17.55 Preparing to unpack .../17-libfreetype6_2.12.1+dfsg-5+deb12u4_amd64.deb ...
+#10 17.55 Unpacking libfreetype6:amd64 (2.12.1+dfsg-5+deb12u4) ...
+#10 17.58 Selecting previously unselected package fonts-dejavu-core.
+#10 17.58 Preparing to unpack .../18-fonts-dejavu-core_2.37-6_all.deb ...
+#10 17.58 Unpacking fonts-dejavu-core (2.37-6) ...
+#10 17.64 Selecting previously unselected package fontconfig-config.
+#10 17.64 Preparing to unpack .../19-fontconfig-config_2.14.1-4_amd64.deb ...
+#10 17.70 Unpacking fontconfig-config (2.14.1-4) ...
+#10 17.71 Selecting previously unselected package libfontconfig1:amd64.
+#10 17.71 Preparing to unpack .../20-libfontconfig1_2.14.1-4_amd64.deb ...
+#10 17.71 Unpacking libfontconfig1:amd64 (2.14.1-4) ...
+#10 17.73 Selecting previously unselected package fontconfig.
+#10 17.73 Preparing to unpack .../21-fontconfig_2.14.1-4_amd64.deb ...
+#10 17.73 Unpacking fontconfig (2.14.1-4) ...
+#10 17.75 Selecting previously unselected package fonts-noto-cjk.
+#10 17.75 Preparing to unpack .../22-fonts-noto-cjk_1%3a20220127+repack1-1_all.deb ...
+#10 17.75 Unpacking fonts-noto-cjk (1:20220127+repack1-1) ...
+#10 18.58 Selecting previously unselected package fonts-wqy-zenhei.
+#10 18.58 Preparing to unpack .../23-fonts-wqy-zenhei_0.9.45-8_all.deb ...
+#10 18.59 Unpacking fonts-wqy-zenhei (0.9.45-8) ...
+#10 18.93 Selecting previously unselected package libc-ares2:amd64.
+#10 18.93 Preparing to unpack .../24-libc-ares2_1.18.1-3_amd64.deb ...
+#10 18.93 Unpacking libc-ares2:amd64 (1.18.1-3) ...
+#10 18.94 Selecting previously unselected package libicu72:amd64.
+#10 18.94 Preparing to unpack .../25-libicu72_72.1-3+deb12u1_amd64.deb ...
+#10 18.94 Unpacking libicu72:amd64 (72.1-3+deb12u1) ...
+#10 19.27 Selecting previously unselected package libuv1:amd64.
+#10 19.27 Preparing to unpack .../26-libuv1_1.44.2-1+deb12u1_amd64.deb ...
+#10 19.27 Unpacking libuv1:amd64 (1.44.2-1+deb12u1) ...
+#10 19.29 Selecting previously unselected package node-xtend.
+#10 19.29 Preparing to unpack .../27-node-xtend_4.0.2-3_all.deb ...
+#10 19.29 Unpacking node-xtend (4.0.2-3) ...
+#10 19.30 Selecting previously unselected package nodejs.
+#10 19.30 Preparing to unpack .../28-nodejs_18.20.4+dfsg-1~deb12u3_amd64.deb ...
+#10 19.30 Unpacking nodejs (18.20.4+dfsg-1~deb12u3) ...
+#10 19.33 Selecting previously unselected package node-acorn.
+#10 19.33 Preparing to unpack .../29-node-acorn_8.8.1+ds+~cs25.17.7-2_all.deb ...
+#10 19.33 Unpacking node-acorn (8.8.1+ds+~cs25.17.7-2) ...
+#10 19.35 Selecting previously unselected package node-cjs-module-lexer.
+#10 19.35 Preparing to unpack .../30-node-cjs-module-lexer_1.2.2+dfsg-5_all.deb ...
+#10 19.35 Unpacking node-cjs-module-lexer (1.2.2+dfsg-5) ...
+#10 19.36 Selecting previously unselected package node-busboy.
+#10 19.36 Preparing to unpack .../31-node-busboy_1.6.0+~cs2.6.0-2_all.deb ...
+#10 19.36 Unpacking node-busboy (1.6.0+~cs2.6.0-2) ...
+#10 19.37 Selecting previously unselected package node-undici.
+#10 19.37 Preparing to unpack .../32-node-undici_5.15.0+dfsg1+~cs20.10.9.3-1+deb12u4_all.deb ...
+#10 19.37 Unpacking node-undici (5.15.0+dfsg1+~cs20.10.9.3-1+deb12u4) ...
+#10 19.39 Selecting previously unselected package libnode108:amd64.
+#10 19.39 Preparing to unpack .../33-libnode108_18.20.4+dfsg-1~deb12u3_amd64.deb ...
+#10 19.39 Unpacking libnode108:amd64 (18.20.4+dfsg-1~deb12u3) ...
+#10 19.73 Selecting previously unselected package ripgrep.
+#10 19.73 Preparing to unpack .../34-ripgrep_13.0.0-4+b2_amd64.deb ...
+#10 19.73 Unpacking ripgrep (13.0.0-4+b2) ...
+#10 19.79 Selecting previously unselected package time.
+#10 19.80 Preparing to unpack .../35-time_1.9-0.2_amd64.deb ...
+#10 19.80 Unpacking time (1.9-0.2) ...
+#10 19.81 Setting up libexpat1:amd64 (2.5.0-1+deb12u5) ...
+#10 19.81 Setting up time (1.9-0.2) ...
+#10 19.81 Setting up libpsl5:amd64 (0.21.2-1) ...
+#10 19.82 Setting up libicu72:amd64 (72.1-3+deb12u1) ...
+#10 19.82 Setting up libmagic-mgc (1:5.44-3) ...
+#10 19.82 Setting up libbrotli1:amd64 (1.0.9-2+deb12u1) ...
+#10 19.82 Setting up fonts-noto-cjk (1:20220127+repack1-1) ...
+#10 19.83 Setting up libnghttp2-14:amd64 (1.52.0-1+deb12u3) ...
+#10 19.83 Setting up libmagic1:amd64 (1:5.44-3) ...
+#10 19.83 Setting up node-cjs-module-lexer (1.2.2+dfsg-5) ...
+#10 19.83 Setting up libc-ares2:amd64 (1.18.1-3) ...
+#10 19.84 Setting up file (1:5.44-3) ...
+#10 19.84 Setting up libsasl2-modules-db:amd64 (2.1.28+dfsg-10+deb12u1) ...
+#10 19.84 Setting up libuv1:amd64 (1.44.2-1+deb12u1) ...
+#10 19.84 Setting up librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b2) ...
+#10 19.84 Setting up libproc2-0:amd64 (2:4.0.2-3) ...
+#10 19.84 Setting up libpng16-16:amd64 (1.6.39-2+deb12u6) ...
+#10 19.85 Setting up fonts-dejavu-core (2.37-6) ...
+#10 19.85 Setting up libsasl2-2:amd64 (2.1.28+dfsg-10+deb12u1) ...
+#10 19.86 Setting up ripgrep (13.0.0-4+b2) ...
+#10 19.86 Setting up procps (2:4.0.2-3) ...
+#10 19.87 Setting up libssh2-1:amd64 (1.10.0-3+deb12u1) ...
+#10 19.87 Setting up node-xtend (4.0.2-3) ...
+#10 19.87 Setting up node-busboy (1.6.0+~cs2.6.0-2) ...
+#10 19.88 Setting up fontconfig-config (2.14.1-4) ...
+#10 19.91 debconf: unable to initialize frontend: Dialog
+#10 19.91 debconf: (TERM is not set, so the dialog frontend is not usable.)
+#10 19.91 debconf: falling back to frontend: Readline
+#10 19.91 debconf: unable to initialize frontend: Readline
+#10 19.91 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC contains: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.36.0 /usr/local/share/perl/5.36.0 /usr/lib/x86_64-linux-gnu/perl5/5.36 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.36 /usr/share/perl/5.36 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 7.)
+#10 19.91 debconf: falling back to frontend: Teletype
+#10 19.99 Setting up libldap-2.5-0:amd64 (2.5.13+dfsg-5) ...
+#10 19.99 Setting up libfreetype6:amd64 (2.12.1+dfsg-5+deb12u4) ...
+#10 19.99 Setting up node-undici (5.15.0+dfsg1+~cs20.10.9.3-1+deb12u4) ...
+#10 20.00 Setting up libcurl4:amd64 (7.88.1-10+deb12u15) ...
+#10 20.00 Setting up curl (7.88.1-10+deb12u15) ...
+#10 20.00 Setting up libfontconfig1:amd64 (2.14.1-4) ...
+#10 20.00 Setting up fontconfig (2.14.1-4) ...
+#10 20.00 Regenerating fonts cache... done.
+#10 22.06 Setting up fonts-wqy-zenhei (0.9.45-8) ...
+#10 22.07 Setting up node-acorn (8.8.1+ds+~cs25.17.7-2) ...
+#10 22.07 Setting up libnode108:amd64 (18.20.4+dfsg-1~deb12u3) ...
+#10 22.08 Setting up nodejs (18.20.4+dfsg-1~deb12u3) ...
+#10 22.08 update-alternatives: using /usr/bin/nodejs to provide /usr/bin/js (js) in auto mode
+#10 22.08 update-alternatives: warning: skip creation of /usr/share/man/man1/js.1.gz because associated file /usr/share/man/man1/nodejs.1.gz (of link group js) doesn't exist
+#10 22.08 Processing triggers for libc-bin (2.36-9+deb12u14) ...
+#10 DONE 22.1s
+
+#11 [stage-0 5/5] WORKDIR /workspace
+#11 DONE 0.6s
+
+#12 exporting to image
+#12 exporting layers
+#12 exporting layers 1.2s done
+#12 writing image sha256:cc45cfa3c825f81acb1dfcfe54be9f63ef7b945735760729faf939df4c753a3b done
+#12 naming to docker.io/library/famsun-sandbox:latest done
+#12 DONE 1.2s

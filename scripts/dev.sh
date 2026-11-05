@@ -24,7 +24,7 @@ echo 'FAMSUN development: http://localhost:5173'
 echo 'API: http://localhost:8000 · Ctrl+C stops both processes.'
 env_option=()
 [[ ! -f .env ]] || env_option=(--env-file .env)
-uv run "${env_option[@]}" uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 --reload &
+uv run "${env_option[@]}" uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 --reload --reload-dir backend/app &
 backend_pid=$!
 (cd frontend && exec npm run dev -- --host 127.0.0.1) &
 frontend_pid=$!

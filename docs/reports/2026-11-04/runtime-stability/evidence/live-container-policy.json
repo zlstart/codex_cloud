@@ -1,0 +1,36 @@
+[
+  {
+    "name": "famsun-sandbox-17fece038c4c4827abe0ff9c6c7a8a9d",
+    "image": "sha256:cc45cfa3c825f81acb1dfcfe54be9f63ef7b945735760729faf939df4c753a3b",
+    "resources": {
+      "Memory": 2147483648,
+      "MemorySwap": 2147483648,
+      "NanoCpus": 2000000000,
+      "PidsLimit": 256,
+      "Ulimits": [
+        {
+          "Name": "nofile",
+          "Hard": 4096,
+          "Soft": 4096
+        },
+        {
+          "Name": "fsize",
+          "Hard": 104857600,
+          "Soft": 104857600
+        }
+      ],
+      "Tmpfs": {
+        "/tmp": "rw,exec,nosuid,nodev,size=512m,mode=1777"
+      },
+      "ReadonlyRootfs": true,
+      "CapDrop": [
+        "ALL"
+      ],
+      "SecurityOpt": [
+        "no-new-privileges:true"
+      ]
+    },
+    "user": "1000:1000",
+    "no_docker_socket_mount": true
+  }
+]

@@ -86,7 +86,8 @@ class CreateSubagent(Input):
     description: str = Field(default="", max_length=1000)
     instructions: str = Field(min_length=1, max_length=100000)
     model: str | None = Field(default=None, min_length=1, max_length=200)
-    max_turns: int = Field(default=12, ge=1, le=100)
+    # Null inherits the current deployment limit instead of persisting a stale cap.
+    max_turns: int | None = Field(default=None, ge=1, le=10000)
     skill_ids: list[str] = Field(default_factory=list, max_length=100)
     mcp_server_ids: list[str] = Field(default_factory=list, max_length=50)
 
@@ -96,6 +97,6 @@ class PatchSubagent(Input):
     description: str | None = Field(default=None, max_length=1000)
     instructions: str | None = Field(default=None, min_length=1, max_length=100000)
     model: str | None = Field(default=None, min_length=1, max_length=200)
-    max_turns: int | None = Field(default=None, ge=1, le=100)
+    max_turns: int | None = Field(default=None, ge=1, le=10000)
     skill_ids: list[str] | None = Field(default=None, max_length=100)
     mcp_server_ids: list[str] | None = Field(default=None, max_length=50)

@@ -62,6 +62,44 @@ def test_capability_edits_subagents_and_member_permissions(client):
     assert client.patch(f"/api/extensions/{child['id']}", json={"enabled": False}).json()["enabled"] is False
 
 
+def test_subagent_defaults_inherit_and_explicit_large_limits_can_be_reset(client):
+    register(client)
+    response = client.post(
+        "/api/extensions/subagents", json={"name": "Long task", "instructions": "Complete the task."}
+    )
+    assert response.status_code == 201, response.text
+    item = response.json()
+    assert item["config"]["max_turns"] is None
+    endpoint = f"/api/extensions/subagents/{item['id']}"
+    assert client.patch(endpoint, json={"max_turns": 200}).json()["config"]["max_turns"] == 200
+    assert client.patch(endpoint, json={"max_turns": None}).json()["config"]["max_turns"] is None
+    assert client.patch(endpoint, json={"max_turns": 0}).status_code == 422
+    assert client.patch(endpoint, json={"max_turns": 10001}).status_code == 422
+
+
+def test_upload_quota_counts_unregistered_workspace_files(client, app):
+    from pathlib import Path
+
+    user = register(client)
+    sid = session(client)
+    workspace = app.state.service.workspace(user["id"], sid)
+    Path(workspace / "outputs" / "unregistered.bin").write_bytes(b"x" * (1024 * 1024))
+    app.state.settings.max_session_mb = 1
+    response = client.post(f"/api/sessions/{sid}/files", files={"file": ("small.txt", b"x")})
+    assert response.status_code == 413
+    assert not list((workspace / "uploads").iterdir())
+
+
+def test_upload_entry_limit_is_configurable_and_enforced(client, app):
+    register(client)
+    sid = session(client)
+    app.state.settings.max_workspace_entries = 2  # uploads/ and outputs/ already occupy two entries.
+    response = client.post(f"/api/sessions/{sid}/files", files={"file": ("small.txt", b"x")})
+    assert response.status_code == 413
+    app.state.settings.max_workspace_entries = 3
+    assert upload(client, sid, "small.txt", b"x")["size"] == 1
+
+
 def test_spreadsheet_preview_is_bounded_and_owned(client):
     register(client)
     sid = session(client)

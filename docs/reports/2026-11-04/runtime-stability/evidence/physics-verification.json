@@ -1,0 +1,757 @@
+{
+  "generated_at": "2026-11-04T15:15:58.648674+00:00",
+  "source": "downloaded real-provider generated CSV and metrics; model script not executed",
+  "independent_method": "existing independent pure-Python Newtonian-force RK4; all producer-size dt=.001 steps plus 51 reference states at dt=.0001",
+  "overall_pass": true,
+  "checks": {
+    "exact_csv_columns": {
+      "passed": true,
+      "detail": [
+        "t",
+        "x1",
+        "y1",
+        "vx1",
+        "vy1",
+        "x2",
+        "y2",
+        "vx2",
+        "vy2",
+        "x3",
+        "y3",
+        "vx3",
+        "vy3"
+      ]
+    },
+    "sample_count_at_least_1000": {
+      "passed": true,
+      "detail": 1266
+    },
+    "finite_csv": {
+      "passed": true,
+      "detail": null
+    },
+    "time_endpoints": {
+      "passed": true,
+      "detail": [
+        0.0,
+        12.65
+      ]
+    },
+    "monotonic_time": {
+      "passed": true,
+      "detail": null
+    },
+    "uniform_samples": {
+      "passed": true,
+      "detail": 0.01
+    },
+    "specified_initial_conditions": {
+      "passed": true,
+      "detail": null
+    },
+    "conservation_max_relative_energy_error": {
+      "passed": true,
+      "detail": 1.445632106771923e-13
+    },
+    "conservation_max_absolute_angular_momentum_error": {
+      "passed": true,
+      "detail": 4.7128967395337895e-14
+    },
+    "conservation_max_center_of_mass_norm": {
+      "passed": true,
+      "detail": 2.072426513960739e-14
+    },
+    "noncollision": {
+      "passed": true,
+      "detail": 0.6905266463315569
+    },
+    "independent_trajectory_agreement_dt_0_0001": {
+      "passed": true,
+      "detail": {
+        "max_position_error": 8.324868572273658e-12,
+        "max_velocity_error": 1.5521833818255004e-11,
+        "sample_count": 51
+      }
+    },
+    "metric_field_G": {
+      "passed": true,
+      "detail": null
+    },
+    "metric_field_masses": {
+      "passed": true,
+      "detail": null
+    },
+    "metric_field_method": {
+      "passed": true,
+      "detail": null
+    },
+    "metric_field_dt": {
+      "passed": true,
+      "detail": null
+    },
+    "metric_field_t_start": {
+      "passed": true,
+      "detail": null
+    },
+    "metric_field_t_end": {
+      "passed": true,
+      "detail": null
+    },
+    "metric_field_sample_count": {
+      "passed": true,
+      "detail": null
+    },
+    "metric_field_initial_positions": {
+      "passed": true,
+      "detail": null
+    },
+    "metric_field_initial_velocities": {
+      "passed": true,
+      "detail": null
+    },
+    "metric_field_initial_energy": {
+      "passed": true,
+      "detail": null
+    },
+    "metric_field_max_relative_energy_error": {
+      "passed": true,
+      "detail": null
+    },
+    "metric_field_initial_angular_momentum": {
+      "passed": true,
+      "detail": null
+    },
+    "metric_field_max_absolute_angular_momentum_error": {
+      "passed": true,
+      "detail": null
+    },
+    "metric_field_max_center_of_mass_norm": {
+      "passed": true,
+      "detail": null
+    },
+    "metric_field_minimum_pair_distance": {
+      "passed": true,
+      "detail": null
+    },
+    "metric_value_G": {
+      "passed": true,
+      "detail": 1.0
+    },
+    "metric_value_masses": {
+      "passed": true,
+      "detail": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "metric_value_dt": {
+      "passed": true,
+      "detail": 0.001
+    },
+    "metric_value_t_start": {
+      "passed": true,
+      "detail": 0.0
+    },
+    "metric_value_t_end": {
+      "passed": true,
+      "detail": 12.65
+    },
+    "metric_value_sample_count": {
+      "passed": true,
+      "detail": 1266
+    },
+    "metric_value_initial_positions": {
+      "passed": true,
+      "detail": [
+        [
+          -0.97000436,
+          0.24308753
+        ],
+        [
+          0.97000436,
+          -0.24308753
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    "metric_value_initial_velocities": {
+      "passed": true,
+      "detail": [
+        [
+          0.466203685,
+          0.43236573
+        ],
+        [
+          0.466203685,
+          0.43236573
+        ],
+        [
+          -0.93240737,
+          -0.86473146
+        ]
+      ]
+    },
+    "metric_method_rk4": {
+      "passed": true,
+      "detail": "explicit fixed-step 4th-order Runge-Kutta (RK4)，二维牛顿引力三体，无软化项"
+    },
+    "full_precision_metric_initial_energy": {
+      "passed": true,
+      "detail": {
+        "reported": -1.2871419917663258,
+        "independent_full_step": -1.2871419917663254,
+        "tolerance": 1e-10
+      }
+    },
+    "full_precision_metric_initial_angular_momentum": {
+      "passed": true,
+      "detail": {
+        "reported": 0.0,
+        "independent_full_step": 0.0,
+        "tolerance": 1e-10
+      }
+    },
+    "full_precision_metric_max_relative_energy_error": {
+      "passed": true,
+      "detail": {
+        "reported": 1.4542575966691299e-13,
+        "independent_full_step": 1.4508074007102476e-13,
+        "tolerance": 5e-12
+      }
+    },
+    "full_precision_metric_max_absolute_angular_momentum_error": {
+      "passed": true,
+      "detail": {
+        "reported": 4.729550084903167e-14,
+        "independent_full_step": 4.826694599557868e-14,
+        "tolerance": 5e-12
+      }
+    },
+    "full_precision_metric_max_center_of_mass_norm": {
+      "passed": true,
+      "detail": {
+        "reported": 2.072521595751318e-14,
+        "independent_full_step": 1.2577716674922782e-14,
+        "tolerance": 5e-12
+      }
+    },
+    "full_precision_metric_minimum_pair_distance": {
+      "passed": true,
+      "detail": {
+        "reported": 0.6905266306918849,
+        "independent_full_step": 0.6905266306919116,
+        "tolerance": 1e-10
+      }
+    },
+    "artifact_three_body.csv": {
+      "passed": true,
+      "detail": null
+    },
+    "artifact_metrics.json": {
+      "passed": true,
+      "detail": null
+    },
+    "artifact_three_body.png": {
+      "passed": true,
+      "detail": null
+    },
+    "artifact_three_body.html": {
+      "passed": true,
+      "detail": null
+    },
+    "artifact_simulate_three_body.py": {
+      "passed": true,
+      "detail": null
+    },
+    "html_embedded_sim_data": {
+      "passed": true,
+      "detail": null
+    },
+    "html_embedded_sample_count": {
+      "passed": true,
+      "detail": 1266
+    },
+    "html_all_embedded_samples_match_csv": {
+      "passed": true,
+      "detail": {
+        "maximum_absolute_error": 4.999889391399392e-13,
+        "tolerance": 1e-12
+      }
+    },
+    "html_no_external_resource_references": {
+      "passed": true,
+      "detail": null
+    }
+  },
+  "failures": [],
+  "recomputed_from_csv": {
+    "sample_count": 1266,
+    "initial_energy": -1.2871419917663254,
+    "initial_angular_momentum": 0.0,
+    "max_relative_energy_error": 1.445632106771923e-13,
+    "max_absolute_angular_momentum_error": 4.7128967395337895e-14,
+    "max_center_of_mass_norm": 2.072426513960739e-14,
+    "minimum_pair_distance": 0.6905266463315569
+  },
+  "independent_full_precision_producer_step_metrics": {
+    "max_relative_energy_error": 1.4508074007102476e-13,
+    "max_absolute_angular_momentum_error": 4.826694599557868e-14,
+    "max_center_of_mass_norm": 1.2577716674922782e-14,
+    "minimum_pair_distance": 0.6905266306919116
+  },
+  "independent_integration_samples": [
+    {
+      "sample_index": 0,
+      "t": 0.0,
+      "max_position_error": 0.0,
+      "max_velocity_error": 0.0
+    },
+    {
+      "sample_index": 25,
+      "t": 0.25,
+      "max_position_error": 1.4876988529977098e-14,
+      "max_velocity_error": 7.915890165577366e-14
+    },
+    {
+      "sample_index": 51,
+      "t": 0.51,
+      "max_position_error": 9.364731212713195e-14,
+      "max_velocity_error": 3.88189480560186e-13
+    },
+    {
+      "sample_index": 76,
+      "t": 0.76,
+      "max_position_error": 2.4541479959339085e-13,
+      "max_velocity_error": 1.1022294188478554e-12
+    },
+    {
+      "sample_index": 101,
+      "t": 1.01,
+      "max_position_error": 5.443354100798103e-13,
+      "max_velocity_error": 1.2777556790410927e-12
+    },
+    {
+      "sample_index": 126,
+      "t": 1.26,
+      "max_position_error": 8.394673844946965e-13,
+      "max_velocity_error": 1.2555512185485895e-12
+    },
+    {
+      "sample_index": 152,
+      "t": 1.52,
+      "max_position_error": 1.102340441150318e-12,
+      "max_velocity_error": 1.84519066692701e-12
+    },
+    {
+      "sample_index": 177,
+      "t": 1.77,
+      "max_position_error": 1.7068013669074844e-12,
+      "max_velocity_error": 2.572136947875947e-12
+    },
+    {
+      "sample_index": 202,
+      "t": 2.02,
+      "max_position_error": 2.272959598315083e-12,
+      "max_velocity_error": 2.4608093340816595e-12
+    },
+    {
+      "sample_index": 228,
+      "t": 2.28,
+      "max_position_error": 2.5559554472920354e-12,
+      "max_velocity_error": 3.913980251013527e-12
+    },
+    {
+      "sample_index": 253,
+      "t": 2.53,
+      "max_position_error": 4.166778033720675e-12,
+      "max_velocity_error": 6.396494445226608e-12
+    },
+    {
+      "sample_index": 278,
+      "t": 2.78,
+      "max_position_error": 5.2591264676493665e-12,
+      "max_velocity_error": 1.0471401523659551e-11
+    },
+    {
+      "sample_index": 304,
+      "t": 3.04,
+      "max_position_error": 5.717648576819556e-12,
+      "max_velocity_error": 6.5432104179308226e-12
+    },
+    {
+      "sample_index": 329,
+      "t": 3.29,
+      "max_position_error": 6.857348022748511e-12,
+      "max_velocity_error": 7.43061168151371e-12
+    },
+    {
+      "sample_index": 354,
+      "t": 3.54,
+      "max_position_error": 7.390504874749126e-12,
+      "max_velocity_error": 9.51531908821579e-12
+    },
+    {
+      "sample_index": 380,
+      "t": 3.8,
+      "max_position_error": 7.945089031125008e-12,
+      "max_velocity_error": 1.3314971954864196e-11
+    },
+    {
+      "sample_index": 405,
+      "t": 4.05,
+      "max_position_error": 8.324868572273658e-12,
+      "max_velocity_error": 1.0129452832075003e-11
+    },
+    {
+      "sample_index": 430,
+      "t": 4.3,
+      "max_position_error": 8.266345941088105e-12,
+      "max_velocity_error": 1.0830891739033177e-11
+    },
+    {
+      "sample_index": 455,
+      "t": 4.55,
+      "max_position_error": 7.626010933847738e-12,
+      "max_velocity_error": 1.3756329408920465e-11
+    },
+    {
+      "sample_index": 481,
+      "t": 4.81,
+      "max_position_error": 7.1299077752939866e-12,
+      "max_velocity_error": 1.4019452265756627e-11
+    },
+    {
+      "sample_index": 506,
+      "t": 5.06,
+      "max_position_error": 4.523770247288894e-12,
+      "max_velocity_error": 7.99726951328239e-12
+    },
+    {
+      "sample_index": 531,
+      "t": 5.31,
+      "max_position_error": 3.840060214255203e-12,
+      "max_velocity_error": 5.775879774461146e-12
+    },
+    {
+      "sample_index": 557,
+      "t": 5.57,
+      "max_position_error": 2.8389512962689878e-12,
+      "max_velocity_error": 4.7158943417002774e-12
+    },
+    {
+      "sample_index": 582,
+      "t": 5.82,
+      "max_position_error": 3.1831204339027863e-12,
+      "max_velocity_error": 5.82461856524219e-12
+    },
+    {
+      "sample_index": 607,
+      "t": 6.07,
+      "max_position_error": 2.0060619831951954e-12,
+      "max_velocity_error": 2.787409192350765e-12
+    },
+    {
+      "sample_index": 632,
+      "t": 6.32,
+      "max_position_error": 2.0651180418496118e-12,
+      "max_velocity_error": 3.985867191858006e-12
+    },
+    {
+      "sample_index": 658,
+      "t": 6.58,
+      "max_position_error": 2.125077891435012e-12,
+      "max_velocity_error": 4.036992962141994e-12
+    },
+    {
+      "sample_index": 683,
+      "t": 6.83,
+      "max_position_error": 3.082534227871747e-12,
+      "max_velocity_error": 5.334038766235949e-12
+    },
+    {
+      "sample_index": 708,
+      "t": 7.08,
+      "max_position_error": 2.1851964682184644e-12,
+      "max_velocity_error": 4.320765967236184e-12
+    },
+    {
+      "sample_index": 734,
+      "t": 7.34,
+      "max_position_error": 3.0555072361160285e-12,
+      "max_velocity_error": 2.715216940174514e-12
+    },
+    {
+      "sample_index": 759,
+      "t": 7.59,
+      "max_position_error": 2.260081011229431e-12,
+      "max_velocity_error": 2.041700142285663e-12
+    },
+    {
+      "sample_index": 784,
+      "t": 7.84,
+      "max_position_error": 2.4374807727767234e-12,
+      "max_velocity_error": 3.149272509439527e-12
+    },
+    {
+      "sample_index": 810,
+      "t": 8.1,
+      "max_position_error": 2.0826257385309077e-12,
+      "max_velocity_error": 9.801603972903195e-13
+    },
+    {
+      "sample_index": 835,
+      "t": 8.35,
+      "max_position_error": 2.1883883594142617e-12,
+      "max_velocity_error": 1.5042411760646246e-12
+    },
+    {
+      "sample_index": 860,
+      "t": 8.6,
+      "max_position_error": 2.6394719743194628e-12,
+      "max_velocity_error": 2.193911718961772e-12
+    },
+    {
+      "sample_index": 886,
+      "t": 8.86,
+      "max_position_error": 2.7559621251782573e-12,
+      "max_velocity_error": 2.2088997297942115e-12
+    },
+    {
+      "sample_index": 911,
+      "t": 9.11,
+      "max_position_error": 3.2970848273805586e-12,
+      "max_velocity_error": 2.3695628792452794e-12
+    },
+    {
+      "sample_index": 936,
+      "t": 9.36,
+      "max_position_error": 3.1463998073633093e-12,
+      "max_velocity_error": 2.514932706532136e-12
+    },
+    {
+      "sample_index": 961,
+      "t": 9.61,
+      "max_position_error": 3.2066016508736084e-12,
+      "max_velocity_error": 4.252820318129125e-12
+    },
+    {
+      "sample_index": 987,
+      "t": 9.87,
+      "max_position_error": 3.2509550607073834e-12,
+      "max_velocity_error": 6.738720692567313e-12
+    },
+    {
+      "sample_index": 1012,
+      "t": 10.12,
+      "max_position_error": 4.878597525959094e-12,
+      "max_velocity_error": 9.282019597378621e-12
+    },
+    {
+      "sample_index": 1037,
+      "t": 10.37,
+      "max_position_error": 4.125338959326541e-12,
+      "max_velocity_error": 5.656808355070098e-12
+    },
+    {
+      "sample_index": 1063,
+      "t": 10.63,
+      "max_position_error": 4.7628567756419216e-12,
+      "max_velocity_error": 5.685341086802964e-12
+    },
+    {
+      "sample_index": 1088,
+      "t": 10.88,
+      "max_position_error": 5.295430760554609e-12,
+      "max_velocity_error": 6.916356376507338e-12
+    },
+    {
+      "sample_index": 1113,
+      "t": 11.13,
+      "max_position_error": 6.944222974425429e-12,
+      "max_velocity_error": 1.2875034371973015e-11
+    },
+    {
+      "sample_index": 1138,
+      "t": 11.38,
+      "max_position_error": 6.4026006718620465e-12,
+      "max_velocity_error": 8.262723838470265e-12
+    },
+    {
+      "sample_index": 1164,
+      "t": 11.64,
+      "max_position_error": 7.741481067302658e-12,
+      "max_velocity_error": 8.31634761055966e-12
+    },
+    {
+      "sample_index": 1189,
+      "t": 11.89,
+      "max_position_error": 7.217837438844299e-12,
+      "max_velocity_error": 1.1137535338434645e-11
+    },
+    {
+      "sample_index": 1214,
+      "t": 12.14,
+      "max_position_error": 8.25806090176684e-12,
+      "max_velocity_error": 1.5521833818255004e-11
+    },
+    {
+      "sample_index": 1240,
+      "t": 12.4,
+      "max_position_error": 6.1121663286201056e-12,
+      "max_velocity_error": 1.0750733636655241e-11
+    },
+    {
+      "sample_index": 1265,
+      "t": 12.65,
+      "max_position_error": 6.334449024342215e-12,
+      "max_velocity_error": 9.22240062095625e-12
+    }
+  ],
+  "producer_metrics": {
+    "G": 1.0,
+    "masses": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "method": "explicit fixed-step 4th-order Runge-Kutta (RK4)，二维牛顿引力三体，无软化项",
+    "dt": 0.001,
+    "t_start": 0.0,
+    "t_end": 12.65,
+    "n_steps": 12650,
+    "sample_every_steps": 10,
+    "sample_interval": 0.01,
+    "sample_count": 1266,
+    "initial_positions": [
+      [
+        -0.97000436,
+        0.24308753
+      ],
+      [
+        0.97000436,
+        -0.24308753
+      ],
+      [
+        0.0,
+        0.0
+      ]
+    ],
+    "initial_velocities": [
+      [
+        0.466203685,
+        0.43236573
+      ],
+      [
+        0.466203685,
+        0.43236573
+      ],
+      [
+        -0.93240737,
+        -0.86473146
+      ]
+    ],
+    "initial_energy": -1.2871419917663258,
+    "max_relative_energy_error": 1.4542575966691299e-13,
+    "initial_angular_momentum": 0.0,
+    "max_absolute_angular_momentum_error": 4.729550084903167e-14,
+    "max_center_of_mass_norm": 2.072521595751318e-14,
+    "minimum_pair_distance": 0.6905266306918849,
+    "final_state": {
+      "t": 12.65,
+      "positions": [
+        [
+          -0.9708545656760599,
+          0.24229664985249358
+        ],
+        [
+          0.969150101007121,
+          -0.24387739337115374
+        ],
+        [
+          0.0017044646689013238,
+          0.0015807435187096828
+        ]
+      ],
+      "velocities": [
+        [
+          0.463989925236942,
+          0.432917765944851
+        ],
+        [
+          0.46842289850914576,
+          0.4318068224341411
+        ],
+        [
+          -0.932412823746095,
+          -0.8647245883789818
+        ]
+      ],
+      "energy": -1.2871419917664004,
+      "angular_momentum": 5.2562121322097255e-16
+    },
+    "center_of_mass_initial": [
+      0.0,
+      0.0
+    ],
+    "linear_momentum_initial": [
+      0.0,
+      0.0
+    ],
+    "cross_check_dt_half": {
+      "dt": 0.0005,
+      "n_steps": 25300,
+      "max_endpoint_position_difference": 8.775451285775171e-12,
+      "max_endpoint_velocity_difference": 1.1640743924345998e-11
+    },
+    "conservation_extent": {
+      "max_absolute_energy_error": 1.871836019518014e-13,
+      "min_pair_distance_at_step": 10016
+    },
+    "units": "无量纲数值单位：G=1、m=1；长度与时间由初值给定，速度=长度/时间，能量=质量·长度^2/时间^2",
+    "definitions": {
+      "initial_energy": "E = sum 1/2 m_i |v_i|^2 - sum_{i<j} G m_i m_j / |r_i-r_j| 在 t=0 的值",
+      "max_relative_energy_error": "max_t |E(t)-E(0)|/|E(0)|，在全部 12651 个积分步上统计",
+      "angular_momentum": "二维轨道角动量 z 分量 Lz = sum m_i (x_i vy_i - y_i vx_i)",
+      "max_absolute_angular_momentum_error": "max_t |Lz(t)-Lz(0)|",
+      "max_center_of_mass_norm": "max_t |COM(t)-COM(0)|；本初值总动量为 0，等于质心位置的模",
+      "minimum_pair_distance": "min_t min_{i<j} |r_i-r_j|，逐步统计",
+      "sample_count": "CSV 数据行数（不含表头），等间隔且含初值与终值"
+    },
+    "run_environment": {
+      "python": "3.12.16",
+      "numpy": "2.5.4",
+      "generated_utc": "2026-11-04T15:04:36+00:00"
+    }
+  },
+  "artifacts": [
+    {
+      "name": "three_body.csv",
+      "size": 313571,
+      "sha256": "07976028c6b7222649c2368e6a8b08d9582eec3f411cac6055a691d916edb472"
+    },
+    {
+      "name": "metrics.json",
+      "size": 2909,
+      "sha256": "4d7525b5e71ec4221bdfcf190958a361049a87a4677290d3d842289991d958f2"
+    },
+    {
+      "name": "three_body.png",
+      "size": 395514,
+      "sha256": "0fcc48ffeb84eac3deb918533c970e67b9977d83e3a86e0f4c299a0f80e63d1f"
+    },
+    {
+      "name": "three_body.html",
+      "size": 260897,
+      "sha256": "53fd0f61288da24bce222508ee80dd9f4997714a6c01ad39c75cf61cabc2ad0e"
+    },
+    {
+      "name": "simulate_three_body.py",
+      "size": 37425,
+      "sha256": "b1d7e071d4586c9f977f1749af311740a05df89eecb68c08f20027affa23886d"
+    }
+  ]
+}

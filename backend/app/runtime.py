@@ -56,8 +56,15 @@ class RuntimeConfig:
     tracing_workflow_name: str = "FAMSUN conversation"
     tracing_include_sensitive_data: bool = False
     compaction_threshold: int = 32_000
-    max_turns: int = 40
-    max_runtime_seconds: int = 900
+    max_turns: int = 200
+    max_runtime_seconds: int = 7200
+    max_session_mb: int = 2048
+    max_workspace_entries: int = 10000
+    model_timeout_seconds: int = 300
+    mcp_timeout_seconds: int = 120
+    mcp_session_timeout_seconds: int = 300
+    mcp_max_list_pages: int = 100
+    max_plan_steps: int = 50
     extensions: list[dict] = field(default_factory=list)
     allowed_mcp_hosts: list[str] = field(default_factory=list)
 
@@ -113,14 +120,14 @@ def _context_input_filter(data: CallModelData[Any]) -> ModelInputData:
     )
 
 
-def _plan_tool(emit: Emit):
+def _plan_tool(emit: Emit, *, max_steps: int = 50):
     # There is no SDK general-purpose plan tool. Only this product-specific
     # operation remains custom; filesystem and command tools are SDK capabilities.
     def plan_error(context, error):
         # Never echo validation payloads or persistence exceptions into model/UI output.
         return json.dumps({
             "isError": True,
-            "error": "计划未更新。请使用 JSON：steps 为 1 至 12 个非空步骤（每项不超过 300 字）；"
+            "error": f"计划未更新。请使用 JSON：steps 为 1 至 {max_steps} 个非空步骤（每项不超过 300 字）；"
                      "current_step 为从 0 开始且小于步骤数的整数；completed 为布尔值，默认 false。",
         }, ensure_ascii=False)
 
@@ -129,8 +136,8 @@ def _plan_tool(emit: Emit):
         context: ToolContext, steps: list[str], current_step: int, completed: bool = False
     ) -> str:
         """记录任务计划。current_step 从 0 开始；completed 默认 false，任务完成时设为 true。"""
-        if not steps or len(steps) > 12 or any(not step.strip() or len(step) > 300 for step in steps):
-            raise ValueError("计划应包含 1 至 12 个简明步骤。")
+        if not steps or len(steps) > max_steps or any(not step.strip() or len(step) > 300 for step in steps):
+            raise ValueError(f"计划应包含 1 至 {max_steps} 个简明步骤。")
         if not 0 <= current_step < len(steps):
             raise ValueError("当前步骤编号超出范围。")
         plan = {
@@ -226,6 +233,14 @@ async def run_agent(
         raise AgentRuntimeError("会话历史存储或身份未配置。")
     if config.compaction_threshold < 1:
         raise AgentRuntimeError("上下文压缩阈值必须为正整数。")
+    for name in (
+        "max_turns", "max_runtime_seconds", "max_session_mb", "max_workspace_entries",
+        "model_timeout_seconds", "mcp_timeout_seconds", "mcp_session_timeout_seconds",
+        "mcp_max_list_pages", "max_plan_steps",
+    ):
+        value = getattr(config, name)
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise AgentRuntimeError("任务执行限制必须为正整数。")
 
     async def execute() -> str:
         async with AsyncExitStack() as stack:
@@ -242,21 +257,28 @@ async def run_agent(
             )
             client = await stack.enter_async_context(
                 AsyncOpenAI(
-                    api_key=config.api_key, base_url=config.base_url or None, timeout=90, max_retries=1
+                    api_key=config.api_key, base_url=config.base_url or None,
+                    timeout=config.model_timeout_seconds, max_retries=1,
                 )
             )
             sandbox = await stack.enter_async_context(
-                open_chat_sandbox(workspace, chat_id=config.session_id, user_id=config.user_id)
+                open_chat_sandbox(
+                    workspace, chat_id=config.session_id, user_id=config.user_id,
+                    max_session_mb=config.max_session_mb,
+                    max_workspace_entries=config.max_workspace_entries,
+                )
             )
             observed = {
                 item["path"]: (item["size"], item["modified_ns"])
-                for item in regular_files(workspace)
+                for item in regular_files(workspace, limit=config.max_workspace_entries)
                 if item["path"].startswith("outputs/")
             }
 
             async def artifacts():
                 current_paths = set()
-                for item in await asyncio.to_thread(regular_files, workspace):
+                for item in await asyncio.to_thread(
+                    regular_files, workspace, limit=config.max_workspace_entries
+                ):
                     path = item["path"]
                     current_paths.add(path)
                     fingerprint = (item["size"], item["modified_ns"])
@@ -284,14 +306,15 @@ async def run_agent(
                         params={
                             "url": url,
                             "headers": mcp_headers(extension["id"], extension.get("token_env")),
-                            "timeout": 20,
+                            "timeout": config.mcp_timeout_seconds,
+                            "sse_read_timeout": config.mcp_session_timeout_seconds,
                             "httpx_client_factory": _mcp_http_client,
                         },
                         cache_tools_list=True,
                         require_approval="always",
-                        client_session_timeout_seconds=30,
+                        client_session_timeout_seconds=config.mcp_session_timeout_seconds,
                         max_retry_attempts=0,
-                        max_list_pages=10,
+                        max_list_pages=config.mcp_max_list_pages,
                         custom_data_extractor=mcp_tool_display_data,
                     )
                     servers[extension["id"]] = await stack.enter_async_context(server)
@@ -310,7 +333,7 @@ async def run_agent(
                 **tracing.run_config(),
             )
             settings = ModelSettings(store=False, parallel_tool_calls=True)
-            tools = [_plan_tool(emit)]
+            tools = [_plan_tool(emit, max_steps=config.max_plan_steps)]
             for extension in extensions:
                 if extension.get("type") != "subagent":
                     continue

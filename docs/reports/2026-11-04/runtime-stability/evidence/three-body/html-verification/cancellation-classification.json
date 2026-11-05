@@ -1,0 +1,96 @@
+{
+  "events": [
+    {
+      "url": "http://127.0.0.1:5173/api/files",
+      "started_phase": "mounting files view",
+      "started_at": "2026-11-04T15:18:10.026Z",
+      "outcome": "failed",
+      "finished_phase": "mounting files view",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      },
+      "finished_at": "2026-11-04T15:18:10.035Z"
+    },
+    {
+      "url": "http://127.0.0.1:5173/api/files",
+      "started_phase": "mounting files view",
+      "started_at": "2026-11-04T15:18:10.026Z",
+      "outcome": "finished",
+      "finished_phase": "mounting files view",
+      "status": 200,
+      "finished_at": "2026-11-04T15:18:10.036Z"
+    },
+    {
+      "url": "http://127.0.0.1:5173/api/files/6911c6a7ee8646349a253db618a59fe0/content",
+      "started_phase": "mounting preview",
+      "started_at": "2026-11-04T15:18:10.257Z",
+      "outcome": "failed",
+      "finished_phase": "mounting preview",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      },
+      "finished_at": "2026-11-04T15:18:10.258Z"
+    },
+    {
+      "url": "http://127.0.0.1:5173/api/files/6911c6a7ee8646349a253db618a59fe0/content",
+      "started_phase": "mounting preview",
+      "started_at": "2026-11-04T15:18:10.257Z",
+      "outcome": "failed",
+      "finished_phase": "mounting preview",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      },
+      "finished_at": "2026-11-04T15:18:10.267Z"
+    }
+  ],
+  "console": [
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    }
+  ],
+  "failed_while_mounting": [
+    {
+      "url": "http://127.0.0.1:5173/api/files",
+      "started_phase": "mounting files view",
+      "started_at": "2026-11-04T15:18:10.026Z",
+      "outcome": "failed",
+      "finished_phase": "mounting files view",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      },
+      "finished_at": "2026-11-04T15:18:10.035Z"
+    },
+    {
+      "url": "http://127.0.0.1:5173/api/files/6911c6a7ee8646349a253db618a59fe0/content",
+      "started_phase": "mounting preview",
+      "started_at": "2026-11-04T15:18:10.257Z",
+      "outcome": "failed",
+      "finished_phase": "mounting preview",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      },
+      "finished_at": "2026-11-04T15:18:10.258Z"
+    },
+    {
+      "url": "http://127.0.0.1:5173/api/files/6911c6a7ee8646349a253db618a59fe0/content",
+      "started_phase": "mounting preview",
+      "started_at": "2026-11-04T15:18:10.257Z",
+      "outcome": "failed",
+      "finished_phase": "mounting preview",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      },
+      "finished_at": "2026-11-04T15:18:10.267Z"
+    }
+  ],
+  "failed_on_user_close": []
+}

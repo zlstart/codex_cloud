@@ -1,0 +1,8 @@
+{
+  "watched_directory": "backend/app",
+  "pid_before": "4636",
+  "pid_after_artifact": "4636",
+  "pid_after_source_touch": "9165",
+  "artifact_does_not_reload": true,
+  "source_still_reloads": true
+}

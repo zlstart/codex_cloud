@@ -31,7 +31,7 @@
 | `GET /api/files/{id}/preview` | Office 文档的有界 JSON 预览 |
 | `DELETE /api/files/{id}` | 删除本人文件 |
 
-文件记录包含 `id,session_id,name,mime_type,size,kind,created_at,url`；`kind` 为 `upload` / `output`。URL 不是公开分享链接，仍需要所属用户的 Cookie。默认上传上限 25 MB，单会话 250 MB；上传请求需要 Content-Length。活动任务期间不允许上传或删除文件，返回 409。
+文件记录包含 `id,session_id,name,mime_type,size,kind,created_at,url`；`kind` 为 `upload` / `output`。URL 不是公开分享链接，仍需要所属用户的 Cookie。默认上传与登记产物上限 100 MiB，单会话 2048 MiB；上传请求需要 Content-Length。活动任务期间不允许上传或删除文件，返回 409。
 
 ### Office 预览
 
@@ -209,6 +209,6 @@ MCP 创建字段为 `{name,description?,url,token_env?}`，编辑接受部分字
 }
 ```
 
-编辑接受相同字段的子集；`model:null` 恢复继承主模型。`max_turns` 为 1–100，最多引用 100 个 Skills 和 50 个 MCP；引用必须存在且类型匹配，重复 ID 去重。运行时还要求引用能力被当前用户启用。删除 Skill / MCP 时清理子代理引用。
+编辑接受相同字段的子集；`model:null` 恢复继承主模型；`max_turns:null` 恢复继承部署轮数（默认 200）。显式 `max_turns` 为 1–10000，最多引用 100 个 Skills 和 50 个 MCP；引用必须存在且类型匹配，重复 ID 去重。运行时还要求引用能力被当前用户启用。删除 Skill / MCP 时清理子代理引用。
 
 `/health` 用于进程 / 数据库健康检查。当前部署仅支持单 worker 调度；重启后活动任务标记中断，历史事件与文件保留。

@@ -46,7 +46,7 @@ ALLOW_REGISTRATION=false
 
 每个任务使用 SDK `DockerSandboxClient` 创建一个容器，命令、PTY、补丁和图片读取由 SDK 提供。容器绑定当前聊天目录，`uploads/` 额外只读挂载，任务结束后删除容器，聊天文件保留。
 
-网络默认启用。容器根文件系统只读，非 root，移除 capabilities，启用 `no-new-privileges`，限制为 512 MiB 内存、1 CPU、64 进程，文件句柄上限 256，单文件大小上限 50 MiB。私有 `/tmp` 上限 128 MiB，保留 SDK 辅助程序所需的执行权限。资源设置由 `sdk_sandbox.py` 中的创建策略统一维护。
+网络默认启用。容器根文件系统只读，非 root，移除 capabilities，启用 `no-new-privileges`，默认限制为 2048 MiB 内存、2 CPU、256 进程，文件句柄上限 4096，单文件大小上限 100 MiB。私有 `/tmp` 上限 512 MiB，保留 SDK 辅助程序所需的执行权限。资源设置由 `sdk_sandbox.py` 中的创建策略统一维护。
 
 沙箱不挂载模型密钥、SDK 历史、其他聊天或 Docker socket。MCP 域名允许列表不限制普通 Shell 网络请求；如部署需要网络范围限制，应在 Docker 主机或网络层配置。
 
@@ -88,8 +88,8 @@ location / {
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_buffering off;
-    proxy_read_timeout 600s;
-    client_max_body_size 26m;
+    proxy_read_timeout 7500s;
+    client_max_body_size 101m;
 }
 ```
 
@@ -103,8 +103,8 @@ location / {
 | `AGENT_BASE_URL` | API 根地址；支持 `OPENAI_BASE_URL`，不填写完整 `/responses` 路径 |
 | `AGENT_MODEL` | 模型名称，默认 `gpt-5.6-luna`，与 SDK 0.24 默认模型一致；已配置值不变 |
 | `AGENT_COMPACTION_THRESHOLD` | 原生压缩阈值，默认 32000，需适合目标模型上下文 |
-| `AGENT_MAX_TURNS` | 主代理最大轮数，默认 40；代码生成、自检及多格式产物可能需要多轮工具往返，仍受总时间上限约束 |
-| `AGENT_TIMEOUT_SECONDS` | 单次任务最长时间，默认 900 秒，包含等待审批；复杂代码及多格式报告需要更长生成时间，用户仍可随时停止任务 |
+| `AGENT_MAX_TURNS` | 主代理最大轮数，默认 200；代码生成、自检及多格式产物可能需要多轮工具往返，仍受总时间上限约束 |
+| `AGENT_TIMEOUT_SECONDS` | 单次任务最长时间，默认 7200 秒，包含等待审批；复杂代码及多格式报告需要更长生成时间，用户仍可随时停止任务 |
 | `AGENT_TRACING_ENABLED` | 默认 `false`；设置 `true` 启用 SDK 原生 OpenAI Traces |
 | `OPENAI_TRACING_API_KEY` | 独立的 OpenAI 项目密钥；留空时使用 `OPENAI_API_KEY`，不会使用第三方 `AGENT_API_KEY` |
 | `AGENT_TRACING_WORKFLOW_NAME` | 默认 `FAMSUN conversation` |
@@ -112,9 +112,9 @@ location / {
 | `DATA_DIR` | 应用 SQLite 数据库、工作区与本地 SDK 历史目录 |
 | `DATABASE_URL` | 仅支持 SQLite；留空使用 `DATA_DIR/app.db`；可指定 `sqlite:////absolute/path/app.db` |
 | `ALLOWED_MCP_HOSTS` | MCP HTTPS 主机允许列表，逗号分隔 |
-| `MAX_UPLOAD_MB` / `MAX_SESSION_MB` | 默认 25 / 250 MB |
+| `MAX_UPLOAD_MB` / `MAX_SESSION_MB` | 默认 100 / 2048 MiB |
 | `FAMSUN_SANDBOX_IMAGE` | 默认 `famsun-sandbox:latest` |
-| `FAMSUN_DOCKER_TIMEOUT_SECONDS` | Docker 请求超时，默认 60 秒，范围 1–300 秒；较大镜像或慢存储可能超过 15 秒。创建响应超时后会按本次任务唯一标识等待并清理迟到的容器，不重试创建 |
+| `FAMSUN_DOCKER_TIMEOUT_SECONDS` | Docker 请求超时，默认 180 秒，范围 1–3600 秒；较大镜像或慢存储可能超过 15 秒。创建响应超时后会按本次任务唯一标识等待并清理迟到的容器，不重试创建 |
 | `FAMSUN_SANDBOX_UID` / `FAMSUN_SANDBOX_GID` | 沙箱非 root 身份；Compose 从 `FAMSUN_UID` / `FAMSUN_GID` 传入 |
 | `FAMSUN_SANDBOX_CA_BUNDLE` | 可选，只读可信证书包的宿主 / API 共用路径 |
 | `FAMSUN_DEPLOYMENT_ID` | 可选部署标签；默认从数据目录生成，用于限定遗留容器清理 |
@@ -166,3 +166,34 @@ Docker smoke 直接使用 SDK 原生沙箱，覆盖文件 / 补丁 / 命令 / Sk
 `FAMSUN_TEST_BASE_URL=http://127.0.0.1:8000 npm run test:previews` 可针对已构建前端验证交互 HTML、隔离边界、Office 内容和异常图片/幻灯片尺寸；此套件使用明确标记的模拟 API 与人工构造文件，不能替代真实模型产物验收。真实验收还需在应用内生成并操作文件，核对下载字节、图表/表格内容和实际截图。
 
 上线时另验收两个账号的隔离、真实 Responses 工具循环、连续多轮历史、压缩、子代理、MCP 允许 / 拒绝、取消、SSE 重连、文件预览和备份恢复。记录实际执行命令、环境和结果；历史验证报告不自动适用于当前部署。
+
+
+## 复杂任务预算与开发热加载
+
+开发启动脚本使用 `--reload --reload-dir backend/app`，只监视后端源码。`data/`、`test-results/` 和任务工作空间里的生成文件不会触发重启；后端源码修改仍会重启并中断活动任务。生产部署不启用 reload。
+
+`.env` 中含空格的值应加引号，例如 `AGENT_TRACING_WORKFLOW_NAME="FAMSUN conversation"`。修改下列部署预算后重启后端；已运行的任务不会动态替换预算。示例配置见根目录 `.env.example`。
+
+| 环境变量 | 默认值 | 控制范围 |
+| --- | ---: | --- |
+| `AGENT_MAX_TURNS` | 200 | 主代理模型轮数，未单独配置的子代理继承此值 |
+| `AGENT_TIMEOUT_SECONDS` | 7200 | 整个任务秒数，包含子代理和审批等待 |
+| `AGENT_MODEL_TIMEOUT_SECONDS` | 300 | 模型 HTTP 请求超时秒数 |
+| `MAX_UPLOAD_MB` | 100 | 上传和登记产物的单文件上限，MiB |
+| `MAX_SESSION_MB` | 2048 | 实际工作空间总容量，MiB |
+| `MAX_WORKSPACE_ENTRIES` | 10000 | 文件和目录条目预算；同时用于产物扫描 |
+| `AGENT_MAX_PLAN_STEPS` | 50 | 单个任务计划的步骤数 |
+| `MCP_TIMEOUT_SECONDS` | 120 | MCP HTTP 超时秒数 |
+| `MCP_SESSION_TIMEOUT_SECONDS` | 300 | MCP 会话及 SSE 读取超时秒数 |
+| `MCP_MAX_LIST_PAGES` | 100 | MCP 工具列表最大页数 |
+| `FAMSUN_DOCKER_TIMEOUT_SECONDS` | 180 | Docker daemon 请求超时秒数，可设 1–3600 |
+| `FAMSUN_SANDBOX_MEMORY_MB` | 2048 | 每个会话容器的内存上限，MiB，禁用额外 swap |
+| `FAMSUN_SANDBOX_CPUS` | 2 | 每个容器的 CPU 配额 |
+| `FAMSUN_SANDBOX_PIDS_LIMIT` | 256 | 每个容器的进程数 |
+| `FAMSUN_SANDBOX_NOFILE` | 4096 | 容器内进程的文件描述符上限 |
+| `FAMSUN_SANDBOX_FILE_MB` | 100 | 容器内单文件写入上限，MiB |
+| `FAMSUN_SANDBOX_TMP_MB` | 512 | 容器临时文件系统容量，MiB |
+
+子代理轮数留空表示继承部署值，可明确设置 1–10000。启动时将未修改的旧版内置子代理 12 轮配置升级为继承；管理员修改过的配置保留。提高产物大小时，需要同时调整 `MAX_UPLOAD_MB` 和 `FAMSUN_SANDBOX_FILE_MB`，且 `MAX_SESSION_MB` 必须容纳全部文件。
+
+这些值提供复杂任务的执行余量，仍保持有限的资源边界。多个聊天并行时需按容器配额评估宿主容量。会话磁盘配额由启动检查与周期扫描监控，并非文件系统硬配额。模型上下文压缩阈值和旧工具输出截断独立保持有界，放宽任务预算不意味着扩大模型上下文。

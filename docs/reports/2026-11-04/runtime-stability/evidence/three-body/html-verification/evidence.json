@@ -1,0 +1,1954 @@
+{
+  "started_at": "2026-11-04T15:15:44.021Z",
+  "initial_run_id": "c1933a6866ae451189ccb4f809ebef24",
+  "repair_run_id": "4793b4db26e54e8cb4d91b2c625f1981",
+  "session_id": "a866dfe0411142eeaea29d1768fc92d8",
+  "live_provider": true,
+  "generated_outputs_modified": false,
+  "model_calls_submitted": false,
+  "checks": [
+    {
+      "label": "preview-desktop",
+      "functional_passed": true,
+      "controls": {
+        "buttons": [
+          {
+            "id": "btn-toggle",
+            "text": "▶ 继续"
+          },
+          {
+            "id": "btn-reset",
+            "text": "⟲ 重置"
+          }
+        ],
+        "sliders": [
+          {
+            "id": "slider",
+            "label": "时间滑块，单位：模拟时间",
+            "labels": [
+              "时间滑块 —— 拖动即可定位到任意采样时刻（t 从 0 到 12.65）"
+            ]
+          }
+        ]
+      },
+      "initial": {
+        "range": {
+          "value": 0,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 0.000",
+        "output": "t = 0.000",
+        "status": "状态：已重置回 t = 0 并暂停",
+        "canvas": {
+          "width": 548,
+          "height": 494,
+          "clientWidth": 548,
+          "clientHeight": 494
+        },
+        "markers": [
+          {
+            "x": 81.5,
+            "y": 205.5,
+            "pixels": 32
+          },
+          {
+            "x": 246.5,
+            "y": 246.5,
+            "pixels": 32
+          },
+          {
+            "x": 411.5,
+            "y": 287.6666666666667,
+            "pixels": 30
+          }
+        ],
+        "layout": {
+          "clientWidth": 1098,
+          "scrollWidth": 1098
+        },
+        "canvas_sha256": "9cbca61447fe793e036a14f0ba9c3087d7e8d08e115936b0262216355d448bad"
+      },
+      "colors": [
+        {
+          "legend": "星 1（红）",
+          "css": "rgb(255, 107, 107)",
+          "matching_pixels": 458
+        },
+        {
+          "legend": "星 2（青）",
+          "css": "rgb(77, 208, 225)",
+          "matching_pixels": 476
+        },
+        {
+          "legend": "星 3（黄）",
+          "css": "rgb(255, 209, 102)",
+          "matching_pixels": 458
+        }
+      ],
+      "playing": {
+        "range": {
+          "value": 17,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 0.167",
+        "output": "t = 0.167",
+        "status": "状态：继续 —— 时间正在推进（1× 倍速）",
+        "canvas": {
+          "width": 548,
+          "height": 494,
+          "clientWidth": 548,
+          "clientHeight": 494
+        },
+        "markers": [
+          {
+            "x": 97.73529411764706,
+            "y": 194,
+            "pixels": 34
+          },
+          {
+            "x": 219.5,
+            "y": 270.5,
+            "pixels": 32
+          },
+          {
+            "x": 422.1818181818182,
+            "y": 275.1818181818182,
+            "pixels": 33
+          }
+        ],
+        "layout": {
+          "clientWidth": 1098,
+          "scrollWidth": 1098
+        },
+        "canvas_sha256": "62462188e33b5fc04b4a9d607cd1b2e52fad17b8de22009912eec8fa0a9de47c"
+      },
+      "play_motion_pixels": 44.393777226606325,
+      "pause": {
+        "before": {
+          "range": {
+            "value": 22,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.217",
+          "output": "t = 0.217",
+          "status": "状态：已暂停（所有状态冻结）",
+          "canvas": {
+            "width": 548,
+            "height": 494,
+            "clientWidth": 548,
+            "clientHeight": 494
+          },
+          "markers": [
+            {
+              "x": 103.76470588235294,
+              "y": 191.26470588235293,
+              "pixels": 34
+            },
+            {
+              "x": 211.36363636363637,
+              "y": 277.24242424242425,
+              "pixels": 33
+            },
+            {
+              "x": 424.4117647058824,
+              "y": 271.3235294117647,
+              "pixels": 34
+            }
+          ],
+          "layout": {
+            "clientWidth": 1098,
+            "scrollWidth": 1098
+          },
+          "canvas_sha256": "e863a502602293815bdad207220229cc26410c4e07a9eade69c51633308883a7"
+        },
+        "after": {
+          "range": {
+            "value": 22,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.217",
+          "output": "t = 0.217",
+          "status": "状态：已暂停（所有状态冻结）",
+          "canvas": {
+            "width": 548,
+            "height": 494,
+            "clientWidth": 548,
+            "clientHeight": 494
+          },
+          "markers": [
+            {
+              "x": 103.76470588235294,
+              "y": 191.26470588235293,
+              "pixels": 34
+            },
+            {
+              "x": 211.36363636363637,
+              "y": 277.24242424242425,
+              "pixels": 33
+            },
+            {
+              "x": 424.4117647058824,
+              "y": 271.3235294117647,
+              "pixels": 34
+            }
+          ],
+          "layout": {
+            "clientWidth": 1098,
+            "scrollWidth": 1098
+          },
+          "canvas_sha256": "e863a502602293815bdad207220229cc26410c4e07a9eade69c51633308883a7"
+        }
+      },
+      "continue": {
+        "range": {
+          "value": 33,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 0.333",
+        "output": "t = 0.333",
+        "status": "状态：继续 —— 时间正在推进（1× 倍速）",
+        "canvas": {
+          "width": 548,
+          "height": 494,
+          "clientWidth": 548,
+          "clientHeight": 494
+        },
+        "markers": [
+          {
+            "x": 120.57575757575758,
+            "y": 186.57575757575756,
+            "pixels": 33
+          },
+          {
+            "x": 190.71875,
+            "y": 290.8125,
+            "pixels": 32
+          },
+          {
+            "x": 428.1714285714286,
+            "y": 262,
+            "pixels": 35
+          }
+        ],
+        "layout": {
+          "clientWidth": 1098,
+          "scrollWidth": 1098
+        },
+        "canvas_sha256": "425b1b54e50337f4d59ccdc2b99d2228b2b10bf8f3c20fc4da8df6c1a6fff3b4"
+      },
+      "continue_motion_pixels": 31.87505697827042,
+      "seek": {
+        "range": {
+          "value": 897,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 8.970",
+        "output": "t = 8.970",
+        "status": "状态：滑块定位（保持暂停） t = 8.970",
+        "canvas": {
+          "width": 548,
+          "height": 494,
+          "clientWidth": 548,
+          "clientHeight": 494
+        },
+        "markers": [
+          {
+            "x": 153,
+            "y": 305.65625,
+            "pixels": 32
+          },
+          {
+            "x": 156.1818181818182,
+            "y": 188.1818181818182,
+            "pixels": 33
+          },
+          {
+            "x": 430.375,
+            "y": 245.65625,
+            "pixels": 32
+          }
+        ],
+        "layout": {
+          "clientWidth": 1098,
+          "scrollWidth": 1098
+        },
+        "canvas_sha256": "0ac0cf70f4aaf521bcbd1a7877169d6463b1b8af56f677b784382e7cacfb1ea9"
+      },
+      "seek_motion_pixels": 87.55048149343396,
+      "reset": {
+        "first": {
+          "range": {
+            "value": 0,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.000",
+          "output": "t = 0.000",
+          "status": "状态：已重置回 t = 0 并暂停",
+          "canvas": {
+            "width": 548,
+            "height": 494,
+            "clientWidth": 548,
+            "clientHeight": 494
+          },
+          "markers": [
+            {
+              "x": 81.5,
+              "y": 205.5,
+              "pixels": 32
+            },
+            {
+              "x": 246.5,
+              "y": 246.5,
+              "pixels": 32
+            },
+            {
+              "x": 411.5,
+              "y": 287.6666666666667,
+              "pixels": 30
+            }
+          ],
+          "layout": {
+            "clientWidth": 1098,
+            "scrollWidth": 1098
+          },
+          "canvas_sha256": "9cbca61447fe793e036a14f0ba9c3087d7e8d08e115936b0262216355d448bad"
+        },
+        "later": {
+          "range": {
+            "value": 0,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.000",
+          "output": "t = 0.000",
+          "status": "状态：已重置回 t = 0 并暂停",
+          "canvas": {
+            "width": 548,
+            "height": 494,
+            "clientWidth": 548,
+            "clientHeight": 494
+          },
+          "markers": [
+            {
+              "x": 81.5,
+              "y": 205.5,
+              "pixels": 32
+            },
+            {
+              "x": 246.5,
+              "y": 246.5,
+              "pixels": 32
+            },
+            {
+              "x": 411.5,
+              "y": 287.6666666666667,
+              "pixels": 30
+            }
+          ],
+          "layout": {
+            "clientWidth": 1098,
+            "scrollWidth": 1098
+          },
+          "canvas_sha256": "9cbca61447fe793e036a14f0ba9c3087d7e8d08e115936b0262216355d448bad"
+        }
+      },
+      "no_horizontal_overflow": true
+    },
+    {
+      "label": "preview-mobile",
+      "functional_passed": true,
+      "controls": {
+        "buttons": [
+          {
+            "id": "btn-toggle",
+            "text": "▶ 继续"
+          },
+          {
+            "id": "btn-reset",
+            "text": "⟲ 重置"
+          }
+        ],
+        "sliders": [
+          {
+            "id": "slider",
+            "label": "时间滑块，单位：模拟时间",
+            "labels": [
+              "时间滑块 —— 拖动即可定位到任意采样时刻（t 从 0 到 12.65）"
+            ]
+          }
+        ]
+      },
+      "initial": {
+        "range": {
+          "value": 0,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 0.000",
+        "output": "t = 0.000",
+        "status": "状态：已重置回 t = 0 并暂停",
+        "canvas": {
+          "width": 322,
+          "height": 278,
+          "clientWidth": 322,
+          "clientHeight": 278
+        },
+        "markers": [
+          {
+            "x": 55.625,
+            "y": 117.65625,
+            "pixels": 32
+          },
+          {
+            "x": 138.5,
+            "y": 138.5,
+            "pixels": 32
+          },
+          {
+            "x": 221.5,
+            "y": 159.5,
+            "pixels": 32
+          }
+        ],
+        "layout": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        },
+        "canvas_sha256": "54e61c6b5f5fe31a922c39d1b2806d6a8e4d6ed50d229aa886532ab631eafcbf"
+      },
+      "colors": [
+        {
+          "legend": "星 1（红）",
+          "css": "rgb(255, 107, 107)",
+          "matching_pixels": 461
+        },
+        {
+          "legend": "星 2（青）",
+          "css": "rgb(77, 208, 225)",
+          "matching_pixels": 474
+        },
+        {
+          "legend": "星 3（黄）",
+          "css": "rgb(255, 209, 102)",
+          "matching_pixels": 458
+        }
+      ],
+      "playing": {
+        "range": {
+          "value": 17,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 0.167",
+        "output": "t = 0.167",
+        "status": "状态：继续 —— 时间正在推进（1× 倍速）",
+        "canvas": {
+          "width": 322,
+          "height": 278,
+          "clientWidth": 322,
+          "clientHeight": 278
+        },
+        "markers": [
+          {
+            "x": 63.71875,
+            "y": 112.1875,
+            "pixels": 32
+          },
+          {
+            "x": 125,
+            "y": 150.65625,
+            "pixels": 32
+          },
+          {
+            "x": 226.71875,
+            "y": 152.8125,
+            "pixels": 32
+          }
+        ],
+        "layout": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        },
+        "canvas_sha256": "5c10785f3bac33ad29f9c7bd12ba249ef18015364694767413f5fac456ed5139"
+      },
+      "play_motion_pixels": 22.302431201552892,
+      "pause": {
+        "before": {
+          "range": {
+            "value": 22,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.217",
+          "output": "t = 0.217",
+          "status": "状态：已暂停（所有状态冻结）",
+          "canvas": {
+            "width": 322,
+            "height": 278,
+            "clientWidth": 322,
+            "clientHeight": 278
+          },
+          "markers": [
+            {
+              "x": 66.75757575757575,
+              "y": 110.63636363636364,
+              "pixels": 33
+            },
+            {
+              "x": 120.73529411764706,
+              "y": 154,
+              "pixels": 34
+            },
+            {
+              "x": 227.73529411764707,
+              "y": 151,
+              "pixels": 34
+            }
+          ],
+          "layout": {
+            "clientWidth": 360,
+            "scrollWidth": 360
+          },
+          "canvas_sha256": "563fbcd0fb9abcf509268e924e5c38fa352052e3fe3ae988fb6ab7616c7ef412"
+        },
+        "after": {
+          "range": {
+            "value": 22,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.217",
+          "output": "t = 0.217",
+          "status": "状态：已暂停（所有状态冻结）",
+          "canvas": {
+            "width": 322,
+            "height": 278,
+            "clientWidth": 322,
+            "clientHeight": 278
+          },
+          "markers": [
+            {
+              "x": 66.75757575757575,
+              "y": 110.63636363636364,
+              "pixels": 33
+            },
+            {
+              "x": 120.73529411764706,
+              "y": 154,
+              "pixels": 34
+            },
+            {
+              "x": 227.73529411764707,
+              "y": 151,
+              "pixels": 34
+            }
+          ],
+          "layout": {
+            "clientWidth": 360,
+            "scrollWidth": 360
+          },
+          "canvas_sha256": "563fbcd0fb9abcf509268e924e5c38fa352052e3fe3ae988fb6ab7616c7ef412"
+        }
+      },
+      "continue": {
+        "range": {
+          "value": 33,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 0.333",
+        "output": "t = 0.333",
+        "status": "状态：继续 —— 时间正在推进（1× 倍速）",
+        "canvas": {
+          "width": 322,
+          "height": 278,
+          "clientWidth": 322,
+          "clientHeight": 278
+        },
+        "markers": [
+          {
+            "x": 75.5,
+            "y": 108.5,
+            "pixels": 32
+          },
+          {
+            "x": 110.5,
+            "y": 160.5,
+            "pixels": 32
+          },
+          {
+            "x": 229.58064516129033,
+            "y": 146.4516129032258,
+            "pixels": 31
+          }
+        ],
+        "layout": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        },
+        "canvas_sha256": "ecc8269e3ad8770190dc00215aff66ea5b1b11ae2ac3b7a960d7a7570cc0303f"
+      },
+      "continue_motion_pixels": 15.877607582769576,
+      "seek": {
+        "range": {
+          "value": 922,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 9.220",
+        "output": "t = 9.220",
+        "status": "状态：滑块定位（保持暂停） t = 9.220",
+        "canvas": {
+          "width": 322,
+          "height": 278,
+          "clientWidth": 322,
+          "clientHeight": 278
+        },
+        "markers": [
+          {
+            "x": 70.5,
+            "y": 167.5,
+            "pixels": 32
+          },
+          {
+            "x": 116.28125,
+            "y": 119.8125,
+            "pixels": 32
+          },
+          {
+            "x": 228.66666666666666,
+            "y": 128.27272727272728,
+            "pixels": 33
+          }
+        ],
+        "layout": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        },
+        "canvas_sha256": "976849a13a9c47b8a8d3b93f07031e54b0beb4826df913b19e93c10a7ecba1c1"
+      },
+      "seek_motion_pixels": 70.38109778486692,
+      "reset": {
+        "first": {
+          "range": {
+            "value": 0,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.000",
+          "output": "t = 0.000",
+          "status": "状态：已重置回 t = 0 并暂停",
+          "canvas": {
+            "width": 322,
+            "height": 278,
+            "clientWidth": 322,
+            "clientHeight": 278
+          },
+          "markers": [
+            {
+              "x": 55.625,
+              "y": 117.65625,
+              "pixels": 32
+            },
+            {
+              "x": 138.5,
+              "y": 138.5,
+              "pixels": 32
+            },
+            {
+              "x": 221.5,
+              "y": 159.5,
+              "pixels": 32
+            }
+          ],
+          "layout": {
+            "clientWidth": 360,
+            "scrollWidth": 360
+          },
+          "canvas_sha256": "54e61c6b5f5fe31a922c39d1b2806d6a8e4d6ed50d229aa886532ab631eafcbf"
+        },
+        "later": {
+          "range": {
+            "value": 0,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.000",
+          "output": "t = 0.000",
+          "status": "状态：已重置回 t = 0 并暂停",
+          "canvas": {
+            "width": 322,
+            "height": 278,
+            "clientWidth": 322,
+            "clientHeight": 278
+          },
+          "markers": [
+            {
+              "x": 55.625,
+              "y": 117.65625,
+              "pixels": 32
+            },
+            {
+              "x": 138.5,
+              "y": 138.5,
+              "pixels": 32
+            },
+            {
+              "x": 221.5,
+              "y": 159.5,
+              "pixels": 32
+            }
+          ],
+          "layout": {
+            "clientWidth": 360,
+            "scrollWidth": 360
+          },
+          "canvas_sha256": "54e61c6b5f5fe31a922c39d1b2806d6a8e4d6ed50d229aa886532ab631eafcbf"
+        }
+      },
+      "no_horizontal_overflow": true
+    },
+    {
+      "label": "offline-desktop",
+      "functional_passed": true,
+      "controls": {
+        "buttons": [
+          {
+            "id": "btn-toggle",
+            "text": "▶ 继续"
+          },
+          {
+            "id": "btn-reset",
+            "text": "⟲ 重置"
+          }
+        ],
+        "sliders": [
+          {
+            "id": "slider",
+            "label": "时间滑块，单位：模拟时间",
+            "labels": [
+              "时间滑块 —— 拖动即可定位到任意采样时刻（t 从 0 到 12.65）"
+            ]
+          }
+        ]
+      },
+      "initial": {
+        "range": {
+          "value": 0,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 0.000",
+        "output": "t = 0.000",
+        "status": "状态：已重置回 t = 0 并暂停",
+        "canvas": {
+          "width": 739,
+          "height": 739,
+          "clientWidth": 739,
+          "clientHeight": 739
+        },
+        "markers": [
+          {
+            "x": 110.65625,
+            "y": 304.375,
+            "pixels": 32
+          },
+          {
+            "x": 369,
+            "y": 369,
+            "pixels": 33
+          },
+          {
+            "x": 627.2424242424242,
+            "y": 433.6363636363636,
+            "pixels": 33
+          }
+        ],
+        "layout": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440
+        },
+        "canvas_sha256": "dd61b687bf6dc4466250a3391254b39db62028672d9b322037142cff67ea4a8b"
+      },
+      "colors": [
+        {
+          "legend": "星 1（红）",
+          "css": "rgb(255, 107, 107)",
+          "matching_pixels": 468
+        },
+        {
+          "legend": "星 2（青）",
+          "css": "rgb(77, 208, 225)",
+          "matching_pixels": 481
+        },
+        {
+          "legend": "星 3（黄）",
+          "css": "rgb(255, 209, 102)",
+          "matching_pixels": 473
+        }
+      ],
+      "playing": {
+        "range": {
+          "value": 17,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 0.167",
+        "output": "t = 0.167",
+        "status": "状态：继续 —— 时间正在推进（1× 倍速）",
+        "canvas": {
+          "width": 739,
+          "height": 739,
+          "clientWidth": 739,
+          "clientHeight": 739
+        },
+        "markers": [
+          {
+            "x": 136.29032258064515,
+            "y": 286.7096774193548,
+            "pixels": 31
+          },
+          {
+            "x": 327,
+            "y": 406.65625,
+            "pixels": 32
+          },
+          {
+            "x": 643.7096774193549,
+            "y": 413.7096774193548,
+            "pixels": 31
+          }
+        ],
+        "layout": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440
+        },
+        "canvas_sha256": "3e1b2552eb70d2d1ad5f166deeeaa41ac70405c0407405f69bd6b81fa7e12607"
+      },
+      "play_motion_pixels": 69.42193971501226,
+      "pause": {
+        "before": {
+          "range": {
+            "value": 20,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.200",
+          "output": "t = 0.200",
+          "status": "状态：已暂停（所有状态冻结）",
+          "canvas": {
+            "width": 739,
+            "height": 739,
+            "clientWidth": 739,
+            "clientHeight": 739
+          },
+          "markers": [
+            {
+              "x": 142.625,
+              "y": 283.65625,
+              "pixels": 32
+            },
+            {
+              "x": 318.42424242424244,
+              "y": 413.57575757575756,
+              "pixels": 33
+            },
+            {
+              "x": 646.1875,
+              "y": 409.71875,
+              "pixels": 32
+            }
+          ],
+          "layout": {
+            "clientWidth": 1440,
+            "scrollWidth": 1440
+          },
+          "canvas_sha256": "ac0ba4a706118b875a27623c4be2ae6e8da05334813755facc9b00bdefe0821d"
+        },
+        "after": {
+          "range": {
+            "value": 20,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.200",
+          "output": "t = 0.200",
+          "status": "状态：已暂停（所有状态冻结）",
+          "canvas": {
+            "width": 739,
+            "height": 739,
+            "clientWidth": 739,
+            "clientHeight": 739
+          },
+          "markers": [
+            {
+              "x": 142.625,
+              "y": 283.65625,
+              "pixels": 32
+            },
+            {
+              "x": 318.42424242424244,
+              "y": 413.57575757575756,
+              "pixels": 33
+            },
+            {
+              "x": 646.1875,
+              "y": 409.71875,
+              "pixels": 32
+            }
+          ],
+          "layout": {
+            "clientWidth": 1440,
+            "scrollWidth": 1440
+          },
+          "canvas_sha256": "ac0ba4a706118b875a27623c4be2ae6e8da05334813755facc9b00bdefe0821d"
+        }
+      },
+      "continue": {
+        "range": {
+          "value": 32,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 0.317",
+        "output": "t = 0.317",
+        "status": "状态：继续 —— 时间正在推进（1× 倍速）",
+        "canvas": {
+          "width": 739,
+          "height": 739,
+          "clientWidth": 739,
+          "clientHeight": 739
+        },
+        "markers": [
+          {
+            "x": 168.21875,
+            "y": 276.09375,
+            "pixels": 32
+          },
+          {
+            "x": 286.375,
+            "y": 435.65625,
+            "pixels": 32
+          },
+          {
+            "x": 652.4242424242424,
+            "y": 395.42424242424244,
+            "pixels": 33
+          }
+        ],
+        "layout": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440
+        },
+        "canvas_sha256": "f1af8c0c98a6f1f61e04c1316b0d2b958fe52eb97fa33a0a7410e88fd6946efa"
+      },
+      "continue_motion_pixels": 49.70073876590894,
+      "seek": {
+        "range": {
+          "value": 894,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 8.940",
+        "output": "t = 8.940",
+        "status": "状态：滑块定位（保持暂停） t = 8.940",
+        "canvas": {
+          "width": 739,
+          "height": 739,
+          "clientWidth": 739,
+          "clientHeight": 739
+        },
+        "markers": [
+          {
+            "x": 218.8181818181818,
+            "y": 275.8181818181818,
+            "pixels": 33
+          },
+          {
+            "x": 231.5,
+            "y": 459.5,
+            "pixels": 32
+          },
+          {
+            "x": 656.5757575757576,
+            "y": 371.57575757575756,
+            "pixels": 33
+          }
+        ],
+        "layout": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440
+        },
+        "canvas_sha256": "d13afed89c854190cb2e682552aea32e619e0390446250ccd3af1764a0ab3d4c"
+      },
+      "seek_motion_pixels": 130.74593683249395,
+      "reset": {
+        "first": {
+          "range": {
+            "value": 0,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.000",
+          "output": "t = 0.000",
+          "status": "状态：已重置回 t = 0 并暂停",
+          "canvas": {
+            "width": 739,
+            "height": 739,
+            "clientWidth": 739,
+            "clientHeight": 739
+          },
+          "markers": [
+            {
+              "x": 110.65625,
+              "y": 304.375,
+              "pixels": 32
+            },
+            {
+              "x": 369,
+              "y": 369,
+              "pixels": 33
+            },
+            {
+              "x": 627.2424242424242,
+              "y": 433.6363636363636,
+              "pixels": 33
+            }
+          ],
+          "layout": {
+            "clientWidth": 1440,
+            "scrollWidth": 1440
+          },
+          "canvas_sha256": "dd61b687bf6dc4466250a3391254b39db62028672d9b322037142cff67ea4a8b"
+        },
+        "later": {
+          "range": {
+            "value": 0,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.000",
+          "output": "t = 0.000",
+          "status": "状态：已重置回 t = 0 并暂停",
+          "canvas": {
+            "width": 739,
+            "height": 739,
+            "clientWidth": 739,
+            "clientHeight": 739
+          },
+          "markers": [
+            {
+              "x": 110.65625,
+              "y": 304.375,
+              "pixels": 32
+            },
+            {
+              "x": 369,
+              "y": 369,
+              "pixels": 33
+            },
+            {
+              "x": 627.2424242424242,
+              "y": 433.6363636363636,
+              "pixels": 33
+            }
+          ],
+          "layout": {
+            "clientWidth": 1440,
+            "scrollWidth": 1440
+          },
+          "canvas_sha256": "dd61b687bf6dc4466250a3391254b39db62028672d9b322037142cff67ea4a8b"
+        }
+      },
+      "no_horizontal_overflow": true
+    },
+    {
+      "label": "offline-mobile",
+      "functional_passed": true,
+      "controls": {
+        "buttons": [
+          {
+            "id": "btn-toggle",
+            "text": "▶ 继续"
+          },
+          {
+            "id": "btn-reset",
+            "text": "⟲ 重置"
+          }
+        ],
+        "sliders": [
+          {
+            "id": "slider",
+            "label": "时间滑块，单位：模拟时间",
+            "labels": [
+              "时间滑块 —— 拖动即可定位到任意采样时刻（t 从 0 到 12.65）"
+            ]
+          }
+        ]
+      },
+      "initial": {
+        "range": {
+          "value": 0,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 0.000",
+        "output": "t = 0.000",
+        "status": "状态：已重置回 t = 0 并暂停",
+        "canvas": {
+          "width": 352,
+          "height": 352,
+          "clientWidth": 352,
+          "clientHeight": 352
+        },
+        "markers": [
+          {
+            "x": 64.42424242424242,
+            "y": 147.57575757575756,
+            "pixels": 33
+          },
+          {
+            "x": 175.5,
+            "y": 175.5,
+            "pixels": 32
+          },
+          {
+            "x": 286.5,
+            "y": 203.5,
+            "pixels": 32
+          }
+        ],
+        "layout": {
+          "clientWidth": 390,
+          "scrollWidth": 390
+        },
+        "canvas_sha256": "9ffbed453e67435164a1f9dc80b4eb3161f2c3891546f5a467615c7089342c56"
+      },
+      "colors": [
+        {
+          "legend": "星 1（红）",
+          "css": "rgb(255, 107, 107)",
+          "matching_pixels": 461
+        },
+        {
+          "legend": "星 2（青）",
+          "css": "rgb(77, 208, 225)",
+          "matching_pixels": 474
+        },
+        {
+          "legend": "星 3（黄）",
+          "css": "rgb(255, 209, 102)",
+          "matching_pixels": 460
+        }
+      ],
+      "playing": {
+        "range": {
+          "value": 17,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 0.167",
+        "output": "t = 0.167",
+        "status": "状态：继续 —— 时间正在推进（1× 倍速）",
+        "canvas": {
+          "width": 352,
+          "height": 352,
+          "clientWidth": 352,
+          "clientHeight": 352
+        },
+        "markers": [
+          {
+            "x": 75.42424242424242,
+            "y": 140.42424242424244,
+            "pixels": 33
+          },
+          {
+            "x": 157.5,
+            "y": 191.5,
+            "pixels": 32
+          },
+          {
+            "x": 293.625,
+            "y": 194.65625,
+            "pixels": 32
+          }
+        ],
+        "layout": {
+          "clientWidth": 390,
+          "scrollWidth": 390
+        },
+        "canvas_sha256": "e328cf824168a01bda3e1200a708fd72124a331a1ed62788764c1f42cf8f3b60"
+      },
+      "play_motion_pixels": 29.683694312279435,
+      "pause": {
+        "before": {
+          "range": {
+            "value": 20,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.200",
+          "output": "t = 0.200",
+          "status": "状态：已暂停（所有状态冻结）",
+          "canvas": {
+            "width": 352,
+            "height": 352,
+            "clientWidth": 352,
+            "clientHeight": 352
+          },
+          "markers": [
+            {
+              "x": 78.17142857142858,
+              "y": 139,
+              "pixels": 35
+            },
+            {
+              "x": 153.57575757575756,
+              "y": 194.57575757575756,
+              "pixels": 33
+            },
+            {
+              "x": 294.7,
+              "y": 193,
+              "pixels": 30
+            }
+          ],
+          "layout": {
+            "clientWidth": 390,
+            "scrollWidth": 390
+          },
+          "canvas_sha256": "aec471191056d1ee5200e3f266c400992d6a90dda5b97b1231a4a7ce98edfd5c"
+        },
+        "after": {
+          "range": {
+            "value": 20,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.200",
+          "output": "t = 0.200",
+          "status": "状态：已暂停（所有状态冻结）",
+          "canvas": {
+            "width": 352,
+            "height": 352,
+            "clientWidth": 352,
+            "clientHeight": 352
+          },
+          "markers": [
+            {
+              "x": 78.17142857142858,
+              "y": 139,
+              "pixels": 35
+            },
+            {
+              "x": 153.57575757575756,
+              "y": 194.57575757575756,
+              "pixels": 33
+            },
+            {
+              "x": 294.7,
+              "y": 193,
+              "pixels": 30
+            }
+          ],
+          "layout": {
+            "clientWidth": 390,
+            "scrollWidth": 390
+          },
+          "canvas_sha256": "aec471191056d1ee5200e3f266c400992d6a90dda5b97b1231a4a7ce98edfd5c"
+        }
+      },
+      "continue": {
+        "range": {
+          "value": 32,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 0.317",
+        "output": "t = 0.317",
+        "status": "状态：继续 —— 时间正在推进（1× 倍速）",
+        "canvas": {
+          "width": 352,
+          "height": 352,
+          "clientWidth": 352,
+          "clientHeight": 352
+        },
+        "markers": [
+          {
+            "x": 89.06060606060606,
+            "y": 135.57575757575756,
+            "pixels": 33
+          },
+          {
+            "x": 140,
+            "y": 204.17142857142858,
+            "pixels": 35
+          },
+          {
+            "x": 297.375,
+            "y": 186.65625,
+            "pixels": 32
+          }
+        ],
+        "layout": {
+          "clientWidth": 390,
+          "scrollWidth": 390
+        },
+        "canvas_sha256": "267cc9a759cc48151f786685418a3824f23f77ed0d4a992b236463483fa86b6d"
+      },
+      "continue_motion_pixels": 21.309071008521048,
+      "seek": {
+        "range": {
+          "value": 917,
+          "min": 0,
+          "max": 1265
+        },
+        "time": "t = 9.170",
+        "output": "t = 9.170",
+        "status": "状态：滑块定位（保持暂停） t = 9.170",
+        "canvas": {
+          "width": 352,
+          "height": 352,
+          "clientWidth": 352,
+          "clientHeight": 352
+        },
+        "markers": [
+          {
+            "x": 89.5,
+            "y": 215.5,
+            "pixels": 32
+          },
+          {
+            "x": 139.57575757575756,
+            "y": 146.57575757575756,
+            "pixels": 33
+          },
+          {
+            "x": 297.5,
+            "y": 164.5,
+            "pixels": 32
+          }
+        ],
+        "layout": {
+          "clientWidth": 390,
+          "scrollWidth": 390
+        },
+        "canvas_sha256": "14f014b6f3674056776c92dcabd5708888332951cd07e7a97b713ad9248b13eb"
+      },
+      "seek_motion_pixels": 95.87231275636489,
+      "reset": {
+        "first": {
+          "range": {
+            "value": 0,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.000",
+          "output": "t = 0.000",
+          "status": "状态：已重置回 t = 0 并暂停",
+          "canvas": {
+            "width": 352,
+            "height": 352,
+            "clientWidth": 352,
+            "clientHeight": 352
+          },
+          "markers": [
+            {
+              "x": 64.42424242424242,
+              "y": 147.57575757575756,
+              "pixels": 33
+            },
+            {
+              "x": 175.5,
+              "y": 175.5,
+              "pixels": 32
+            },
+            {
+              "x": 286.5,
+              "y": 203.5,
+              "pixels": 32
+            }
+          ],
+          "layout": {
+            "clientWidth": 390,
+            "scrollWidth": 390
+          },
+          "canvas_sha256": "9ffbed453e67435164a1f9dc80b4eb3161f2c3891546f5a467615c7089342c56"
+        },
+        "later": {
+          "range": {
+            "value": 0,
+            "min": 0,
+            "max": 1265
+          },
+          "time": "t = 0.000",
+          "output": "t = 0.000",
+          "status": "状态：已重置回 t = 0 并暂停",
+          "canvas": {
+            "width": 352,
+            "height": 352,
+            "clientWidth": 352,
+            "clientHeight": 352
+          },
+          "markers": [
+            {
+              "x": 64.42424242424242,
+              "y": 147.57575757575756,
+              "pixels": 33
+            },
+            {
+              "x": 175.5,
+              "y": 175.5,
+              "pixels": 32
+            },
+            {
+              "x": 286.5,
+              "y": 203.5,
+              "pixels": 32
+            }
+          ],
+          "layout": {
+            "clientWidth": 390,
+            "scrollWidth": 390
+          },
+          "canvas_sha256": "9ffbed453e67435164a1f9dc80b4eb3161f2c3891546f5a467615c7089342c56"
+        }
+      },
+      "no_horizontal_overflow": true
+    }
+  ],
+  "issues": [],
+  "artifact": {
+    "name": "three_body.html",
+    "id": "6911c6a7ee8646349a253db618a59fe0",
+    "bytes": 260897,
+    "sha256": "53fd0f61288da24bce222508ee80dd9f4997714a6c01ad39c75cf61cabc2ad0e"
+  },
+  "embedded_data": {
+    "csv_rows": 1266,
+    "embedded_rows": 1266,
+    "maximum_absolute_difference": 4.999889391399392e-13,
+    "tolerance": 1e-09
+  },
+  "repair_preservation": {
+    "embedded_samples_identical": true,
+    "csv_bytes_identical": true,
+    "csv_sha256": "07976028c6b7222649c2368e6a8b08d9582eec3f411cac6055a691d916edb472"
+  },
+  "app_observed": {
+    "label": "app-preview",
+    "console": [
+      {
+        "type": "debug",
+        "text": "[vite] connecting...",
+        "location": {
+          "url": "http://127.0.0.1:5173/@vite/client",
+          "line": 788,
+          "column": 8,
+          "lineNumber": 788,
+          "columnNumber": 8
+        }
+      },
+      {
+        "type": "debug",
+        "text": "[vite] connected.",
+        "location": {
+          "url": "http://127.0.0.1:5173/@vite/client",
+          "line": 911,
+          "column": 14,
+          "lineNumber": 911,
+          "columnNumber": 14
+        }
+      },
+      {
+        "type": "info",
+        "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+        "location": {
+          "url": "http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=17f6d248",
+          "line": 22164,
+          "column": 53,
+          "lineNumber": 22164,
+          "columnNumber": 53
+        }
+      },
+      {
+        "type": "warning",
+        "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently",
+        "location": {
+          "url": "",
+          "line": 3,
+          "column": 0,
+          "lineNumber": 3,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "page_errors": [],
+    "requests": [
+      {
+        "url": "http://127.0.0.1:5173/",
+        "type": "document"
+      },
+      {
+        "url": "http://127.0.0.1:5173/@vite/client",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/main.tsx?t=1793803799571",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/@react-refresh",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=63cbd8ec",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/react.js?v=63cbd8ec",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=17f6d248",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/App.tsx?t=1793803799571",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/styles/index.css",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/styles/admin.css",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/vite/dist/client/env.mjs",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-M4F42M6S.js?v=1e03996d",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-WOOG5QLI.js?v=1e03996d",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/lucide-react.js?v=5d8ac478",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/Sidebar.tsx",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/Composer.tsx",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/ChatMessages.tsx?t=1793803799571",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/Artifacts.tsx?t=1793803799571",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/AuthModal.tsx",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/SettingsModal.tsx",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/CapabilitiesView.tsx",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/Modal.tsx",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/lib/useWorkspace.ts",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/lib/api.ts",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/Markdown.tsx",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/ExecutionHistory.tsx",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/RunTimeline.tsx",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/previews/FilePreview.tsx?t=1793803799571",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/previews/previewData.ts",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/ArtifactDownloadLink.tsx?t=1793803799571",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/styles/capabilities.css",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/CapabilityEditor.tsx",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/lib/useRunStream.ts",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/react-markdown.js?v=e32cf21b",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/remark-gfm.js?v=8b383391",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/lib/artifactLinks.ts",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/CodeBlock.tsx",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/lib/runTimeline.ts",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-32QSVXDN.js?v=1e03996d",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/TraceStatus.tsx",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/lib/toolPresentation.ts",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/styles/timeline.css",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/previews/SpreadsheetPreview.tsx",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/previews/DocumentPreview.tsx",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/previews/PresentationPreview.tsx",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/components/previews/htmlPreview.ts",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/styles/previews.css",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-NRFMGSLE.js?v=1e03996d",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-V3F26E2A.js?v=1e03996d",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/dompurify.js?v=05a07cfd",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/lib/highlighting.ts",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/styles/code.css",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/styles/tracing.css",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_core.js?v=d1a51caf",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_bash.js?v=175fa411",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_cpp.js?v=0e48aff3",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_csharp.js?v=d3ecd660",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_css.js?v=834eaad1",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_diff.js?v=1df657d6",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_dockerfile.js?v=7870e6ad",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_go.js?v=71d8a5bb",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_ini.js?v=ba53582f",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_java.js?v=3daea595",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_javascript.js?v=9123036f",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_json.js?v=a9068e92",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_markdown.js?v=f97ddae7",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_powershell.js?v=05451f66",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_python.js?v=c228e6b4",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_r.js?v=3edbcc40",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_rust.js?v=a2957051",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_sql.js?v=6dbf3469",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_typescript.js?v=8d81e195",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_xml.js?v=69f9beed",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/highlight__js_lib_languages_yaml.js?v=e96284e2",
+        "type": "script"
+      },
+      {
+        "url": "http://127.0.0.1:5173/api/auth/me",
+        "type": "fetch"
+      },
+      {
+        "url": "http://127.0.0.1:5173/api/auth/me",
+        "type": "fetch"
+      },
+      {
+        "url": "http://127.0.0.1:5173/favicon.svg",
+        "type": "other"
+      },
+      {
+        "url": "http://127.0.0.1:5173/api/sessions",
+        "type": "fetch"
+      },
+      {
+        "url": "http://127.0.0.1:5173/api/settings",
+        "type": "fetch"
+      },
+      {
+        "url": "http://127.0.0.1:5173/api/files",
+        "type": "fetch"
+      },
+      {
+        "url": "http://127.0.0.1:5173/api/files",
+        "type": "fetch"
+      },
+      {
+        "url": "http://127.0.0.1:5173/api/files/6911c6a7ee8646349a253db618a59fe0/content",
+        "type": "fetch"
+      },
+      {
+        "url": "http://127.0.0.1:5173/api/files/6911c6a7ee8646349a253db618a59fe0/content",
+        "type": "fetch"
+      },
+      {
+        "url": "http://127.0.0.1:5173/api/files/6911c6a7ee8646349a253db618a59fe0/content?download=true",
+        "type": "fetch"
+      }
+    ],
+    "failed_requests": [
+      {
+        "url": "http://127.0.0.1:5173/api/files",
+        "failure": {
+          "errorText": "net::ERR_ABORTED"
+        }
+      },
+      {
+        "url": "http://127.0.0.1:5173/api/files/6911c6a7ee8646349a253db618a59fe0/content",
+        "failure": {
+          "errorText": "net::ERR_ABORTED"
+        }
+      },
+      {
+        "url": "http://127.0.0.1:5173/api/files/6911c6a7ee8646349a253db618a59fe0/content",
+        "failure": {
+          "errorText": "net::ERR_ABORTED"
+        }
+      }
+    ]
+  },
+  "download": {
+    "suggested_filename": "three_body.html",
+    "bytes": 260897,
+    "sha256": "53fd0f61288da24bce222508ee80dd9f4997714a6c01ad39c75cf61cabc2ad0e",
+    "api_bytes_identical": true,
+    "saved_file": "three_body.downloaded.html"
+  },
+  "app_mobile_layout": {
+    "clientWidth": 390,
+    "scrollWidth": 390
+  },
+  "direct_file_open": {
+    "loaded": false,
+    "error": "page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///workspace/codex_cloud/test-results/runtime-stability/three-body/html-verification-2026-11-04T15-15-44-021Z/three_body.downloaded.html\nCall log:\n\u001b[2m  - navigating to \"file:///workspace/codex_cloud/test-results/runtime-stability/three-body/html-verification-2026-11-04T15-15-44-021Z/three_body.downloaded.html\", waiting until \"load\"\u001b[22m\n",
+    "limitation": "Offline setContent below verifies unmodified self-contained HTML, not direct file navigation."
+  },
+  "offline": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "label": "offline-desktop",
+      "console": [
+        {
+          "type": "warning",
+          "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently",
+          "location": {
+            "url": "",
+            "line": 3,
+            "column": 0,
+            "lineNumber": 3,
+            "columnNumber": 0
+          }
+        }
+      ],
+      "page_errors": [],
+      "requests": [],
+      "failed_requests": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "label": "offline-mobile",
+      "console": [
+        {
+          "type": "warning",
+          "text": "Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently",
+          "location": {
+            "url": "",
+            "line": 3,
+            "column": 0,
+            "lineNumber": 3,
+            "columnNumber": 0
+          }
+        }
+      ],
+      "page_errors": [],
+      "requests": [],
+      "failed_requests": []
+    }
+  ],
+  "functional_passed": true,
+  "all_layouts_passed": true,
+  "passed": true,
+  "finished_at": "2026-11-04T15:15:53.370Z",
+  "runtime_observations_review": {
+    "console_errors": 0,
+    "uncaught_page_errors": 0,
+    "canvas_warning": {
+      "count": 3,
+      "classification": "Test-instrumentation performance warning",
+      "reason": "The verifier repeatedly calls getImageData to locate actual rendered star cores. The generated animation does not read canvas pixels; the focused no-readback run produced no warning."
+    },
+    "other_console_messages": "Two Vite connection debug messages and React DevTools informational advice; no application errors.",
+    "aborted_gets": {
+      "count": 3,
+      "paths": [
+        "/api/files",
+        "/api/files/6911c6a7ee8646349a253db618a59fe0/content"
+      ],
+      "phase_labelled_reproduction": "cancellation-classification.json",
+      "all_occurred_during_mounting": true,
+      "occurred_on_user_close": false,
+      "download_requests_failed": false,
+      "classification": "Canceled file-list/preview reads during development component mounting; not failed downloads or user-close cancellations.",
+      "support": "React.StrictMode is enabled and both list/preview effects abort stale reads on cleanup. The phase-labelled reproduction observed all three cancellations before preview-loaded/idle, then displayed the generated page. All four interaction checks and the full-byte browser download succeeded.",
+      "precision_limit": "The reproduction establishes timing and successful user-visible results; it does not assign each canceled request to a unique abort call."
+    },
+    "visual_review": {
+      "screenshots_inspected": [
+        "preview-desktop-initial.png",
+        "preview-mobile-seek.png",
+        "offline-mobile-initial.png"
+      ],
+      "result": "Three distinct stars and controls are visible; corrected narrow layout remains inside the viewport; long initial-condition values wrap instead of overflowing."
+    },
+    "final_period_text": "Period approximately 6.326; sampled state returns near t=6.33; t=12.65 approximately two periods."
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "console": [
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    }
+  ],
+  "errors": [],
+  "layout": {
+    "scrollWidth": 367,
+    "clientWidth": 360,
+    "canvas": [
+      {
+        "width": 329,
+        "height": 278,
+        "clientWidth": 329,
+        "clientHeight": 278
+      }
+    ],
+    "buttons": [
+      "▶ 继续",
+      "⟲ 重置"
+    ]
+  },
+  "parentLayout": {
+    "scrollWidth": 390,
+    "clientWidth": 390
+  }
+}

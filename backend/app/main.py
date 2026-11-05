@@ -424,12 +424,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                         )
                     ):
                         raise HTTPException(409, "任务已开始，请停止后上传")
-                    total = db.scalar(
-                        select(func.coalesce(func.sum(Artifact.size), 0)).where(
-                            Artifact.session_id == session_id
-                        )
+                    from .sandbox import workspace_usage
+
+                    entries, total = await asyncio.to_thread(
+                        workspace_usage, workspace, max_entries=config.max_workspace_entries
                     )
-                    if total + size > config.max_session_mb * 1024 * 1024:
+                    if entries > config.max_workspace_entries or total > config.max_session_mb * 1024 * 1024:
                         raise HTTPException(413, "会话文件空间已满，请删除部分文件")
                     artifact = Artifact(
                         id=file_id,
@@ -810,7 +810,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         values = {
             key: value
             for key, value in payload.model_dump(exclude_unset=True).items()
-            if value is not None or key == "model"
+            if value is not None or key in {"model", "max_turns"}
         }
         with database.session() as db:
             item = db.get(Extension, extension_id)

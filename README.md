@@ -16,7 +16,7 @@ docker build -t famsun-sandbox:latest sandbox
 ./scripts/dev.sh
 ```
 
-打开 [http://localhost:5173](http://localhost:5173)。API 位于 [http://localhost:8000](http://localhost:8000)，交互接口文档位于 `/api/docs`。首次注册创建管理员；默认关闭后续公开注册。
+打开 [http://localhost:5173](http://localhost:5173)。API 位于 [http://localhost:8000](http://localhost:8000)，交互接口文档位于 `/api/docs`。开发热加载仅监视 `backend/app`，生成产物不会触发后端重启。首次注册创建管理员；默认关闭后续公开注册。
 
 没有模型密钥时仍可注册、管理会话和文件；发送任务会明确提示未配置。`SANDBOX_BACKEND=disabled` 仅供账号、文件和界面调试，不能运行智能体，不会回退到宿主机执行代码。
 
@@ -31,7 +31,7 @@ AGENT_MODEL=gpt-5.6-luna
 AGENT_COMPACTION_THRESHOLD=32000
 ```
 
-`AGENT_API_KEY`、`AGENT_BASE_URL` 分别支持 `OPENAI_API_KEY`、`OPENAI_BASE_URL` 别名。密钥只在服务端使用，不发送给浏览器或沙箱。管理员可以在设置页修改 API 根地址、模型和压缩阈值；已保存的设置优先于环境默认值。
+`AGENT_API_KEY`、`AGENT_BASE_URL` 分别支持 `OPENAI_API_KEY`、`OPENAI_BASE_URL` 别名。密钥只在服务端使用，不发送给浏览器或沙箱。复杂任务默认可运行 200 轮、2 小时，单文件上限 100 MiB、会话空间 2 GiB；全部执行与沙箱预算见 [部署配置](docs/guides/DEPLOYMENT.md#复杂任务预算与开发热加载)。管理员可以在设置页修改 API 根地址、模型和压缩阈值；已保存的设置优先于环境默认值。
 
 Base URL 应为 API 根地址，不能带 `/responses` 等请求路径。运行器固定使用 `OpenAIResponsesModel` 和 `store=False`，本地管理历史，不依赖 OpenAI Conversations 或托管执行环境。旧 API 模式配置会归一为 Responses，应用不会自动切换协议。
 
@@ -79,7 +79,7 @@ PYTHONPATH=backend uv run python tests/docker_smoke.py
 - [文档总入口](docs/README.md)
 - [说明文档索引](docs/guides/README.md)
 - [按日期与批次归档的测试报告](docs/reports/README.md)
-- [最新测试：2026-11-04 复杂任务回归与修复](docs/reports/2026-11-04/complex-regression/README.md)
+- [最新测试：2026-11-04 运行稳定性、下载与真实三体](docs/reports/2026-11-04/runtime-stability/README.md)
 
 - [部署与运维](docs/guides/DEPLOYMENT.md)
 - [架构与运行边界](docs/guides/ARCHITECTURE.md)

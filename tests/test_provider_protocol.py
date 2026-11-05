@@ -117,7 +117,8 @@ def harness(monkeypatch, tmp_path):
     monkeypatch.setattr(runtime, "open_chat_sandbox", sandbox)
 
     async def execute(
-        handler, *, messages=None, extensions=None, approved=True, cancel_event=None, approval_callback=None
+        handler, *, messages=None, extensions=None, approved=True, cancel_event=None, approval_callback=None,
+        runtime_overrides=None,
     ):
         async def transport(request):
             assert request.url.path == "/v1/responses"
@@ -142,19 +143,22 @@ def harness(monkeypatch, tmp_path):
                 return await approval_callback(*args)
             return approved
 
+        config = runtime.RuntimeConfig(
+            base_url="https://protocol.test/v1",
+            api_key="fixture-secret",
+            model="fixture-model",
+            state_dir=tmp_path / "history",
+            user_id="alice",
+            session_id="chat",
+            run_id="run",
+            extensions=extensions or [],
+            allowed_mcp_hosts=["mcp.test"],
+            compaction_threshold=8000,
+        )
+        for key, value in (runtime_overrides or {}).items():
+            setattr(config, key, value)
         return await runtime.run_agent(
-            config=runtime.RuntimeConfig(
-                base_url="https://protocol.test/v1",
-                api_key="fixture-secret",
-                model="fixture-model",
-                state_dir=tmp_path / "history",
-                user_id="alice",
-                session_id="chat",
-                run_id="run",
-                extensions=extensions or [],
-                allowed_mcp_hosts=["mcp.test"],
-                compaction_threshold=8000,
-            ),
+            config=config,
             workspace=tmp_path / "workspace",
             messages=messages or [{"role": "user", "content": "make a plan"}],
             emit=emit,
@@ -163,6 +167,90 @@ def harness(monkeypatch, tmp_path):
         )
 
     return execute, requests, events, tmp_path
+
+
+async def test_configured_turn_limit_stops_native_sdk_loop(harness):
+    from agents.exceptions import MaxTurnsExceeded
+
+    execute, requests, _, _ = harness
+
+    def handler(body, sequence):
+        return response_sse([call("missing_tool", {}, f"loop_{sequence}")])
+
+    with pytest.raises(MaxTurnsExceeded):
+        await execute(handler, runtime_overrides={"max_turns": 3})
+    assert len(requests) == 3
+
+
+@pytest.mark.parametrize("child_limit,expected_calls", [(None, 3), (1, 1)])
+async def test_subagent_inherited_and_explicit_limits_reach_sdk(harness, child_limit, expected_calls):
+    from agents.exceptions import MaxTurnsExceeded
+
+    execute, requests, _, _ = harness
+    extension = {
+        "id": "loop-child", "type": "subagent", "name": "Loop child",
+        "config": {"instructions": "Use a tool.", "model": "child-model", "max_turns": child_limit},
+    }
+
+    def handler(body, sequence):
+        if body["model"] == "child-model":
+            return response_sse([call("missing_tool", {}, f"child_{sequence}")])
+        tool = next(item for item in body["tools"] if item.get("name", "").startswith("delegate_"))
+        return response_sse([call(tool["name"], {"input": "Keep working."}, "delegate_loop")])
+
+    with pytest.raises(MaxTurnsExceeded):
+        await execute(handler, extensions=[extension], runtime_overrides={"max_turns": 3})
+    assert len([body for body in requests if body["model"] == "child-model"]) == expected_calls
+
+
+async def test_configured_deadline_cancels_pending_request(harness):
+    from app.runtime import AgentRuntimeError
+
+    execute, requests, _, _ = harness
+    cancelled = asyncio.Event()
+
+    async def handler(body, sequence):
+        try:
+            await asyncio.Event().wait()
+        finally:
+            cancelled.set()
+
+    with pytest.raises(AgentRuntimeError, match="1 秒"):
+        await execute(handler, runtime_overrides={"max_runtime_seconds": 1})
+    assert len(requests) == 1
+    assert cancelled.is_set()
+
+
+async def test_provider_and_workspace_overrides_reach_clients(harness, monkeypatch):
+    from app import runtime
+
+    execute, _, _, _ = harness
+    original_sandbox = runtime.open_chat_sandbox
+    sandbox_options = {}
+    client_options = {}
+
+    @asynccontextmanager
+    async def sandbox(workspace, **kwargs):
+        sandbox_options.update(kwargs)
+        async with original_sandbox(workspace, **kwargs) as session:
+            yield session
+
+    original_model = runtime.OpenAIResponsesModel
+
+    def model(**kwargs):
+        client_options["timeout"] = kwargs["openai_client"].timeout
+        return original_model(**kwargs)
+
+    monkeypatch.setattr(runtime, "open_chat_sandbox", sandbox)
+    monkeypatch.setattr(runtime, "OpenAIResponsesModel", model)
+    assert await execute(
+        lambda *_: response_sse([message("done")]),
+        runtime_overrides={"model_timeout_seconds": 137, "max_session_mb": 8192,
+                           "max_workspace_entries": 12345},
+    ) == "done"
+    assert client_options["timeout"] == 137
+    assert sandbox_options["max_session_mb"] == 8192
+    assert sandbox_options["max_workspace_entries"] == 12345
 
 
 async def test_unknown_function_tool_is_reported_and_model_can_recover(harness):
@@ -410,7 +498,10 @@ async def test_native_mcp_approval_resume_persists_input_once(harness, monkeypat
 
     class FakeMCP(MCPServerStreamableHttp):
         async def connect(self):
-            pass
+            assert self.params["timeout"] == 187
+            assert self.params["sse_read_timeout"] == 421
+            assert self.client_session_timeout_seconds == 421
+            assert self.max_list_pages == 71
 
         async def cleanup(self):
             pass
@@ -453,6 +544,8 @@ async def test_native_mcp_approval_resume_persists_input_once(harness, monkeypat
         handler,
         extensions=[{"id": "research", "name": "Research", "type": "mcp", "url": "https://mcp.test/mcp"}],
         approval_callback=approve,
+        runtime_overrides={"mcp_timeout_seconds": 187, "mcp_session_timeout_seconds": 421,
+                           "mcp_max_list_pages": 71},
     )
     assert result == "审批已处理。" and len(approvals) == 1
     assert len(executed) == int(approved)

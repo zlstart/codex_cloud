@@ -19,3 +19,5 @@
 - [2026-11-02 SDK 原生重构计划](plans/2026-11-02-sdk-native-agent.md)
 - [2026-11-03 工作空间改进计划](plans/2026-11-03-workspace-refinement.md)
 - [2026-11-03 生产任务验收计划](plans/2026-11-03-production-acceptance.md)
+
+- [2026-11-04 执行稳定性与下载修复计划](plans/2026-11-04-runtime-stability.md)

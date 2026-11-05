@@ -77,7 +77,7 @@ export interface Extension {
   config?: {
     instructions: string;
     model?: string | null;
-    max_turns: number;
+    max_turns?: number | null;
     skill_ids: string[];
     mcp_server_ids: string[];
   };

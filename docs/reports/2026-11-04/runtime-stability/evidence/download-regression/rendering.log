@@ -1,0 +1,26 @@
+
+> famsun-agent-web@1.0.0 test:rendering
+> node --test tests/tool-presentation.test.mjs tests/artifact-links.test.mjs && node tests/rendering.mjs && node tests/artifact-updates.mjs && node tests/artifact-removal.mjs
+
+✔ workspace links distinguish uploads and outputs, including encoded filenames (0.654627ms)
+✔ ambiguous, external, malformed and traversal-like links never select an arbitrary file (0.187921ms)
+✔ SDK shell headers expose outcome without reading exit-like program output (1.115575ms)
+✔ background process and malformed output retain a truthful fallback (0.20085ms)
+✔ structured shell results preserve stderr, additional fields and the full tail (0.625513ms)
+✔ shell and raw patch inputs separate useful content without losing arguments (0.247599ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 72.693343
+PASS: highlighted Markdown, safe/plain fallbacks, exact copy, structured shell/patch/JSON results, failure statuses, full scrollable output, mobile layout
+PASS: open preview follows equal-size revisions and appended content; one updated file card
+PASS: live artifact removal closes preview, updates workspace, preserves other files/chats, is idempotent, and does not revive during SSE/history replay
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice

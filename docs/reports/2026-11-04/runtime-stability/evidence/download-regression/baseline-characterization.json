@@ -1,0 +1,31 @@
+{
+  "recorded_at": "2026-11-04T14:53:08.487461+00:00",
+  "evidence_kind": "Observed baseline characterization transcribed from execution output; original user environment unavailable",
+  "backend": "Unmodified file route on disposable local server; real HTTP, cookie auth, Chromium; authored HTML, no model calls",
+  "successful_owner_downloads": [
+    {
+      "entry_point": "file list",
+      "suggested_filename": "三体模拟.html",
+      "browser_failure": null
+    },
+    {
+      "entry_point": "preview modal",
+      "suggested_filename": "三体模拟.html",
+      "browser_failure": null
+    }
+  ],
+  "after_logout_while_modal_stays_open": {
+    "suggested_filename": "content.json",
+    "browser_failure": "canceled",
+    "app_alerts": [],
+    "app_url_unchanged": true
+  },
+  "csp_hypothesis": "Disproved: Chromium downloaded an HTML attachment successfully with the existing exact sandbox CSP as well as without CSP.",
+  "proven_failure": "Native anchors do not inspect HTTP errors; expired authentication triggers an unsuccessful error-document download without app feedback.",
+  "limitation": "The reported original download failure was not reproduced under valid authentication; do not claim stale authentication was the original user cause.",
+  "tdd": [
+    "New real-backend browser regression failed before implementation waiting for the missing authentication alert.",
+    "Review reproduced an initial implementation regression: closing preview during 2500ms-throttled download yielded no download and net::ERR_ABORTED.",
+    "Added 300ms-throttled list-filter/modal-close regression failed waiting for a download before lifecycle correction; passed after initiated downloads were allowed to finish."
+  ]
+}

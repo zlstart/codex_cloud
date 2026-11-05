@@ -11,6 +11,7 @@
     "test:ui": "node tests/regression.mjs",
     "test:deployment": "node tests/deployment.mjs",
     "test:deployment-restart": "node tests/deployment-restart.mjs",
+    "test:downloads": "npm run build && node tests/artifact-downloads.mjs",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" tests/*.mjs",
     "test:timeline": "node --test tests/run-timeline.test.mjs && node tests/timeline.mjs && node tests/timeline-recovery.mjs && node tests/context-observation.mjs",
     "test:capabilities": "node tests/capabilities.mjs",

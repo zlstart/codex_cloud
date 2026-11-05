@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import {
   ArrowUpRight,
-  Download,
   File,
   FileCode2,
   FileImage,
@@ -15,16 +14,11 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import {
-  api,
-  errorMessage,
-  formatDate,
-  formatSize,
-  safeArtifactUrl,
-} from "../lib/api";
+import { api, errorMessage, formatDate, formatSize } from "../lib/api";
 import type { Artifact, User } from "../types";
 import { FilePreview } from "./previews/FilePreview";
 import { previewKind } from "./previews/previewData";
+import { ArtifactDownloadLink } from "./ArtifactDownloadLink";
 export function FileIcon({
   file,
   size = 20,
@@ -396,14 +390,12 @@ export function FilesView({
                 >
                   <ArrowUpRight size={16} />
                 </button>
-                <a
+                <ArtifactDownloadLink
+                  file={f}
                   className="icon-button"
-                  aria-label={`下载 ${f.name}`}
-                  href={`${safeArtifactUrl(f.url)}?download=true`}
-                  download
-                >
-                  <Download size={16} />
-                </a>
+                  iconOnly
+                  onError={setError}
+                />
               </div>
             </div>
           ))}

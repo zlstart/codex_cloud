@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile, chmod } from "node:fs/promises";
 
 const baseURL = process.env.FAMSUN_TEST_BASE_URL || "http://127.0.0.1:8000";
-const output = "../test-results/production-acceptance-2026-11-03";
+const output = process.env.FAMSUN_TEST_OUTPUT || "../test-results/production-acceptance-2026-11-03";
 await mkdir(`${output}/screenshots`, { recursive: true });
 const browser = await chromium.launch({ executablePath: "/usr/bin/chromium", args: ["--no-sandbox"] });
 const context = await browser.newContext({ baseURL, viewport: { width: 1440, height: 1000 } });

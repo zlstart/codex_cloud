@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import {
   Code2,
-  Download,
   Eye,
   File,
   LoaderCircle,
@@ -13,6 +12,7 @@ import { api, errorMessage, formatSize, safeArtifactUrl } from "../../lib/api";
 import { Modal } from "../Modal";
 import { Markdown } from "../Markdown";
 import { CodeBlock } from "../CodeBlock";
+import { ArtifactDownloadLink } from "../ArtifactDownloadLink";
 import { SpreadsheetPreview } from "./SpreadsheetPreview";
 import { DocumentPreview } from "./DocumentPreview";
 import { PresentationPreview } from "./PresentationPreview";
@@ -87,6 +87,7 @@ export function FilePreview({
   const [structured, setStructured] = useState<ParsedPreview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [downloadError, setDownloadError] = useState("");
   const [source, setSource] = useState(false);
   const [retry, setRetry] = useState(0);
   const [loadedVersion, setLoadedVersion] = useState(0);
@@ -386,6 +387,11 @@ export function FilePreview({
           </div>
         )}
       </div>
+      {downloadError && (
+        <p className="preview-notice form-error" role="alert">
+          {downloadError}
+        </p>
+      )}
       <footer className="preview-footer">
         <span>
           <ShieldCheck size={13} />
@@ -394,14 +400,11 @@ export function FilePreview({
             : "文件仅对所属账号可见"}
         </span>
         {downloadUrl && (
-          <a
+          <ArtifactDownloadLink
+            file={file}
             className="button primary"
-            href={`${downloadUrl}?download=true`}
-            download
-          >
-            <Download size={16} />
-            下载文件
-          </a>
+            onError={setDownloadError}
+          />
         )}
       </footer>
     </Modal>

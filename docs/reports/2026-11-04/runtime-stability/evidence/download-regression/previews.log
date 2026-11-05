@@ -1,0 +1,26 @@
+
+> famsun-agent-web@1.0.0 test:previews
+> node --test tests/preview-data.test.mjs && node tests/file-previews.mjs && node tests/interactive-preview.mjs && node tests/preview-live-updates.mjs
+
+✔ routes MIME-only structured text and common source filenames (1.234923ms)
+✔ decodes UTF-8 and UTF-16 BOM text without replacement characters (0.507066ms)
+✔ rejects binary and invalid UTF-8 masquerading as text (0.517122ms)
+✔ preserves quoted empty CSV records and quotes within unquoted values (0.602369ms)
+✔ bounds CSV rows, columns and cell lengths with a visible truncation flag (4.692564ms)
+✔ bounded download cancels a response that exceeds the preview limit (14.571778ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 95.883032
+PASS: workspace all/upload/output filters/counts/keyboard/empty state; Excel pagination, Markdown/source, isolated HTML, quoted CSV, PDF, DOCX, image cleanup, code/JSON highlighting, UTF-16 text, binary rejection, retry, preview truncation, downloads, Escape, mobile overflow
+PASS authored fixture: inline scripts/events and full bounded HTML; opaque parent isolation; fetch/images/frames/self-navigation blocked before network
+PASS: preview loads during revision bursts, retains content, converges to latest equal-size revision, aborts only on close, resets removed sheet selections, and initializes refreshed HTML frames with real layout
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice

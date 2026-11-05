@@ -1,0 +1,6 @@
+请读取已上传的三体初值说明，实际运行数值模拟并交付可核验成果，不能仅画示意图。无需再确认。使用二维牛顿引力方程、G=1，三颗质量均为1；初始位置 r1=(-0.97000436,0.24308753), r2=(0.97000436,-0.24308753), r3=(0,0)，初始速度 v1=v2=(0.466203685,0.43236573), v3=(-0.93240737,-0.86473146)。使用固定步长 RK4，dt=0.001，从 t=0 积分到 t=12.65（含端点），不加软化。请先实际写出并运行计算脚本，再检查所得文件。
+必须创建 outputs/three_body.csv：至少1000个等间隔样本（建议每10步导出），CSV列名严格为 t,x1,y1,vx1,vy1,x2,y2,vx2,vy2,x3,y3,vx3,vy3。必须包含初值和终值。
+创建 outputs/metrics.json：记录 G、masses、method、dt、t_start、t_end、sample_count、initial_positions、initial_velocities，以及 initial_energy、max_relative_energy_error、initial_angular_momentum、max_absolute_angular_momentum_error、max_center_of_mass_norm、minimum_pair_distance；请从真实积分计算，不能预填示例值。
+创建 outputs/three_body.png：等比例 x/y 坐标，三颗星分别着色，图例、轨迹、初值、单位和数值模拟说明。
+创建 outputs/three_body.html：能直接离线打开的自包含中文动画，把真实CSV相同采样数据嵌入文件，不引用外部资源。桌面及手机适配；包含“暂停/继续”“重置”按钮和有明确标签的时间滑块，显示当前 t，三颗运动星体和轨迹。暂停时状态不动，继续后时间推进，拖动滑块定位，重置回t=0并暂停。显示初值、数值方法、dt、守恒误差，并说明这是特定初值下的数值模拟而非三体通解。
+同时保留 outputs/simulate_three_body.py 以便复现。不要用外部轨迹数据，不要用仅描绘8字曲线的参数化函数替代积分。最后给出四个主要文件的可点击链接、实际样本数及主要守恒误差。
